@@ -126,7 +126,7 @@ export const factoryConfig = {
 
   /**
    * Shisha fasad: old fasad (showroom va darvozalar tomoni) to‘liq vitraj;
-   * showroom burchagida yon fasad ham `sideDepth` uzunlikda shishadan.
+   * Yon fasadda shisha qism yo‘q (sideDepth = 0): showroomdan keyingi xomashyo ombori yon devori yopiq panel.
    * side — showroom joylashgan burchak: 'west' = old fasadga qaraganda o‘ng tomon.
    */
   glassCorner: {
@@ -136,7 +136,7 @@ export const factoryConfig = {
     /** Showroom burchagidagi shisha qism kengligi (to‘liq shisha o‘chirilgan holat uchun), m */
     facadeWidth: 9,
     /** Yon fasadda shisha qismining uzunligi (old fasaddan), m */
-    sideDepth: 10,
+    sideDepth: 0,
     mullionSpacing: 1.5,
     transomSpacing: 2.2,
   },
@@ -166,7 +166,8 @@ export const factoryConfig = {
   solar: {
     /** panellar joylashgan yarim: 'east' — old fasadga qaraganda chap yarmi */
     side: 'east' as 'east' | 'west',
-    segments: ['front', 'production'] as SegmentId[],
+    /** faqat ishlab chiqarish zonasi tomida (omborlar tomida panel yo‘q) */
+    segments: ['production'] as SegmentId[],
     rowPitch: 3.2,
     rowDepth: 2.1,
     tiltDeg: 12,

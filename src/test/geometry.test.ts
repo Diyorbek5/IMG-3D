@@ -102,7 +102,7 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     expect(slab.min.z).toBeGreaterThanOrEqual(115);
   });
 
-  it('old fasad to‘liq shisha (40 m bo‘ylab) va showroom burchagida yon fasad ham shisha', () => {
+  it('old fasad to‘liq shisha (40 m bo‘ylab), yon fasad (xomashyo ombori) yopiq', () => {
     const glass = p.glass.build();
     // old fasaddagi shisha (z ≈ 0) qamrovi
     let minX = Infinity;
@@ -126,10 +126,11 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     expect(minX).toBeLessThan(-19.5);
     expect(maxX).toBeGreaterThan(19.5);
     expect(maxY).toBeCloseTo(12 - factoryConfig.building.parapetHeight, 2);
-    expect(sideMaxZ).toBeGreaterThanOrEqual(9.9);
+    // yon devorda vitraj yo‘q — faqat old fasad burchagidagi shisha (z ≈ 0)
+    expect(sideMaxZ).toBeLessThan(0.5);
   });
 
-  it('tomning yarmida quyosh panellari', () => {
+  it('quyosh panellari faqat ishlab chiqarish zonasi tomining yarmida', () => {
     const roof = p.roof.build();
     const b = bounds(roof, 'solar');
     expect(b.isEmpty()).toBe(false);
@@ -137,6 +138,9 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     if (east) expect(b.min.x).toBeGreaterThanOrEqual(0);
     else expect(b.max.x).toBeLessThanOrEqual(0);
     expect(b.max.x - b.min.x).toBeGreaterThan(17);
+    const prod = getSegments().find((s) => s.id === 'production')!;
+    expect(b.min.z).toBeGreaterThanOrEqual(prod.z0);
+    expect(b.max.z).toBeLessThanOrEqual(prod.z1);
   });
 });
 

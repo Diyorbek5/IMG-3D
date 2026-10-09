@@ -35,7 +35,7 @@ export function runChecks(cfg = factoryConfig): Check[] {
     { label: 'Showroom', ok: cfg.showroom.width === 9 && cfg.showroom.depth === 15 && cfg.showroom.height === 6 && showroomRight, detail: `${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m, old fasadning o‘ng tomonida` },
     { label: 'Old fasad', ok: cfg.glassCorner.fullFrontGlazing, detail: 'showroom va darvozalar tomoni to‘liq shishadan' },
     { label: 'Rolikli darvozalar', ok: rollerDoors(cfg).length === 3, detail: `${rollerDoors(cfg).length} ta, har biri ${cfg.rollerDoors.width} × ${cfg.rollerDoors.height} m (taxminiy)` },
-    { label: 'Quyosh panellari', ok: cfg.solar.segments.length > 0, detail: `tomning ${cfg.solar.side === 'east' ? 'chap' : 'o‘ng'} yarmida` },
+    { label: 'Quyosh panellari', ok: cfg.solar.segments.length > 0, detail: `faqat ishlab chiqarish zonasi tomining ${cfg.solar.side === 'east' ? 'chap' : 'o‘ng'} yarmida` },
     {
       label: 'Qo‘shni binolar alohida',
       ok: cfg.neighborBuildings.every((b) => !overlap(b.rect, building) && !overlap(b.rect, sr)),
@@ -57,7 +57,8 @@ export function dimensionReport(cfg = factoryConfig) {
     `Showroom: ${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m, old fasadning o‘ng tomonida`,
     'Old fasad (showroom va darvozalar tomoni) — to‘liq shisha',
     'Rolikli darvozalar soni: 3 ta',
-    'Tomning yarmida quyosh panellari',
+    'Quyosh panellari — faqat ishlab chiqarish zonasi tomining yarmida (omborlar tomida yo‘q)',
+    'Xomashyo ombori yon devori — yopiq panel (shishasiz)',
   ];
   const pending: string[] = [
     `Ikki ombor orasidagi devor joyi (hozir x = ${cfg.building.frontPartitionX} m: xomashyo ≈${cfg.building.frontPartitionX + cfg.building.width / 2} m, tayyor mahsulot ≈${cfg.building.width / 2 - cfg.building.frontPartitionX} m)`,

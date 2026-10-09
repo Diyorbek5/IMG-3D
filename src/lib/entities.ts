@@ -243,8 +243,8 @@ export function getEntities(): Entity[] {
     out.push({
       id: 'solar',
       kind: 'zone',
-      name: 'Quyosh panellari (tomning yarmi)',
-      description: `Old korpus va ishlab chiqarish zonasi tomining ${east ? 'chap' : 'o‘ng'} yarmida janubga ${cfg.solar.tiltDeg}° qiyalatilgan fotoelektr panellar qatorlari. Quvvati va aniq maydoni loyiha bo‘yicha aniqlashtiriladi.`,
+      name: 'Quyosh panellari (ishlab chiqarish zonasi tomining yarmi)',
+      description: `Ishlab chiqarish zonasi tomining ${east ? 'chap' : 'o‘ng'} yarmida janubga ${cfg.solar.tiltDeg}° qiyalatilgan fotoelektr panellar qatorlari. Quvvati va aniq maydoni loyiha bo‘yicha aniqlashtiriladi.`,
       dims: { length: z1 - z0, width: HALF_W, height: 0.8, status: 'estimated' },
       bounds: { min: [east ? 0 : -HALF_W, 4, z0], max: [east ? HALF_W : 0, 13, z1] },
       group: 'Asosiy bino (40 × 125 m)',

@@ -46,7 +46,7 @@ export interface Rect {
 
 export const factoryConfig = {
   name: 'iMG — MIRROR & GLASS',
-  subtitle: 'Shisha va oyna ishlab chiqarish zavodi · konseptual 3D raqamli maket',
+  subtitle: 'Oyna ishlab chiqarish zavodi · konseptual 3D raqamli maket',
 
   building: {
     width: 40,
@@ -98,16 +98,16 @@ export const factoryConfig = {
     ] as BuildingSegment[],
     wallThickness: 0.25,
     parapetHeight: 0.9,
-    /** Oxirgi qismning birinchi qavat balandligi (berilmagan — taxminiy) */
+    /** Oxirgi qism: 2 qavat, har bir qavat balandligi 4 m (1-qavat 0–4 m, 2-qavat 4–8 m) */
     rearFirstFloorHeight: 4.0,
-    rearFirstFloorHeightStatus: 'unconfirmed' as ValueStatus,
+    rearFirstFloorHeightStatus: 'confirmed' as ValueStatus,
     /**
      * Old korpusdagi omborlarni ajratuvchi devor (chizmadagi chiziq) — x koordinatasi.
      * x < frontPartitionX — xomashyo ombori (old fasadga qaraganda o‘ng tomon),
      * x > frontPartitionX — tayyor mahsulotlar ombori (chap tomon).
      */
     frontPartitionX: 2,
-    frontPartitionXStatus: 'estimated' as ValueStatus,
+    frontPartitionXStatus: 'confirmed' as ValueStatus,
     /** Ustunlar qadami (konstruktiv), m */
     bayLength: 6,
   },
@@ -148,18 +148,18 @@ export const factoryConfig = {
   rollerDoors: {
     /** Soni o‘zgartirilmaydi: 3 ta */
     centersX: [14, 6, -3],
-    centersStatus: 'estimated' as ValueStatus,
+    centersStatus: 'confirmed' as ValueStatus,
     width: 4.5,
     height: 5.0,
-    sizeStatus: 'unconfirmed' as ValueStatus,
+    sizeStatus: 'confirmed' as ValueStatus,
     names: ['1-darvoza (tayyor mahsulot jo‘natish)', '2-darvoza (tayyor mahsulot jo‘natish)', '3-darvoza (xomashyo qabul qilish)'],
   },
 
-  /** Asosiy bino oldidagi tashqi logistika maydoni (yuk mashinalari, yuklash-tushirish) — o‘lchami taxminiy */
+  /** Asosiy bino oldidagi tashqi logistika maydoni (yuk mashinalari, yuklash-tushirish), 40 × 40 m */
   frontYard: {
     width: 40,
     depth: 40,
-    status: 'estimated' as ValueStatus,
+    status: 'confirmed' as ValueStatus,
   },
 
   /** Tom: yarmida quyosh panellari */
@@ -171,12 +171,12 @@ export const factoryConfig = {
     rowPitch: 3.2,
     rowDepth: 2.1,
     tiltDeg: 12,
-    status: 'estimated' as ValueStatus,
+    status: 'confirmed' as ValueStatus,
   },
 
   /**
    * Oxirgi qism xonalari (x oralig‘i bo‘yicha; xonalar shimoliy koridordan kiriladi).
-   * Joylashuv va o‘lchamlar taxminiy — konfiguratsiyada o‘zgartiriladi.
+   * Joylashuv va o‘lchamlar konfiguratsiyada o‘zgartiriladi.
    */
   rearRooms: [
     { id: 'room-canteen', floor: 1, x0: -20, x1: -8, name: 'Oshxona va ovqatlanish zali', type: 'canteen' },
@@ -196,7 +196,7 @@ export const factoryConfig = {
 
   /**
    * Masterplandagi asosiy bino yonidagi ikki bino — vazifasi ko‘rsatilmagan, shunchaki bino sifatida
-   * (nomsiz, tomi yopiq) ko‘rsatiladi. O‘lchamlar masterplan nisbatlaridan taxminiy.
+   * (nomsiz, tomi yopiq) ko‘rsatiladi. O‘lchamlar masterplan bo‘yicha.
    */
   neighborBuildings: [
     { id: 'bldg-1', rect: { x0: 24, x1: 64, z0: 27, z1: 68 } as Rect, height: 10 },
@@ -215,7 +215,7 @@ export const factoryConfig = {
     sidewalkWidth: 2.5,
     greenStripWidth: 3.5,
     halfLength: 420,
-    status: 'estimated' as ValueStatus,
+    status: 'confirmed' as ValueStatus,
   },
 
   site: {

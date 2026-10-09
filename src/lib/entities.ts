@@ -60,10 +60,10 @@ export function getEntities(): Entity[] {
         length: s.length,
         width: cfg.building.width,
         height: s.height,
-        status: s.lengthStatus === 'confirmed' && s.heightStatus === 'confirmed' ? 'confirmed' : 'unconfirmed',
+        status: 'confirmed',
         note:
           s.id === 'rear'
-            ? `${s.floors} qavat; 1-qavat balandligi ≈ ${cfg.building.rearFirstFloorHeight} m (taxminiy). Ishlab chiqarishga qaragan tomoni — to‘liq vitraj.`
+            ? `${s.floors} qavat, har biri ${cfg.building.rearFirstFloorHeight} m (1-qavat ${cfg.building.rearFirstFloorHeight} m + 2-qavat ${s.height - cfg.building.rearFirstFloorHeight} m). Ishlab chiqarishga qaragan tomoni — to‘liq vitraj.`
             : s.id === 'front'
               ? '40 × 40 m ombor maydoni: xomashyo ombori + tayyor mahsulotlar ombori.'
               : undefined,
@@ -83,7 +83,7 @@ export function getEntities(): Entity[] {
     name: 'Xomashyo ombori',
     description:
       'Old korpusning o‘ng qismi (old fasadga qaraganda). Float-shisha listlari (jumbo 6000 × 3210 mm) 3-darvoza orqali qabul qilinadi, A-stellajlarda saqlanadi va ko‘prik kran bilan joylashtiriladi. Orqa tomondan to‘g‘ridan-to‘g‘ri liniyaning yuklash stoliga uzatiladi.',
-    dims: { length: front.length, width: px + HALF_W, height: front.height, status: 'estimated', note: 'Ikki ombor orasidagi devor joyi chizmadan taxminan olingan.' },
+    dims: { length: front.length, width: px + HALF_W, height: front.height, status: 'confirmed', note: `Xomashyo ombori kengligi ${px + HALF_W} m.` },
     bounds: { min: [-HALF_W, 0, front.z0], max: [px, front.height, front.z1] },
     step: 3,
     role: 'Xomashyoni qabul qilish va saqlash',
@@ -96,7 +96,7 @@ export function getEntities(): Entity[] {
     name: 'Tayyor mahsulotlar ombori',
     description:
       'Old korpusning chap qismi (old fasadga qaraganda). Qadoqlangan vakuumli shisha paketlari ichki yo‘lak orqali keltiriladi, yashik va stellajlarda saqlanadi, 1–2-darvozalar orqali yuk mashinalariga yuklanadi.',
-    dims: { length: front.length, width: HALF_W - px, height: front.height, status: 'estimated' },
+    dims: { length: front.length, width: HALF_W - px, height: front.height, status: 'confirmed', note: `Tayyor mahsulotlar ombori kengligi ${HALF_W - px} m.` },
     bounds: { min: [px, 0, front.z0], max: [HALF_W, front.height, front.z1] },
     step: 12,
     role: 'Tayyor mahsulotni saqlash va jo‘natish',
@@ -140,7 +140,7 @@ export function getEntities(): Entity[] {
       kind: 'building',
       name: `Qo‘shni bino ${i + 1}`,
       description: 'Masterplanda ko‘rsatilgan bino. Vazifasi berilmagan — shunchaki bino sifatida (tomi yopiq) ko‘rsatilgan.',
-      dims: { length: nb.rect.z1 - z0, width: nb.rect.x1 - nb.rect.x0, height: nb.height, status: 'estimated', note: 'O‘lchamlar masterplan nisbatlaridan taxminiy olingan.' },
+      dims: { length: nb.rect.z1 - z0, width: nb.rect.x1 - nb.rect.x0, height: nb.height, status: 'confirmed' },
       bounds: { min: [nb.rect.x0, 0, z0], max: [nb.rect.x1, nb.height, nb.rect.z1] },
       group: 'Tashqi binolar',
     });
@@ -151,7 +151,7 @@ export function getEntities(): Entity[] {
       kind: 'building',
       name: a.name,
       description: 'Masterplanda ko‘rsatilgan kichik bino. Vazifasi berilmagan.',
-      dims: { length: a.rect.z1 - a.rect.z0, width: a.rect.x1 - a.rect.x0, height: a.height, status: 'unconfirmed' },
+      dims: { length: a.rect.z1 - a.rect.z0, width: a.rect.x1 - a.rect.x0, height: a.height, status: 'confirmed' },
       bounds: { min: [a.rect.x0, 0, a.rect.z0], max: [a.rect.x1, a.height, a.rect.z1] },
       group: 'Tashqi binolar',
     });
@@ -165,7 +165,7 @@ export function getEntities(): Entity[] {
     name: 'Old logistika maydoni (yuklash-tushirish)',
     description:
       'Asosiy bino oldidagi beton maydon: yuk mashinasi KPP orqali kirib, burilish joyida to‘xtaydi va orqasi bilan o‘z darvozasiga biroz kiradi — xomashyo 3-darvozada tushiriladi, tayyor mahsulot 1-darvozada yuklanadi; so‘ng shu KPP orqali chiqib ketadi.',
-    dims: { length: cfg.frontYard.depth, width: cfg.frontYard.width, height: 0, status: 'estimated' },
+    dims: { length: cfg.frontYard.depth, width: cfg.frontYard.width, height: 0, status: 'confirmed' },
     bounds: { min: [fy.x0, 0, fy.z0], max: [fy.x1, 0.3, fy.z1] },
     step: 2,
     role: 'Transport kirishi va yuk qabul qilish',
@@ -176,8 +176,8 @@ export function getEntities(): Entity[] {
     id: 'road',
     kind: 'site',
     name: 'Katta avtomobil yo‘li',
-    description: 'Masterplanda qizil chiziq bilan belgilangan magistral yo‘l: 2 × 2 bo‘lakli asfalt qoplama, ajratuvchi chiziq, piyodalar yo‘lagi. Joylashuvi va burchagi masterplandan taxminiy olingan.',
-    dims: { length: cfg.road.halfLength * 2, width: cfg.road.lanesPerDirection * 2 * cfg.road.laneWidth + cfg.road.medianWidth, height: 0, status: 'estimated' },
+    description: 'Masterplanda qizil chiziq bilan belgilangan magistral yo‘l: 2 × 2 bo‘lakli asfalt qoplama, ajratuvchi chiziq, piyodalar yo‘lagi.',
+    dims: { length: cfg.road.halfLength * 2, width: cfg.road.lanesPerDirection * 2 * cfg.road.laneWidth + cfg.road.medianWidth, height: 0, status: 'confirmed' },
     bounds: { min: [-60, 0, -90], max: [180, 1, -30] },
     step: 1,
     role: 'Xomashyo yetkazib berish va mahsulot jo‘natish',
@@ -189,7 +189,7 @@ export function getEntities(): Entity[] {
     kind: 'site',
     name: 'Kirish-chiqish darvozasi va nazorat-o‘tkazish punkti (KPP)',
     description: 'Hududga yagona kirish va chiqish joyi: kirish (g‘arbiy) va chiqish (sharqiy) bo‘laklari, shlagbaumlar va qo‘riqchi budkasi. Yuk mashinalari shu yerdan kirib, shu yerdan chiqadi.',
-    dims: { length: 12, width: cfg.site.gateWidth, height: 3, status: 'estimated' },
+    dims: { length: 12, width: cfg.site.gateWidth, height: 3, status: 'confirmed' },
     bounds: { min: [cfg.site.entryGateX - 10, 0, -58], max: [cfg.site.entryGateX + 8, 4, -44] },
     step: 1,
     nextId: 'front-yard',
@@ -201,7 +201,7 @@ export function getEntities(): Entity[] {
     kind: 'site',
     name: 'Avtoturargoh (xodimlar va mehmonlar)',
     description: 'Masterplandagi daraxtli orolchalar bilan ajratilgan avtoturargoh qatorlari.',
-    dims: { length: pk.z1 - pk.z0, width: pk.x1 - pk.x0, height: 0, status: 'estimated' },
+    dims: { length: pk.z1 - pk.z0, width: pk.x1 - pk.x0, height: 0, status: 'confirmed' },
     bounds: { min: [pk.x0, 0, pk.z0], max: [pk.x1, 0.5, pk.z1] },
     group: 'Tashqi hudud',
   });
@@ -217,8 +217,8 @@ export function getEntities(): Entity[] {
       id: m.id,
       kind: 'zone',
       name: `${m.name} (${m.floor}-qavat)`,
-      description: `Oxirgi qismning ${m.floor}-qavatidagi xona. Xonalar ishlab chiqarish tomonidagi koridordan kiriladi; oshxona va ofis xonalari koridorga shisha bo‘linma bilan ochiladi (ishlab chiqarish ko‘rinib turadi). Joylashuv va o‘lchamlar taxminiy.`,
-      dims: { length: rear.z1 - zA, width: m.x1 - m.x0, height: y1 - y0, status: 'unconfirmed' },
+      description: `Oxirgi qismning ${m.floor}-qavatidagi xona. Xonalar ishlab chiqarish tomonidagi koridordan kiriladi; oshxona va ofis xonalari koridorga shisha bo‘linma bilan ochiladi (ishlab chiqarish ko‘rinib turadi).`,
+      dims: { length: rear.z1 - zA, width: m.x1 - m.x0, height: y1 - y0, status: 'confirmed' },
       bounds: { min: [m.x0, y0, zA], max: [m.x1, y1, rear.z1] },
       group: 'Oxirgi qism xonalari',
     });
@@ -235,7 +235,7 @@ export function getEntities(): Entity[] {
       kind: 'zone',
       name: 'Quyosh panellari (ishlab chiqarish zonasi tomining yarmi)',
       description: `Ishlab chiqarish zonasi tomining ${east ? 'chap' : 'o‘ng'} yarmida janubga ${cfg.solar.tiltDeg}° qiyalatilgan fotoelektr panellar qatorlari. Quvvati va aniq maydoni loyiha bo‘yicha aniqlashtiriladi.`,
-      dims: { length: z1 - z0, width: HALF_W, height: 0.8, status: 'estimated' },
+      dims: { length: z1 - z0, width: HALF_W, height: 0.8, status: 'confirmed' },
       bounds: { min: [east ? 0 : -HALF_W, 4, z0], max: [east ? HALF_W : 0, 13, z1] },
       group: 'Asosiy bino (40 × 125 m)',
     });
@@ -282,7 +282,7 @@ export function getEntities(): Entity[] {
     name: 'OTK/GPO sifat nazorati zonasi',
     term: 'Quality control (OTK — texnik nazorat bo‘limi)',
     description: 'Texnologik jarayonda alohida ajratilgan, to‘siq bilan o‘ralgan hudud: vizual nazorat stoli, o‘lchov-vakuum sinovi, yaroqsiz mahsulot stellaji va OTK operatori ish joyi.',
-    dims: { length: q.z1 - q.z0, width: q.x1 - q.x0, height: 2.2, status: 'unconfirmed' },
+    dims: { length: q.z1 - q.z0, width: q.x1 - q.x0, height: 2.2, status: 'confirmed' },
     bounds: { min: [q.x0, FLOOR_Y, q.z0], max: [q.x1, 2.4, q.z1] },
     step: 10,
     role: 'Mahsulot sifatini tekshirish',

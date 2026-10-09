@@ -22,7 +22,7 @@ export function Brand() {
     <header className="brand glass">
       {url ? <img src={url} alt="iMG — Mirror & Glass" className="brand-logo" /> : <canvas ref={ref} className="brand-logo" aria-label="iMG — Mirror & Glass" role="img" />}
       <div className="brand-text">
-        <h1>Shisha zavodi · 3D raqamli maket</h1>
+        <h1>Oyna zavodi · 3D raqamli maket</h1>
         <p>{factoryConfig.subtitle.split('·')[0].trim()}</p>
       </div>
     </header>

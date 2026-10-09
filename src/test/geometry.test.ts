@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { factoryConfig } from '../config/factoryConfig';
-import { dimensionSpecs } from '../lib/dimensions';
+import { dimensionSpecs, dimText } from '../lib/dimensions';
 import { getSegments, rollerDoors, segmentsTotalLength, showroomRect } from '../lib/layout';
 import { runChecks } from '../lib/validation';
 import { buildMainShell } from '../scene/building/shellBuilders';
@@ -179,12 +179,17 @@ describe('o‘lcham chiziqlari geometriyadan hisoblanadi', () => {
     ['sr-width', 12],
     ['sr-depth', 24],
     ['sr-height', 9],
+    ['w-raw', 22],
+    ['w-fg', 18],
+    ['rear-f1', 4],
+    ['rear-f2', 4],
   ])('%s = %d m', (id, v) => {
     expect(specs[id].value).toBeCloseTo(v as number, 6);
   });
-  it('tasdiqlanmagan qiymatlar ≈ bilan belgilanadi', () => {
-    expect(specs['w-raw'].status).not.toBe('confirmed');
-    expect(specs['rear-f1'].status).not.toBe('confirmed');
-    expect(specs['len-front'].status).toBe('confirmed');
+  it('barcha o‘lcham chiziqlari aniq (≈ belgisiz)', () => {
+    for (const d of dimensionSpecs()) {
+      expect(d.status, d.id).toBe('confirmed');
+      expect(dimText(d).startsWith('≈'), d.id).toBe(false);
+    }
   });
 });

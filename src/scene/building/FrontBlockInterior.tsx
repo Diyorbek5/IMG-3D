@@ -53,92 +53,111 @@ export function addCrate(b: GeoBuilder, x: number, z: number, y0: number, w = 2.
 }
 
 /**
- * Old korpus ichki jihozlari: xomashyo qismi (A-stellajlar va ko‘prik kran),
- * tayyor mahsulot buferi (yashiklar), hamda vazifasi aniqlashtiriladigan zona belgisi.
+ * Xomashyo ombori (old korpusning o‘ng qismi, old fasadga qaraganda):
+ * A-stellajlardagi jumbo shisha listlari va ko‘prik kran. Forklift yo‘laklari bo‘sh qoldirilgan.
  */
-export function FrontBlockInterior() {
+export function RawMaterialWarehouse() {
   const front = getSegment('front');
   const px = factoryConfig.building.frontPartitionX;
-  const equipmentVisible = useStore((s) => s.layers.equipment);
   const parts = useMemo(() => {
     const b = new GeoBuilder();
     const g = new GeoBuilder();
-    // xomashyo: A-stellajlar (3-darvoza oldida bo‘sh joy qoldiriladi)
-    const zA = front.z1 - 2.6;
-    addAFrame(b, g, px + 5.2, zA, 6.2, 5);
-    addAFrame(b, g, px + 12.6, zA, 6.2, 4);
-    addAFrame(b, g, HALF_W - 3.6, zA - 3.5, 6.2, 5);
-    // ko‘prik kran yo‘llari (runway)
+    const x0 = -HALF_W;
+    // devor bo‘ylab A-stellajlar qatori
+    for (let z = front.z0 + 4.5; z < front.z1 - 2; z += 5.5) addAFrame(b, g, x0 + 4.2, z, 6.2, 5);
+    // 3-darvoza yonidagi qabul qilingan listlar (ko‘ndalang)
+    addAFrame(b, g, -8, front.z0 + 6.5, 6.0, 4, Math.PI / 2);
+    addAFrame(b, g, -8, front.z0 + 14, 6.0, 3, Math.PI / 2);
+    // ko‘prik kran yo‘llari (z bo‘ylab)
     const runY = front.height - factoryConfig.building.parapetHeight - 2.2;
-    for (const z of [front.z0 + 0.7, front.z1 - 0.5]) {
-      b.boxMinMax('paintYellow', px + 0.4, runY - 0.5, z - 0.15, HALF_W - 0.4, runY, z + 0.15);
-    }
-    // tayyor mahsulot buferi — yashiklar to‘plami (forklift yo‘laklari bo‘sh qoladi)
-    const crates: [number, number, number][] = [
-      [-18.4, 2.2, 0],
-      [-18.4, 2.2, 1],
-      [-18.4, 4.0, 0],
-      [-18.4, 6.0, 0],
-      [-18.4, 6.0, 1],
-      [-18.4, 8.0, 0],
-      [-10.4, 6.0, 0],
-      [-10.4, 6.0, 1],
-      [-10.4, 8.2, 0],
-      [-3.6, 7.6, 0],
-    ];
-    for (const [x, z, lvl] of crates) addCrate(b, x, z, FLOOR_Y + lvl * 1.95, 2.4, 1.0, 1.9);
-    // paletlar
-    b.box('wood', [-10.4, FLOOR_Y + 0.07, 3.4], [2.4, 0.14, 1.2]);
+    for (const x of [x0 + 0.6, px - 0.6]) b.boxMinMax('paintYellow', x - 0.15, runY - 0.5, front.z0 + 0.6, x + 0.15, runY, front.z1 - 0.6);
     return { solid: b.build(), glass: g.build(), runY };
   }, [front, px]);
-
-  if (!equipmentVisible) return null;
   return (
-    <group>
+    <group name="RawMaterialWarehouse">
       <Built parts={parts.solid} />
       <Built parts={parts.glass} castShadow={false} />
-      <GantryCrane x0={px + 0.6} x1={HALF_W - 0.6} z0={front.z0 + 0.7} z1={front.z1 - 0.5} y={parts.runY} />
+      <GantryCrane x0={-HALF_W + 0.6} x1={px - 0.6} z0={front.z0 + 2} z1={front.z1 - 2} y={parts.runY} />
     </group>
   );
 }
 
-/** Ko‘prik kran — runway bo‘ylab sekin harakatlanadi (animatsiya soatiga bog‘liq) */
+/** Tayyor mahsulotlar ombori (old korpusning chap qismi): yashiklar qatorlari, forklift yo‘laklari bo‘sh */
+export function FinishedGoodsWarehouse() {
+  const front = getSegment('front');
+  const parts = useMemo(() => {
+    const b = new GeoBuilder();
+    let k = 0;
+    for (const x of [5.6, 9.6, HALF_W - 1.4]) {
+      for (let z = front.z0 + 13; z < front.z1 - 2; z += 2.6) {
+        addCrate(b, x, z, FLOOR_Y, 2.4, 1.0, 1.9);
+        if (k++ % 3 !== 1) addCrate(b, x, z, FLOOR_Y + 1.95, 2.4, 1.0, 1.9);
+      }
+    }
+    // jo‘natishga tayyorlangan yashiklar (darvozalar yonida)
+    addCrate(b, 9.6, front.z0 + 4, FLOOR_Y, 2.4, 1.0, 1.9);
+    addCrate(b, HALF_W - 1.4, front.z0 + 4, FLOOR_Y, 2.4, 1.0, 1.9);
+    addCrate(b, HALF_W - 1.4, front.z0 + 6.6, FLOOR_Y, 2.4, 1.0, 1.9);
+    // yuklash zonasi belgisi
+    b.boxMinMax('markingYellow', 3, FLOOR_Y + 0.001, front.z0 + 9.6, HALF_W - 0.5, FLOOR_Y + 0.005, front.z0 + 9.75);
+    return b.build();
+  }, [front]);
+  return (
+    <group name="FinishedGoodsWarehouse">
+      <Built parts={parts} />
+    </group>
+  );
+}
+
+/** Old korpus (omborlar maydoni) ichki jihozlari */
+export function FrontBlockInterior() {
+  const equipmentVisible = useStore((s) => s.layers.equipment);
+  if (!equipmentVisible) return null;
+  return (
+    <group>
+      <RawMaterialWarehouse />
+      <FinishedGoodsWarehouse />
+    </group>
+  );
+}
+
+/** Ko‘prik kran — x bo‘ylab ko‘prik, z bo‘ylab runway; animatsiya soatiga bog‘liq */
 function GantryCrane({ x0, x1, z0, z1, y }: { x0: number; x1: number; z0: number; z1: number; y: number }) {
   const bridge = useRef<THREE.Group>(null);
   const hoist = useRef<THREE.Group>(null);
-  const span = z1 - z0;
+  const span = x1 - x0;
   const parts = useMemo(() => {
     const b = new GeoBuilder();
-    b.box('paintYellow', [0, 0.35, 0], [0.5, 0.7, span]);
-    b.box('paintYellow', [0.7, 0.35, 0], [0.3, 0.5, span]);
-    b.box('paintDark', [0, 0.25, -span / 2 + 0.3], [1.2, 0.5, 0.6]);
-    b.box('paintDark', [0, 0.25, span / 2 - 0.3], [1.2, 0.5, 0.6]);
+    b.box('paintYellow', [0, 0.35, 0], [span, 0.7, 0.5]);
+    b.box('paintYellow', [0, 0.35, 0.7], [span, 0.5, 0.3]);
+    b.box('paintDark', [-span / 2 + 0.3, 0.25, 0], [0.6, 0.5, 1.2]);
+    b.box('paintDark', [span / 2 - 0.3, 0.25, 0], [0.6, 0.5, 1.2]);
     return b.build();
   }, [span]);
   const hoistParts = useMemo(() => {
     const b = new GeoBuilder();
-    b.box('paintDark', [0, 0, 0], [1.0, 0.6, 0.9]);
+    b.box('paintDark', [0, 0, 0], [0.9, 0.6, 1.0]);
     b.cyl('steel', [0, -1.6, 0], 0.02, 3.0, 'y', 6);
     // vakuumli ko‘targich ramasi
-    b.box('paintOrange', [0, -3.2, 0], [0.12, 0.12, 2.6]);
-    b.box('paintOrange', [0, -3.2, 0], [1.6, 0.12, 0.12]);
+    b.box('paintOrange', [0, -3.2, 0], [2.6, 0.12, 0.12]);
+    b.box('paintOrange', [0, -3.2, 0], [0.12, 0.12, 1.6]);
     for (const [x, z] of [
-      [-0.7, -1.1],
-      [0.7, -1.1],
-      [-0.7, 1.1],
-      [0.7, 1.1],
+      [-1.1, -0.7],
+      [1.1, -0.7],
+      [-1.1, 0.7],
+      [1.1, 0.7],
     ])
       b.cyl('rubber', [x, -3.32, z], 0.16, 0.06, 'y', 14);
     return b.build();
   }, []);
   useFrame(() => {
     const t = simClock.t;
-    const u = (Math.sin(t * 0.07) + 1) / 2;
-    if (bridge.current) bridge.current.position.x = x0 + 1 + u * (x1 - x0 - 2);
-    if (hoist.current) hoist.current.position.z = Math.sin(t * 0.13) * (span / 2 - 1.2);
+    const u = (Math.sin(t * 0.05) + 1) / 2;
+    if (bridge.current) bridge.current.position.z = z0 + u * (z1 - z0);
+    if (hoist.current) hoist.current.position.x = Math.sin(t * 0.13) * (span / 2 - 1.5);
   });
   return (
-    <group ref={bridge} position={[x0 + 1, y, (z0 + z1) / 2]}>
+    <group ref={bridge} position={[(x0 + x1) / 2, y, z0]}>
       <Built parts={parts} />
       <group ref={hoist} position={[0, -0.1, 0]}>
         <Built parts={hoistParts} />

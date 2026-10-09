@@ -3,10 +3,7 @@ import type { Rect } from '../../config/factoryConfig';
 import { factoryConfig } from '../../config/factoryConfig';
 import { FLOOR_Y } from '../../lib/lineLayout';
 import { GeoBuilder, type MatKey } from '../../three/GeoBuilder';
-import { signTexture } from '../../three/textures';
-import { useStore } from '../../state/store';
 import { Built, Selectable } from '../common/Built';
-import { addAFrame, addCrate } from './FrontBlockInterior';
 import { curtainWall, wallWithHoles, type Hole } from './shellBuilders';
 
 export interface WarehouseDoor {
@@ -23,41 +20,24 @@ interface WarehouseProps {
   id: string;
   rect: Rect;
   height: number;
-  sign: string;
-  signFace: 'north' | 'west' | 'east';
   doors: WarehouseDoor[];
   /** qo‘shimcha past qanot (L-shakl) */
   wing?: Rect;
-  content: 'raw' | 'finished';
   cladding?: MatKey;
 }
 
-/** Sanoat ombori — sendvich-panel devorlar, rolikli darvozalar, tom, ichki stellajlar */
+/**
+ * Sanoat binosi (masterplandagi qo‘shni binolar): sendvich-panel devorlar, yopiq rolikli darvozalar, tom.
+ * Vazifasi ko‘rsatilmagani uchun nom va ichki jihozlar yo‘q; tomi doimo yopiq (kesim rejimida ham).
+ */
 export function Warehouse(p: WarehouseProps) {
-  const roofs = useStore((s) => s.layers.roofs);
   const parts = useMemo(() => build(p), [p]);
-  const r = p.rect;
-  const signTex = signTexture(p.sign.toUpperCase(), { bg: '#1d1f22', fg: '#ffffff', w: 2048, h: 220, weight: 700 });
-  const signW = Math.min(r.x1 - r.x0, r.z1 - r.z0) * 0.6;
-  const signPos: [number, number, number] =
-    p.signFace === 'north'
-      ? [(r.x0 + r.x1) / 2, p.height - 1.6, (p.wing ? Math.min(p.wing.z0, r.z0) : r.z0) - 0.08]
-      : p.signFace === 'west'
-        ? [r.x0 - 0.08, p.height - 1.6, (r.z0 + r.z1) / 2]
-        : [r.x1 + 0.08, p.height - 1.6, (r.z0 + r.z1) / 2];
-  const signRot = p.signFace === 'north' ? Math.PI : p.signFace === 'west' ? -Math.PI / 2 : Math.PI / 2;
-  const signX = p.signFace === 'north' && p.wing ? (Math.max(p.wing.x1, r.x0) + r.x1) / 2 : signPos[0];
   return (
     <Selectable id={p.id}>
       <group name={p.id}>
         <Built parts={parts.shell} />
         <Built parts={parts.glass} castShadow={false} />
-        <Built parts={parts.interior} />
-        {roofs && <Built parts={parts.roof} dispose={false} />}
-        <mesh position={[p.signFace === 'north' && p.wing ? signX : signPos[0], signPos[1], p.signFace === 'north' ? r.z0 - 0.08 : signPos[2]]} rotation={[0, signRot, 0]}>
-          <planeGeometry args={[signW, (signW * 220) / 2048]} />
-          <meshStandardMaterial map={signTex} roughness={0.5} metalness={0.2} polygonOffset polygonOffsetFactor={-2} />
-        </mesh>
+        <Built parts={parts.roof} />
       </group>
     </Selectable>
   );
@@ -154,110 +134,32 @@ function build(p: WarehouseProps) {
       for (let z = r.z0 + 4; z < r.z1 - 2; z += 8) roof.box('lightPanel', [x, H - 1.7, z], [1.2, 0.06, 0.4]);
   });
 
-  /* ---- ichki jihozlar ---- */
-  const r = p.rect;
-  if (p.content === 'raw') {
-    // A-stellaj qatorlari (forklift yo‘laklari bilan)
-    for (let z = r.z0 + 10; z < r.z1 - 6; z += 7.5) {
-      for (let x = r.x0 + 6; x < r.x1 - 4; x += 8) {
-        if (Math.abs(x - (r.x0 + 26)) < 4) continue; // markaziy yo‘lak
-        if (z > 40 && z < 50 && x < r.x0 + 24) continue; // galereya yo‘lagi
-        addAFrame(interior, glass, x, z, 6.2, 4);
-      }
-    }
-    // pol belgilari: yo‘lak chiziqlari
-    interior.boxMinMax('markingYellow', r.x0 + 23.6, FLOOR_Y + 0.001, r.z0 + 1, r.x0 + 23.72, FLOOR_Y + 0.004, r.z1 - 1);
-    interior.boxMinMax('markingYellow', r.x0 + 28.3, FLOOR_Y + 0.001, r.z0 + 1, r.x0 + 28.42, FLOOR_Y + 0.004, r.z1 - 1);
-  } else {
-    // tayyor mahsulot: yashiklar qatorlari va stellajlar
-    for (let x = r.x0 + 4; x < r.x1 - 3; x += 4.2) {
-      for (let z = r.z0 + 6.5; z < r.z1 - 2; z += 2.6) {
-        if (Math.abs(x - 108) < 3.5 || Math.abs(x - 116) < 3) continue; // ichki yo‘laklar
-        addCrate(interior, x, z, FLOOR_Y, 2.4, 1.0, 1.9);
-        if ((Math.round(x) + Math.round(z)) % 3 !== 0) addCrate(interior, x, z, FLOOR_Y + 1.95, 2.4, 1.0, 1.9);
-      }
-    }
-    // baland stellaj (palet tokchalari)
-    for (const z of [r.z1 - 1.2]) {
-      for (let x = r.x0 + 2; x < r.x1 - 2; x += 2.8) {
-        interior.box('paintBlue', [x, 3, z], [0.1, 6, 1.1]);
-      }
-      for (const y of [0.15, 2.0, 3.9, 5.8]) interior.box('paintOrange', [(r.x0 + r.x1) / 2, y, z], [r.x1 - r.x0 - 4, 0.12, 1.1]);
-    }
-    if (p.wing) {
-      const w = p.wing;
-      addCrate(interior, w.x0 + 3, (w.z0 + r.z0) / 2 + 3, FLOOR_Y, 2.4, 1, 1.9);
-    }
-  }
   void factoryConfig;
-  return { shell: shell.build(), glass: glass.build(), roof: roof.build(), interior: interior.build() };
+  void interior;
+  return { shell: shell.build(), glass: glass.build(), roof: roof.build() };
 }
 
-/** Xomashyo ombori + asosiy bino bilan bog‘lovchi yopiq galereya */
-export function RawMaterialWarehouse() {
-  const rw = factoryConfig.rawWarehouse;
-  const props = useMemo<WarehouseProps>(
-    () => ({
-      id: rw.id,
-      rect: rw.rect,
-      height: rw.height,
-      sign: 'Xomashyo ombori',
-      signFace: 'north',
-      content: 'raw',
-      doors: [
-        { face: 'north', at: 50, width: 4.5, height: 5, open: 1 },
-        { face: 'north', at: 36, width: 4.5, height: 5, open: 0 },
-        { face: 'west', at: (rw.gallery.z0 + rw.gallery.z1) / 2, width: rw.gallery.z1 - rw.gallery.z0 - 0.6, height: rw.gallery.height - 0.8, open: 1 },
-      ],
-    }),
-    [rw],
-  );
-  const gallery = useMemo(() => {
-    const b = new GeoBuilder();
-    const g = rw.gallery;
-    const x0 = factoryConfig.building.width / 2;
-    const x1 = rw.rect.x0;
-    b.boxMinMax('cladding', x0, 0.2, g.z0 - 0.2, x1, g.height, g.z0);
-    b.boxMinMax('cladding', x0, 0.2, g.z1, x1, g.height, g.z1 + 0.2);
-    b.boxMinMax('roof', x0, g.height, g.z0 - 0.3, x1, g.height + 0.25, g.z1 + 0.3);
-    b.boxMinMax('aluminium', x0, g.height + 0.25, g.z0 - 0.35, x1, g.height + 0.35, g.z0 - 0.25);
-    b.boxMinMax('concrete', x0, 0, g.z0, x1, FLOOR_Y, g.z1);
-    return b.build();
-  }, [rw]);
-  return (
-    <group name="RawMaterialWarehouse">
-      <Warehouse {...props} />
-      <Selectable id={rw.id}>
-        <Built parts={gallery} />
-      </Selectable>
-    </group>
-  );
-}
-
-export function FinishedGoodsWarehouse() {
-  const fw = factoryConfig.finishedWarehouse;
-  const props = useMemo<WarehouseProps>(
-    () => ({
-      id: fw.id,
-      rect: fw.rect,
-      wing: fw.wing,
-      height: fw.height,
-      sign: 'Tayyor mahsulotlar ombori',
-      signFace: 'north',
-      content: 'finished',
-      cladding: 'cladding',
-      doors: [
-        { face: 'north', at: 116, width: 4.5, height: 5, open: 1 },
-        { face: 'north', at: 92, width: 4.5, height: 4.5, open: 1 },
-        { face: 'north', at: 124, width: 4.5, height: 5, open: 0 },
-        { face: 'west', at: 50, width: 4.5, height: 5, open: 0 },
-      ],
-    }),
-    [fw],
+/** Masterplandagi asosiy bino yonidagi ikki bino — nomsiz, tomi yopiq */
+export function NeighborBuildings() {
+  const list = useMemo(
+    () =>
+      factoryConfig.neighborBuildings.map<WarehouseProps>((b) => ({
+        id: b.id,
+        rect: b.rect,
+        wing: b.wing,
+        height: b.height,
+        doors: [
+          { face: 'north', at: b.rect.x0 + (b.rect.x1 - b.rect.x0) * 0.3, width: 4.5, height: 5, open: 0 },
+          { face: 'north', at: b.rect.x0 + (b.rect.x1 - b.rect.x0) * 0.7, width: 4.5, height: 5, open: 0 },
+        ],
+      })),
+    [],
   );
   return (
-    <group name="FinishedGoodsWarehouse">
-      <Warehouse {...props} />
+    <group name="NeighborBuildings">
+      {list.map((p) => (
+        <Warehouse key={p.id} {...p} />
+      ))}
     </group>
   );
 }

@@ -6,7 +6,7 @@ import { factoryConfig } from '../../config/factoryConfig';
 import { animationConfig } from '../../config/animationConfig';
 import { dimensionSpecs, dimText } from '../../lib/dimensions';
 import { getEntity } from '../../lib/entities';
-import { getSegments, HALF_W, roadFrame } from '../../lib/layout';
+import { getSegments, HALF_W, roadFrame, showroomRect } from '../../lib/layout';
 import { computeLineLayout, FLOOR_Y } from '../../lib/lineLayout';
 import { Path2D, type P2 } from '../../lib/motion';
 import { simClock, useStore } from '../../state/store';
@@ -21,10 +21,8 @@ export function Dimensions() {
   const specs = useMemo(() => dimensionSpecs(), []);
   const target: Record<string, string> = {
     'len-front': 'seg-front',
-    'len-tbd': 'seg-tbd',
     'len-production': 'seg-production',
     'len-rear': 'seg-rear',
-    'h-tbd': 'seg-tbd',
     'h-production': 'seg-production',
     'h-rear': 'seg-rear',
     'rear-f1': 'seg-rear',
@@ -32,8 +30,8 @@ export function Dimensions() {
     'sr-width': 'showroom',
     'sr-depth': 'showroom',
     'sr-height': 'showroom',
-    'yard-w': 'front-yard',
-    'yard-d': 'front-yard',
+    'w-raw': 'raw-buffer',
+    'w-fg': 'fg-buffer',
     'front-height': 'seg-front',
   };
   return (
@@ -72,19 +70,26 @@ export function ScaleGrid() {
 export function ZoneLabels() {
   const on = useStore((s) => s.layers.labels);
   const roofs = useStore((s) => s.layers.roofs);
+  const upperFloor = useStore((s) => s.layers.upperFloor);
   const select = useStore((s) => s.select);
   const labels = useMemo(() => {
     const segs = getSegments();
     const L = computeLineLayout();
-    const out: { id: string; text: string; pos: [number, number, number]; kind: 'major' | 'minor' }[] = [];
-    for (const s of segs) out.push({ id: `seg-${s.id}`, text: s.shortName, pos: [0, s.height + 2.5, (s.z0 + s.z1) / 2], kind: 'major' });
+    const out: { id: string; text: string; pos: [number, number, number]; kind: 'major' | 'minor' | 'room1' | 'room2' }[] = [];
+    for (const s of segs) if (s.id !== 'front') out.push({ id: `seg-${s.id}`, text: s.shortName, pos: [0, s.height + 2.5, (s.z0 + s.z1) / 2], kind: 'major' });
     const c = factoryConfig;
-    const rw = c.rawWarehouse.rect;
-    const fw = c.finishedWarehouse.rect;
-    out.push({ id: 'showroom', text: 'Showroom', pos: [15.5, c.showroom.height + 2.2, -7.5], kind: 'major' });
-    out.push({ id: 'raw-warehouse', text: c.rawWarehouse.name, pos: [(rw.x0 + rw.x1) / 2, c.rawWarehouse.height + 2.5, (rw.z0 + rw.z1) / 2], kind: 'major' });
-    out.push({ id: 'fg-warehouse', text: c.finishedWarehouse.name, pos: [(fw.x0 + fw.x1) / 2, c.finishedWarehouse.height + 2.5, (fw.z0 + fw.z1) / 2], kind: 'major' });
-    out.push({ id: 'front-yard', text: 'Old hovli 40 × 40 m', pos: [-6, 1.5, -24], kind: 'major' });
+    const sr = showroomRect();
+    const front = segs[0];
+    const px = c.building.frontPartitionX;
+    out.push({ id: 'showroom', text: 'Showroom', pos: [(sr.x0 + sr.x1) / 2, c.showroom.height + 2.2, (sr.z0 + sr.z1) / 2], kind: 'major' });
+    out.push({ id: 'raw-buffer', text: 'Xomashyo ombori', pos: [(-HALF_W + px) / 2, front.height + 1.2, front.z0 + front.length * 0.62], kind: 'major' });
+    out.push({ id: 'fg-buffer', text: 'Tayyor mahsulotlar ombori', pos: [(HALF_W + px) / 2, front.height + 1.2, front.z0 + front.length * 0.62], kind: 'major' });
+    out.push({ id: 'front-yard', text: 'Yuklash-tushirish maydoni', pos: [6, 1.5, -30], kind: 'minor' });
+    for (const m of c.rearRooms) {
+      const r = segs[segs.length - 1];
+      const y = m.floor === 1 ? FLOOR_Y + 2.6 : c.building.rearFirstFloorHeight + 2.4;
+      out.push({ id: m.id, text: m.name.split(' (')[0], pos: [(m.x0 + m.x1) / 2, y, r.z0 + 6.5], kind: m.floor === 1 ? 'room1' : 'room2' });
+    }
     const rf = roadFrame();
     const rp = rf.toWorld(-40, 0);
     out.push({ id: 'road', text: 'Katta avtomobil yo‘li', pos: [rp.x, 2, rp.z], kind: 'major' });
@@ -94,21 +99,20 @@ export function ZoneLabels() {
     // ichki zonalar (kesim rejimida)
     for (const st of L.stations) out.push({ id: st.id, text: st.name, pos: [st.cx, FLOOR_Y + st.height + 0.9, st.cz], kind: 'minor' });
     out.push({ id: 'qc-zone', text: 'OTK/GPO sifat nazorati', pos: [(L.qualityZone.x0 + L.qualityZone.x1) / 2 - 3, 3.0, (L.qualityZone.z0 + L.qualityZone.z1) / 2], kind: 'major' });
-    out.push({ id: 'raw-buffer', text: 'Xomashyo qabul qilish', pos: [9, 4, 5], kind: 'minor' });
-    out.push({ id: 'fg-buffer', text: 'Tayyor mahsulot buferi', pos: [-11, 4, 5], kind: 'minor' });
     for (const o of L.optional) out.push({ id: o.id, text: o.name, pos: [o.cx, FLOOR_Y + o.height + 0.9, o.cz], kind: 'minor' });
     return out;
   }, []);
   if (!on) return null;
-  const interior = new Set(['qc-zone', 'raw-buffer', 'fg-buffer', ...computeLineLayout().stations.map((s) => s.id), ...computeLineLayout().optional.map((o) => o.id)]);
+  const interior = new Set(['qc-zone', ...computeLineLayout().stations.map((s) => s.id), ...computeLineLayout().optional.map((o) => o.id)]);
   return (
     <group name="ZoneLabels">
       {labels
         .filter((l) => (interior.has(l.id) ? !roofs : true))
-        .filter((l) => (!roofs ? !l.id.startsWith('seg-') || l.id === 'seg-tbd' : true))
+        .filter((l) => (!roofs ? !l.id.startsWith('seg-') : true))
+        .filter((l) => (l.kind === 'room2' ? !roofs && upperFloor : l.kind === 'room1' ? !roofs && !upperFloor : true))
         .map((l) => (
           <Html key={l.id} position={l.pos} center zIndexRange={[12, 2]}>
-            <ManagedLabel position={l.pos} priority={l.kind === 'major' ? 3 : 4} className={`zone-label zone-label--${l.kind}`} onClick={() => select(l.id)}>
+            <ManagedLabel position={l.pos} priority={l.kind === 'major' ? 3 : 4} className={`zone-label zone-label--${l.kind === 'major' ? 'major' : 'minor'}`} onClick={() => select(l.id)}>
               {l.text}
             </ManagedLabel>
           </Html>
@@ -164,15 +168,29 @@ export function FlowArrows() {
     const find = (id: string) => fl.find((f) => f.id === id)!.route;
     const roadIn = rf.toWorld(-90, lane);
     const roadOut = rf.toWorld(90 + factoryConfig.site.exitGateX, lane);
-    const raw: P2[] = [[roadIn.x, roadIn.z], [tr.siteRoute[0][0], rf.zAt(tr.siteRoute[0][0], lane)], ...tr.siteRoute.slice(0, 3), [tr.raw.stop[0], tr.raw.stop[1]], [tr.raw.stop[0], 30], ...find('fl-gallery')];
+    const rawFl = find('fl-raw-unload');
+    const rawIn = find('fl-raw-internal');
     const linePts: P2[] = L.path.sample(1.0);
+    // Katta yo‘l → kirish → 3-darvoza oldida tushirish → xomashyo ombori → yuklash stoli
+    const raw: P2[] = [
+      [roadIn.x, roadIn.z],
+      [tr.siteRoute[0][0], rf.zAt(tr.siteRoute[0][0], lane)],
+      ...tr.siteRoute.slice(0, 3),
+      [rawFl[0][0], tr.laneZ],
+      [rawFl[0][0], rawFl[0][1]],
+      [rawIn[0][0], rawIn[0][1]],
+      [rawIn[1][0], rawIn[1][1]],
+      linePts[0],
+    ];
+    const fgIn = find('fl-fg-internal');
+    const fgOut = find('fl-fg-load');
+    // qadoqlash → tayyor mahsulotlar ombori → 1-darvoza → yuk mashinasi → chiqish
     const fg: P2[] = [
-      [L.packedStaging.x0 + 2, L.packedStaging.z0],
-      ...find('fl-fg-internal').slice(1),
-      ...find('fl-fg-transfer'),
-      [tr.finished.stop[0], 41.5],
-      [tr.finished.stop[0], tr.finished.stop[1]],
-      [factoryConfig.site.exitGateX, tr.finished.stop[1]],
+      [fgIn[1][0], L.packedStaging.z0 + 1],
+      [fgIn[0][0], fgIn[0][1]],
+      [fgOut[0][0], fgOut[0][1]],
+      [fgOut[0][0], tr.laneZ],
+      ...tr.siteRoute.slice(3),
       [factoryConfig.site.exitGateX, rf.zAt(factoryConfig.site.exitGateX, lane)],
       [roadOut.x, roadOut.z],
     ];

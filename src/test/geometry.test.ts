@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { factoryConfig } from '../config/factoryConfig';
 import { dimensionSpecs } from '../lib/dimensions';
-import { frontYardRect, getSegments, rollerDoors, segmentsTotalLength, showroomRect } from '../lib/layout';
+import { getSegments, rollerDoors, segmentsTotalLength, showroomRect } from '../lib/layout';
 import { runChecks } from '../lib/validation';
 import { buildMainShell } from '../scene/building/shellBuilders';
 import type { BuiltPart } from '../three/GeoBuilder';
@@ -29,30 +29,44 @@ function bounds(parts: BuiltPart[], key: string) {
 }
 
 describe('bino o‘lchamlari (konfiguratsiya)', () => {
-  it('umumiy uzunlik 125 m saqlangan, 30 m alohida zona', () => {
+  it('umumiy uzunlik 125 m: omborlar 40 + ishlab chiqarish 75 + oxirgi qism 10', () => {
     expect(factoryConfig.building.totalLength).toBe(125);
     expect(segmentsTotalLength()).toBe(125);
     const segs = getSegments();
     const byId = Object.fromEntries(segs.map((s) => [s.id, s]));
-    expect(byId.front.length).toBe(10);
+    expect(byId.front.length).toBe(40);
     expect(byId.front.height).toBe(12);
     expect(byId.production.length).toBe(75);
     expect(byId.production.height).toBe(5);
     expect(byId.rear.length).toBe(10);
     expect(byId.rear.height).toBe(8);
     expect(byId.rear.floors).toBe(2);
-    expect(byId.tbd.length).toBe(30);
-    expect(byId.tbd.lengthStatus).toBe('unconfirmed');
+    expect(segs.map((s) => s.id)).toEqual(['front', 'production', 'rear']);
   });
 
-  it('showroom 9 × 15 m, 3 ta darvoza, 40 × 40 m hovli', () => {
+  it('showroom 9 × 15 × 6 m old fasadning o‘ng tomonida (x < 0), 3 ta darvoza', () => {
     const r = showroomRect();
     expect(r.x1 - r.x0).toBe(9);
     expect(r.z1 - r.z0).toBe(15);
+    expect(factoryConfig.showroom.height).toBe(6);
+    expect(r.x1).toBeLessThanOrEqual(0);
     expect(rollerDoors()).toHaveLength(3);
-    const y = frontYardRect();
-    expect(y.x1 - y.x0).toBe(40);
-    expect(y.z1 - y.z0).toBe(40);
+  });
+
+  it('omborlar maydoni 40 × 40 m ikkiga bo‘lingan', () => {
+    const front = getSegments()[0];
+    expect(front.length).toBe(40);
+    expect(factoryConfig.building.width).toBe(40);
+    const px = factoryConfig.building.frontPartitionX;
+    expect(px).toBeGreaterThan(-20);
+    expect(px).toBeLessThan(20);
+  });
+
+  it('oxirgi qismda talab qilingan xonalar bor', () => {
+    const names = factoryConfig.rearRooms.map((r) => r.name.toLowerCase()).join(' | ');
+    expect(names).toContain('oshxona');
+    expect(names).toContain('ishlab chiqarish rahbari');
+    expect(names).toContain('texnik xona');
   });
 
   it('barcha texnik tekshiruvlar o‘tadi', () => {
@@ -88,13 +102,41 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     expect(slab.min.z).toBeGreaterThanOrEqual(115);
   });
 
-  it('shisha burchak: old va yon fasadda vitraj', () => {
+  it('old fasad to‘liq shisha (40 m bo‘ylab) va showroom burchagida yon fasad ham shisha', () => {
     const glass = p.glass.build();
-    const b = bounds(glass, 'glass');
-    // sharqiy burchak (x = 11…20), old fasad (z ≈ 0) va yon fasad (z 0…10)
-    expect(b.max.x).toBeCloseTo(20, 1);
-    expect(b.min.x).toBeLessThanOrEqual(11.01);
-    expect(b.max.z).toBeGreaterThanOrEqual(9.9);
+    // old fasaddagi shisha (z ≈ 0) qamrovi
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let maxY = 0;
+    let sideMaxZ = 0;
+    for (const part of glass) {
+      if (part.key !== 'glass') continue;
+      const pos = part.geometry.getAttribute('position');
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        if (Math.abs(z) < 0.1) {
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, pos.getY(i));
+        }
+        if (x < -19.9) sideMaxZ = Math.max(sideMaxZ, z);
+      }
+    }
+    expect(minX).toBeLessThan(-19.5);
+    expect(maxX).toBeGreaterThan(19.5);
+    expect(maxY).toBeCloseTo(12 - factoryConfig.building.parapetHeight, 2);
+    expect(sideMaxZ).toBeGreaterThanOrEqual(9.9);
+  });
+
+  it('tomning yarmida quyosh panellari', () => {
+    const roof = p.roof.build();
+    const b = bounds(roof, 'solar');
+    expect(b.isEmpty()).toBe(false);
+    const east = factoryConfig.solar.side === 'east';
+    if (east) expect(b.min.x).toBeGreaterThanOrEqual(0);
+    else expect(b.max.x).toBeLessThanOrEqual(0);
+    expect(b.max.x - b.min.x).toBeGreaterThan(17);
   });
 });
 
@@ -104,21 +146,20 @@ describe('o‘lcham chiziqlari geometriyadan hisoblanadi', () => {
     ['bld-width', 40],
     ['bld-length', 125],
     ['front-height', 12],
-    ['yard-w', 40],
-    ['yard-d', 40],
-    ['len-front', 10],
-    ['len-tbd', 30],
+    ['len-front', 40],
     ['len-production', 75],
     ['len-rear', 10],
     ['h-production', 5],
     ['h-rear', 8],
     ['sr-width', 9],
     ['sr-depth', 15],
+    ['sr-height', 6],
   ])('%s = %d m', (id, v) => {
     expect(specs[id].value).toBeCloseTo(v as number, 6);
   });
   it('tasdiqlanmagan qiymatlar ≈ bilan belgilanadi', () => {
-    expect(specs['len-tbd'].status).not.toBe('confirmed');
-    expect(specs['sr-height'].status).not.toBe('confirmed');
+    expect(specs['w-raw'].status).not.toBe('confirmed');
+    expect(specs['rear-f1'].status).not.toBe('confirmed');
+    expect(specs['len-front'].status).toBe('confirmed');
   });
 });

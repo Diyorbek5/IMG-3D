@@ -227,7 +227,7 @@ function Forklift({ v }: { v: VehicleDef }) {
 
 /** Bino yoki ombor ichidami (pol sathi 0.15 m balandroq) */
 function isInside(x: number, z: number) {
-  return (x > -20 && x < 20 && z > 0 && z < 125) || (x > 24 && x < 64 && z > 27 && z < 68) || (x > 84 && x < 131 && z > 33 && z < 60);
+  return x > -20 && x < 20 && z > 0 && z < 125;
 }
 
 function RoadCar({ v }: { v: VehicleDef }) {

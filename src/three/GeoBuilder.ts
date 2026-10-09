@@ -14,6 +14,7 @@ export type MatKey =
   | 'glass'
   | 'glassTint'
   | 'glassDark'
+  | 'solar'
   | 'steel'
   | 'galvanized'
   | 'paintWhite'

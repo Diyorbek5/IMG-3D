@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { factoryConfig } from '../../config/factoryConfig';
 import { GeoBuilder, type MatKey } from '../../three/GeoBuilder';
 import { getSegments, HALF_W, rollerDoors, showroomRect, type SegmentLayout } from '../../lib/layout';
@@ -149,9 +150,7 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
   const plinth = 0.6;
   const gc = cfg.glassCorner;
   const sign = gc.side === 'east' ? 1 : -1;
-  const glassX0 = sign > 0 ? W - gc.facadeWidth : -W;
-  const glassX1 = sign > 0 ? W : -W + gc.facadeWidth;
-  const sr = showroomRect(cfg);
+    const sr = showroomRect(cfg);
   const front = segs[0];
 
   /* ---------- Poydevor va pol ---------- */
@@ -179,11 +178,6 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
           holes.push({ a0: za, a1: zb, y0: rb[0], y1: rb[1] });
           curtainWall(glass, shell, 'z', x + side * -0.05, za, zb, rb[0], rb[1], 1.5, [], { glassKey: 'glassTint', depth: 0.12 });
         }
-      }
-      // galereya ochig‘i (xomashyo ombori bilan bog‘lanish)
-      const gal = cfg.rawWarehouse.gallery;
-      if (side === 1 && seg.id === 'production' && gal.z0 >= seg.z0 && gal.z1 <= seg.z1) {
-        holes.push({ a0: gal.z0, a1: gal.z1, y0: 0, y1: Math.min(gal.height - 0.6, seg.height - P - 0.4) });
       }
       if (seg.id === 'rear') {
         // ikki qavatli: ikki qator derazalar
@@ -240,43 +234,45 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     }
   }
 
-  /* ---------- Old fasad (z = 0) ---------- */
+  /* ---------- Old fasad (z = 0): to‘liq shisha vitraj, 3 ta darvoza ---------- */
   {
-    const holes: Hole[] = [];
-    for (const d of rollerDoors(cfg)) holes.push({ a0: d.cx - d.width / 2, a1: d.cx + d.width / 2, y0: 0, y1: d.height });
-    // shisha burchak — to‘liq balandlikda vitraj
-    holes.push({ a0: glassX0, a1: glassX1, y0: 0, y1: front.height - P });
-    // lenta deraza
-    const rb = ribbonFor(front)!;
-    // lenta deraza: logotip paneli (shisha burchak yonida, ~11 m) uchun joy qoldiriladi
-    const ribA0 = sign > 0 ? -W + 1.5 : glassX1 + 12.5;
-    const ribA1 = sign > 0 ? glassX0 - 12.5 : W - 1.5;
-    holes.push({ a0: ribA0, a1: ribA1, y0: rb[0], y1: rb[1] });
-    wallWithHoles(shell, 'cladding', 'x', 0, 1, -W, W, plinth, front.height, holes, t);
-    wallWithHoles(shell, 'concreteDark', 'x', -0.03, 1, -W, W, 0, plinth, holes.filter((h) => h.y0 < plinth), t + 0.06);
-    curtainWall(glass, shell, 'x', -0.04, ribA0, ribA1, rb[0], rb[1], 1.5, [], { glassKey: 'glassTint', depth: 0.12 });
-    // old fasad pilastrlari (konstruktiv qadam bo‘yicha), darvoza va vitrajlardan tashqari
-    for (let x = -W + cfg.building.bayLength; x < W - 0.5; x += cfg.building.bayLength) {
-      if (holes.some((h) => x > h.a0 - 0.4 && x < h.a1 + 0.4 && h.y0 < 1)) continue;
-      if (x > glassX0 - 0.4 && x < glassX1 + 0.4) continue;
-      shell.boxMinMax('claddingDark', x - 0.15, plinth, -0.08, x + 0.15, rb[0], 0);
-      shell.boxMinMax('claddingDark', x - 0.15, rb[1], -0.08, x + 0.15, front.height - 0.15, 0);
+    const doors = rollerDoors(cfg).slice().sort((a, b) => a.cx - b.cx);
+    const roofY = front.height - P;
+    const transoms = transomLevels(FLOOR_Y, roofY, gc.transomSpacing);
+    if (gc.fullFrontGlazing) {
+      // darvozalar orasidagi to‘liq balandlikdagi vitraj bo‘laklari
+      let x = -W + 0.12;
+      for (const d of [...doors, null]) {
+        const xe = d ? d.cx - d.width / 2 - 0.12 : W - 0.12;
+        if (xe - x > 0.3) curtainWall(glass, shell, 'x', 0.02, x, xe, FLOOR_Y, roofY, gc.mullionSpacing, transoms, { heavyEvery: 4, depth: 0.2 });
+        if (d) {
+          // darvoza ustidagi vitraj
+          curtainWall(glass, shell, 'x', 0.02, d.cx - d.width / 2 - 0.12, d.cx + d.width / 2 + 0.12, d.height + 0.12, roofY, gc.mullionSpacing, transoms.filter((y) => y > d.height + 0.5), { depth: 0.2 });
+          // darvoza ustidagi ko‘ndalang to‘sin
+          shell.boxMinMax('aluDark', d.cx - d.width / 2 - 0.12, d.height, -0.1, d.cx + d.width / 2 + 0.12, d.height + 0.14, t);
+          x = d.cx + d.width / 2 + 0.12;
+        }
+      }
+      // parapet bandi va sokol
+      shell.boxMinMax('claddingDark', -W, roofY, 0, W, front.height, t);
+      shell.boxMinMax('concreteDark', -W, 0, -0.03, W, FLOOR_Y, t);
+    } else {
+      const holes: Hole[] = doors.map((d) => ({ a0: d.cx - d.width / 2, a1: d.cx + d.width / 2, y0: 0, y1: d.height }));
+      wallWithHoles(shell, 'cladding', 'x', 0, 1, -W, W, plinth, front.height, holes, t);
     }
     // burchak qoplamalari
-    shell.boxMinMax('aluminium', -W - 0.1, plinth, -0.1, -W + 0.12, front.height, 0.12);
-    // shisha burchakning old qismi (showroom ortida pastda ichki vitraj bo‘lib qoladi)
-    curtainWall(glass, shell, 'x', 0.02, glassX0, glassX1, FLOOR_Y, front.height - P, gc.mullionSpacing, transomLevels(FLOOR_Y, front.height - P, gc.transomSpacing), { heavyEvery: 3 });
+    shell.boxMinMax('aluDark', -W - 0.12, 0, -0.12, -W + 0.15, front.height, 0.15);
+    shell.boxMinMax('aluDark', W - 0.15, 0, -0.12, W + 0.12, front.height, 0.15);
     // darvozalar ustidagi soyabon (kozirek)
-    for (const d of rollerDoors(cfg)) {
+    for (const d of doors) {
       shell.boxMinMax('aluDark', d.cx - d.width / 2 - 0.9, d.height + 0.85, -1.7, d.cx + d.width / 2 + 0.9, d.height + 1.0, 0);
-      shell.box('steel', [d.cx - d.width / 2 - 0.7, d.height + 1.6, -0.85], [0.05, 1.5, 0.05]);
       shell.beam('steel', [d.cx - d.width / 2 - 0.7, d.height + 0.95, -1.65], [d.cx - d.width / 2 - 0.7, d.height + 2.3, -0.02], 0.05);
       shell.beam('steel', [d.cx + d.width / 2 + 0.7, d.height + 0.95, -1.65], [d.cx + d.width / 2 + 0.7, d.height + 2.3, -0.02], 0.05);
       // darvoza atrofidagi ramka
       shell.boxMinMax('aluDark', d.cx - d.width / 2 - 0.12, 0, -0.06, d.cx - d.width / 2, d.height + 0.05, t);
       shell.boxMinMax('aluDark', d.cx + d.width / 2, 0, -0.06, d.cx + d.width / 2 + 0.12, d.height + 0.05, t);
       // urilishdan himoya ustunchalari (sariq)
-      for (const s of [-1, 1]) shell.cyl('paintYellow', [d.cx + s * (d.width / 2 + 0.45), 0.6, -0.5], 0.11, 1.2, 'y', 12);
+      for (const sx of [-1, 1]) shell.cyl('paintYellow', [d.cx + sx * (d.width / 2 + 0.45), 0.6, -0.5], 0.11, 1.2, 'y', 12);
     }
   }
 
@@ -311,7 +307,8 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     const ff = cfg.building.rearFirstFloorHeight;
     const holesLower: Hole[] = [];
     const holesUpper: Hole[] = [];
-    const doorX = -2;
+    // xodimlar kirishi — zinapoya joylashgan hol tomonida
+    const doorX = 17;
     holesLower.push({ a0: doorX - 1.6, a1: doorX + 1.6, y0: 0, y1: 2.9 });
     for (let x = -W + 3; x <= W - 3; x += 4.5) {
       if (Math.abs(x - doorX) < 3) continue;
@@ -342,9 +339,14 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     const isProd = seg.id === 'production';
     // tom plitasi (zenit fonarlari uchun bo‘laklarga ajratilgan)
     const sky: [number, number][] = [];
-    if (isProd || seg.id === 'tbd') {
+    if (seg.id !== 'rear') {
       for (let z = seg.z0 + 6; z < seg.z1 - 4; z += 12) sky.push([z, z + 2.2]);
     }
+    const solarHere = cfg.solar.segments.includes(seg.id);
+    const sSign = cfg.solar.side === 'east' ? 1 : -1;
+    // zenit fonarlari quyosh panellari bo‘lmagan yarimda
+    const skyX0 = solarHere ? (sSign > 0 ? -W + 3 : 1.5) : -W + 3;
+    const skyX1 = solarHere ? (sSign > 0 ? -1.5 : W - 3) : W - 3;
     let cz = seg.z0;
     const roofSpans: [number, number][] = [];
     for (const [a, b] of sky) {
@@ -359,12 +361,29 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     }
     // zenit fonarlari (polikarbonat/shisha)
     for (const [a, b] of sky) {
-      roof.boxMinMax('glass', -W + 3, roofY + 0.25, a + 0.1, W - 3, roofY + 0.27, b - 0.1);
-      roof.boxMinMax('aluminium', -W + 3, roofY, a, W - 3, roofY + 0.25, a + 0.1);
-      roof.boxMinMax('aluminium', -W + 3, roofY, b - 0.1, W - 3, roofY + 0.25, b);
+      roof.boxMinMax('glass', skyX0, roofY + 0.25, a + 0.1, skyX1, roofY + 0.27, b - 0.1);
+      roof.boxMinMax('aluminium', skyX0, roofY, a, skyX1, roofY + 0.25, a + 0.1);
+      roof.boxMinMax('aluminium', skyX0, roofY, b - 0.1, skyX1, roofY + 0.25, b);
       // fonar ochig‘ining tom bilan tutashgan qismlari
-      roof.boxMinMax('roof', -W + t, roofY - 0.3, a, -W + 3, roofY, b);
-      roof.boxMinMax('roof', W - 3, roofY - 0.3, a, W - t, roofY, b);
+      roof.boxMinMax('roof', -W + t, roofY - 0.3, a, skyX0, roofY, b);
+      roof.boxMinMax('roof', skyX1, roofY - 0.3, a, W - t, roofY, b);
+    }
+    // quyosh panellari (tomning yarmida): janubga qiyalatilgan qatorlar
+    if (solarHere) {
+      const sx0 = sSign > 0 ? 0.8 : -W + 0.9;
+      const sx1 = sSign > 0 ? W - 0.9 : -0.8;
+      const tilt = (cfg.solar.tiltDeg * Math.PI) / 180;
+      const depth = cfg.solar.rowDepth;
+      for (let z = seg.z0 + 1.6; z + depth < seg.z1 - 0.8; z += cfg.solar.rowPitch) {
+        const zc = z + depth / 2;
+        const yc = roofY + 0.45 + Math.sin(tilt) * (depth / 2);
+        roof.add('solar', new THREE.BoxGeometry(sx1 - sx0, 0.04, depth), [(sx0 + sx1) / 2, yc, zc], [tilt, 0, 0]);
+        // tayanch ramalar
+        for (let x = sx0 + 0.5; x < sx1; x += 3) {
+          roof.box('aluminium', [x, roofY + 0.25, z + 0.15], [0.06, 0.5 + Math.sin(tilt) * depth, 0.06]);
+          roof.box('aluminium', [x, roofY + 0.25, z + depth - 0.15], [0.06, 0.4, 0.06]);
+        }
+      }
     }
     // parapet qoplamasi (alyuminiy)
     shell.boxMinMax('aluminium', -W - 0.06, seg.height - 0.06, seg.z0, -W + t + 0.06, seg.height + 0.02, seg.z1);
@@ -385,11 +404,12 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     }
     // tomdagi ventilyatsiya uskunalari
     if (isProd) {
+      const hx = (cfg.solar.side === 'east' ? -1 : 1) * 9;
       for (const [x, z] of [
-        [-9, seg.z0 + 15],
-        [9, seg.z0 + 33],
-        [-9, seg.z0 + 51],
-        [9, seg.z0 + 66],
+        [hx, seg.z0 + 15],
+        [hx - 4, seg.z0 + 33],
+        [hx, seg.z0 + 51],
+        [hx - 4, seg.z0 + 66],
       ]) {
         roof.box('paintGrey', [x, roofY + 0.75, z], [3.2, 1.5, 2.2]);
         roof.cyl('steel', [x - 0.7, roofY + 1.55, z], 0.55, 0.12, 'y', 20);
@@ -411,56 +431,164 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
       // qavatlararo plita
       upper.boxMinMax('concrete', -W + t, ff - 0.3, r.z0 + t, W - t, ff, r.z1 - t);
       upper.boxMinMax('floor', -W + t, ff, r.z0 + t, W - t, ff + 0.02, r.z1 - t);
-      // zinapoya ochig‘i atrofidagi to‘siq
-      upper.boxMinMax('aluminium', 14.5, ff + 1.0, r.z0 + 0.5, 19.6, ff + 1.06, r.z0 + 0.56);
     }
-    // bo‘linmalar (1-qavat): koridor z bo‘ylab o‘rtada
-    const corr0 = r.z0 + 4.2;
-    const corr1 = r.z0 + 5.8;
-    for (const x of [-12, -4, 4, 12]) {
-      interior.boxMinMax('paintWhite', x - 0.06, FLOOR_Y, r.z0 + t, x + 0.06, ff - 0.3, corr0);
-      interior.boxMinMax('paintWhite', x - 0.06, FLOOR_Y, corr1, x + 0.06, ff - 0.3, r.z1 - t);
-      if (r.floors >= 2) {
-        upper.boxMinMax('paintWhite', x - 0.06, ff, r.z0 + t, x + 0.06, r.height - P - 0.3, corr0);
-        upper.boxMinMax('glass', x - 0.03, ff, corr1, x + 0.03, r.height - P - 0.3, r.z1 - t);
-      }
-    }
-    interior.boxMinMax('paintWhite', -W + t, FLOOR_Y, corr0 - 0.12, 14, ff - 0.3, corr0);
-    interior.boxMinMax('paintWhite', -W + t, FLOOR_Y, corr1, 14, ff - 0.3, corr1 + 0.12);
-    // zinapoya
-    const steps = 22;
-    for (let i = 0; i < steps; i++) {
-      const y = FLOOR_Y + ((i + 1) * (ff - FLOOR_Y)) / steps;
-      const z = r.z1 - t - 0.3 - i * 0.28;
-      interior.boxMinMax('concrete', 16.4, y - 0.17, z - 0.3, 19.6, y, z);
-    }
-    interior.boxMinMax('aluminium', 16.3, FLOOR_Y + 0.9, r.z1 - 6.6, 16.36, ff + 1.0, r.z1 - 0.3);
-    // 2-qavat mebellari (stollar)
-    if (r.floors >= 2) {
-      for (const x of [-16, -8, 0, 8]) {
-        for (const dz of [1.3, 7.8]) {
-          upper.boxMinMax('paintWhite', x - 1.6, ff + 0.72, r.z0 + dz, x + 1.6, ff + 0.76, r.z0 + dz + 0.8);
-          upper.box('fabric', [x - 0.8, ff + 0.45, r.z0 + dz + (dz < 4 ? 1.3 : -0.5)], [0.5, 0.9, 0.5]);
-          upper.box('fabric', [x + 0.8, ff + 0.45, r.z0 + dz + (dz < 4 ? 1.3 : -0.5)], [0.5, 0.9, 0.5]);
-          upper.box('screen', [x, ff + 1.0, r.z0 + dz + 0.6], [0.6, 0.38, 0.03]);
-        }
-      }
-      upper.boxMinMax('lightPanel', -18, r.height - P - 0.36, r.z0 + 2, 14, r.height - P - 0.32, r.z0 + 2.3);
-      upper.boxMinMax('lightPanel', -18, r.height - P - 0.36, r.z0 + 7.7, 14, r.height - P - 0.32, r.z0 + 8);
-    }
-    // 1-qavat: oshxona stollari, kiyim shkaflari
-    for (const x of [-16, -8]) interior.box('paintWhite', [x, FLOOR_Y + 0.75, r.z0 + 2], [3, 0.05, 1.2]);
-    for (let x = 0.5; x < 3.6; x += 0.6) interior.box('paintGrey', [x, FLOOR_Y + 1.0, r.z1 - t - 0.35], [0.55, 2.0, 0.5]);
+    buildRearRooms(cfg, r, interior, upper);
   }
 
   /* ---------- Old korpus ichki bo‘luvchi devori (chizmadagi chiziq) ---------- */
   {
     const px = cfg.building.frontPartitionX;
-    interior.boxMinMax('cladding', px - 0.1, FLOOR_Y, t, px + 0.1, front.height - P - 0.3, front.z1 - 2);
+    interior.boxMinMax('cladding', px - 0.1, FLOOR_Y, t, px + 0.1, front.height - P - 0.3, front.z1);
   }
 
-  /* ---------- Showroom va old korpus orasidagi pastki qism ---------- */
   void sr;
-
   return { shell, glass, roof, upper, upperGlass, interior };
+}
+
+/** Oxirgi qism xonalari: bo‘linmalar, koridor devori (eshik o‘rinlari bilan) va xona jihozlari */
+function buildRearRooms(cfg: typeof factoryConfig, r: SegmentLayout, lower: GeoBuilder, upper: GeoBuilder) {
+  const t = cfg.building.wallThickness;
+  const P = cfg.building.parapetHeight;
+  const ff = cfg.building.rearFirstFloorHeight;
+  const zA = r.z0 + t + cfg.rearCorridorWidth;
+  const zB = r.z1 - t;
+  const zc = (zA + zB) / 2;
+  for (const floor of [1, 2] as const) {
+    if (floor === 2 && r.floors < 2) continue;
+    const b = floor === 1 ? lower : upper;
+    const y0 = floor === 1 ? FLOOR_Y : ff;
+    const y1 = floor === 1 ? ff - 0.3 : r.height - P - 0.3;
+    const rooms = cfg.rearRooms.filter((m) => m.floor === floor);
+    for (const m of rooms) {
+      // xonalar orasidagi devor
+      if (m.x1 < HALF_W - 0.5) b.boxMinMax('paintWhite', m.x1 - 0.06, y0, zA, m.x1 + 0.06, y1, zB);
+      // koridor devori (lobby — ochiq)
+      if (m.type !== 'lobby') {
+        const dx = (m.x0 + m.x1) / 2;
+        b.boxMinMax('paintWhite', Math.max(m.x0, -HALF_W + t), y0, zA - 0.06, dx - 0.55, y1, zA + 0.06);
+        b.boxMinMax('paintWhite', dx + 0.55, y0, zA - 0.06, Math.min(m.x1, HALF_W - t), y1, zA + 0.06);
+        b.boxMinMax('paintWhite', dx - 0.55, y0 + 2.2, zA - 0.06, dx + 0.55, y1, zA + 0.06);
+        b.boxMinMax('wood', dx - 0.5, y0, zA - 0.02, dx + 0.5, y0 + 2.15, zA + 0.02);
+      }
+      // shift yoritgichi
+      b.boxMinMax('lightPanel', m.x0 + 1, y1 - 0.05, zc - 0.15, m.x1 - 1, y1 - 0.01, zc + 0.15);
+      furnish(b, m.type, m.x0, m.x1, zA, zB, y0);
+    }
+  }
+  // zinapoya (hol xonasida)
+  const lobby = cfg.rearRooms.find((m) => m.type === 'lobby' && m.floor === 1);
+  if (lobby) {
+    const x0 = lobby.x1 - 3.6;
+    const x1 = lobby.x1 - 0.4;
+    const steps = 22;
+    for (let i = 0; i < steps; i++) {
+      const y = FLOOR_Y + ((i + 1) * (ff - FLOOR_Y)) / steps;
+      const z = r.z1 - t - 0.3 - i * 0.28;
+      lower.boxMinMax('concrete', x0, y - 0.17, z - 0.3, x1, y, z);
+    }
+    lower.boxMinMax('aluminium', x0 - 0.1, FLOOR_Y + 0.9, r.z1 - 6.6, x0 - 0.04, ff + 1.0, r.z1 - 0.3);
+    if (r.floors >= 2) upper.boxMinMax('aluminium', x0 - 1.5, ff + 1.0, r.z1 - 6.9, x1, ff + 1.06, r.z1 - 6.84);
+  }
+}
+
+/** Xona turiga mos jihozlar */
+function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number, zB: number, y0: number) {
+  const zc = (zA + zB) / 2;
+  const chair = (x: number, z: number) => {
+    b.box('fabric', [x, y0 + 0.24, z], [0.45, 0.06, 0.45]);
+    b.box('fabric', [x, y0 + 0.12, z], [0.08, 0.24, 0.08]);
+  };
+  const desk = (x: number, z: number, w = 1.6, d = 0.8, key: 'paintWhite' | 'wood' = 'paintWhite') => {
+    b.box(key, [x, y0 + 0.74, z], [w, 0.05, d]);
+    for (const sx of [-1, 1]) b.box('steel', [x + sx * (w / 2 - 0.06), y0 + 0.36, z], [0.05, 0.72, d - 0.1]);
+  };
+  switch (type) {
+    case 'canteen': {
+      // oshxona bloki devor bo‘ylab
+      b.boxMinMax('paintWhite', x0 + 0.3, y0, zA + 0.8, x0 + 0.95, y0 + 0.9, zB - 0.3);
+      b.boxMinMax('chrome', x0 + 0.3, y0 + 0.9, zA + 0.8, x0 + 0.95, y0 + 0.94, zB - 0.3);
+      b.boxMinMax('paintDark', x0 + 0.35, y0 + 0.94, zc - 0.6, x0 + 0.9, y0 + 0.97, zc + 0.6);
+      b.boxMinMax('steel', x0 + 0.3, y0 + 1.6, zA + 0.8, x0 + 0.7, y0 + 2.3, zB - 0.3);
+      for (let x = x0 + 3; x < x1 - 1.2; x += 2.6) {
+        for (const z of [zc - 1.6, zc + 1.6]) {
+          desk(x, z, 1.8, 0.8, 'wood');
+          for (const sx of [-0.5, 0.5]) {
+            chair(x + sx, z - 0.65);
+            chair(x + sx, z + 0.65);
+          }
+        }
+      }
+      break;
+    }
+    case 'lockers':
+      for (let x = x0 + 0.5; x < x1 - 0.4; x += 0.6) {
+        b.box('paintGrey', [x, y0 + 0.95, zB - 0.3], [0.56, 1.9, 0.5]);
+        b.box('paintGrey', [x, y0 + 0.95, zA + 0.9], [0.56, 1.9, 0.5]);
+      }
+      b.box('wood', [(x0 + x1) / 2, y0 + 0.45, zc], [x1 - x0 - 1.4, 0.06, 0.4]);
+      break;
+    case 'wc':
+      for (let z = zA + 1.5; z < zB - 0.6; z += 1.4) b.boxMinMax('paintWhite', x0 + 0.1, y0, z - 0.03, x0 + 1.6, y0 + 2.0, z + 0.03);
+      b.boxMinMax('paintWhite', x1 - 0.7, y0 + 0.8, zA + 0.8, x1 - 0.2, y0 + 0.9, zB - 0.6);
+      break;
+    case 'tech':
+      for (let x = x0 + 0.6; x < x1 - 0.6; x += 0.9) b.box('paintGrey', [x, y0 + 1.0, zB - 0.35], [0.8, 2.0, 0.5]);
+      b.box('paintBlue', [x0 + 1.4, y0 + 0.6, zc - 0.6], [1.8, 1.2, 1.0]);
+      b.cyl('galvanized', [x1 - 1.2, y0 + 1.0, zc - 0.6], 0.5, 2.0, 'y', 16);
+      b.cyl('steel', [(x0 + x1) / 2, y0 + 2.6, zc - 0.6], 0.08, x1 - x0 - 1, 'x', 8);
+      b.boxMinMax('paintYellow', x0 + 0.3, y0 + 0.002, zc + 0.6, x1 - 0.3, y0 + 0.006, zc + 0.7);
+      break;
+    case 'medical':
+      b.box('paintWhite', [x0 + 1.0, y0 + 0.45, zc + 0.5], [0.8, 0.5, 2.0]);
+      desk(x1 - 1.2, zB - 0.8, 1.4, 0.7);
+      chair(x1 - 1.2, zB - 1.5);
+      b.box('paintWhite', [x1 - 0.4, y0 + 0.9, zA + 1.2], [0.5, 1.8, 0.9]);
+      break;
+    case 'lobby':
+      if (y0 < 1) {
+        desk(x0 + 1.6, zB - 2.6, 2.0, 0.7, 'wood');
+        chair(x0 + 1.6, zB - 1.9);
+        b.box('screen', [x0 + 1.6, y0 + 1.0, zB - 2.75], [0.5, 0.32, 0.03]);
+      }
+      break;
+    case 'manager': {
+      const xc = (x0 + x1) / 2;
+      desk(xc, zc + 0.8, 2.2, 0.95, 'wood');
+      chair(xc, zc + 1.6);
+      chair(xc - 0.6, zc - 0.2);
+      chair(xc + 0.6, zc - 0.2);
+      b.box('screen', [xc, y0 + 1.0, zc + 1.05], [0.6, 0.38, 0.03]);
+      b.box('wood', [x0 + 0.4, y0 + 1.0, zc], [0.5, 2.0, 3.2]);
+      b.box('fabric', [x1 - 1.4, y0 + 0.35, zA + 1.2], [2.0, 0.7, 0.8]);
+      b.cyl('paintDark', [x1 - 0.5, y0 + 0.3, zB - 0.5], 0.25, 0.6, 'y', 12);
+      b.box('plant', [x1 - 0.5, y0 + 1.0, zB - 0.5], [0.5, 0.8, 0.5]);
+      break;
+    }
+    case 'office':
+      for (let x = x0 + 1.5; x < x1 - 1; x += 2.6)
+        for (const z of [zc - 1.3, zc + 1.6]) {
+          desk(x, z);
+          chair(x, z + 0.7);
+          b.box('screen', [x, y0 + 1.0, z - 0.2], [0.55, 0.34, 0.03]);
+        }
+      break;
+    case 'meeting': {
+      const xc = (x0 + x1) / 2;
+      desk(xc, zc, x1 - x0 - 3, 1.4, 'wood');
+      for (let x = x0 + 2.2; x < x1 - 1.8; x += 1.1) {
+        chair(x, zc - 1.05);
+        chair(x, zc + 1.05);
+      }
+      b.box('screen', [x0 + 0.2, y0 + 1.5, zc], [0.05, 1.1, 2.0]);
+      break;
+    }
+    case 'lab':
+      b.boxMinMax('paintWhite', x0 + 0.3, y0, zB - 0.9, x1 - 0.3, y0 + 0.9, zB - 0.2);
+      b.boxMinMax('paintWhite', x0 + 1.5, y0, zc - 0.5, x1 - 1.5, y0 + 0.9, zc + 0.3);
+      for (let x = x0 + 1; x < x1 - 0.5; x += 1.6) b.box('paintBlue', [x, y0 + 1.15, zB - 0.55], [0.6, 0.5, 0.45]);
+      for (let x = x0 + 2; x < x1 - 1.5; x += 1.4) b.box('glassSheet', [x, y0 + 1.25, zc - 0.1], [0.5, 0.7, 0.02]);
+      b.box('screen', [x1 - 2, y0 + 1.1, zc - 0.4], [0.55, 0.34, 0.03]);
+      break;
+    default:
+  }
 }

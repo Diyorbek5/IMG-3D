@@ -104,8 +104,9 @@ export function buildVehicles(cfg = animationConfig, fcfg = factoryConfig): Vehi
     const path = Path2D.rounded(f.route, 2.5);
     const sp = cfg.speeds;
     const steps: Step[] = [];
-    const vLoaded = 'speedLoaded' in f && f.speedLoaded ? f.speedLoaded : sp.forkliftLoaded;
-    const vEmpty = 'speedEmpty' in f && f.speedEmpty ? f.speedEmpty : sp.forklift;
+    const ff = f as typeof f & { speedLoaded?: number; speedEmpty?: number };
+    const vLoaded = ff.speedLoaded ?? sp.forkliftLoaded;
+    const vEmpty = ff.speedEmpty ?? sp.forklift;
     for (let i = 0; i < f.repeat; i++) {
       steps.push({ kind: 'move', path, vMax: f.loadedOut ? vLoaded : vEmpty, loaded: f.loadedOut });
       steps.push({ kind: 'wait', duration: f.waitEnd, loaded: !f.loadedOut });

@@ -57,8 +57,9 @@ function occluderBoxes(): { box: THREE.Box3; roofed: boolean }[] {
   for (const s of getSegments()) out.push({ box: new THREE.Box3(new THREE.Vector3(-HALF_W, 0, s.z0), new THREE.Vector3(HALF_W, s.height, s.z1)), roofed: true });
   const sr = showroomRect();
   out.push({ box: new THREE.Box3(new THREE.Vector3(sr.x0, 0, sr.z0), new THREE.Vector3(sr.x1, factoryConfig.showroom.height, sr.z1)), roofed: true });
-  for (const w of [factoryConfig.rawWarehouse, factoryConfig.finishedWarehouse]) {
-    out.push({ box: new THREE.Box3(new THREE.Vector3(w.rect.x0, 0, w.rect.z0), new THREE.Vector3(w.rect.x1, w.height, w.rect.z1)), roofed: true });
+  for (const w of factoryConfig.neighborBuildings) {
+    // qo‘shni binolarning tomi doimo yopiq
+    out.push({ box: new THREE.Box3(new THREE.Vector3(w.rect.x0, 0, w.rect.z0), new THREE.Vector3(w.rect.x1, w.height, w.rect.z1)), roofed: false });
   }
   return out;
 }

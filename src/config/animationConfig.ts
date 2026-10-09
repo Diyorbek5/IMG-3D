@@ -18,31 +18,53 @@ export const animationConfig = {
   },
 
   trucks: {
-    /** Hudud ichidagi marshrut: kirish darvozasidan chiqish darvozasigacha (yo‘l bo‘laklari avtomatik qo‘shiladi) */
+    /**
+     * Hudud ichidagi marshrut: kirish darvozasidan hovli orqali shisha fasad oldidagi yo‘lakka,
+     * so‘ng chiqish darvozasigacha (yo‘l bo‘laklari avtomatik qo‘shiladi).
+     */
     siteRoute: [
-      [8, -36],
-      [30, -36],
+      [8, -38],
+      [-30, -38],
+      [-30, -21],
+      [30, -21],
       [30, 12],
       [140, 12],
     ] as P2[],
-    cornerRadius: 11,
+    /** Darvozalar oldidagi yuk mashinalari yo‘lagi (z) */
+    laneZ: -21,
+    cornerRadius: 9,
     roadCornerRadius: 12,
     /** Yo‘lning qaysi qismidan kiradi / chiqadi (yo‘l bo‘ylama koordinatasi, m) */
     roadEntryU: -210,
     roadExitU: 260,
-    raw: { offset: 0, stop: [50, 12] as P2, dwell: 30 },
-    finished: { offset: 72, stop: [116, 12] as P2, dwell: 28 },
+    /** Xomashyo — 3-darvoza oldida, tayyor mahsulot — 1–2-darvozalar oldida */
+    raw: { offset: 0, stop: [3.2, -21] as P2, dwell: 30 },
+    finished: { offset: 75, stop: [16.2, -21] as P2, dwell: 28 },
   },
 
   forklifts: [
     {
-      id: 'fl-gallery',
-      name: 'Yuk ortgich — xomashyo ombori → liniya (galereya orqali)',
+      id: 'fl-raw-unload',
+      name: 'Yuk ortgich — yuk mashinasidan xomashyoni tushirish (3-darvoza)',
       route: [
-        [46.5, 45],
-        [18.9, 45],
+        [-3, 7],
+        [-3, -16.4],
       ] as P2[],
-      /** yuk bilan boradi, bo‘sh qaytadi */
+      loadedOut: false,
+      cargo: 'glass',
+      offset: 0,
+      syncWith: 'raw',
+      waitEnd: 3,
+      waitStart: 2,
+      repeat: 2,
+    },
+    {
+      id: 'fl-raw-internal',
+      name: 'Yuk ortgich — xomashyo omboridan yuklash stoliga',
+      route: [
+        [-8, 21],
+        [-8, 37.4],
+      ] as P2[],
       loadedOut: true,
       cargo: 'glass',
       offset: 6,
@@ -51,29 +73,13 @@ export const animationConfig = {
       repeat: 2,
     },
     {
-      id: 'fl-raw-unload',
-      name: 'Yuk ortgich — yuk mashinasidan xomashyoni tushirish',
+      id: 'fl-fg-internal',
+      name: 'Yuk ortgich — qadoqlangan mahsulot → tayyor mahsulotlar ombori',
       route: [
-        [50, 33.5],
-        [50, 16.9],
+        [14.3, 30],
+        [14.3, 60.4],
       ] as P2[],
       loadedOut: false,
-      cargo: 'glass',
-      /** yuk mashinasi to‘xtagandan keyin */
-      offset: 0,
-      syncWith: 'raw',
-      waitEnd: 3,
-      waitStart: 2,
-      repeat: 2,
-    },
-    {
-      id: 'fl-fg-internal',
-      name: 'Yuk ortgich — qadoqlangan mahsulot → old korpus buferi',
-      route: [
-        [-14.3, 60.4],
-        [-14.3, 11.2],
-      ] as P2[],
-      loadedOut: true,
       cargo: 'crate',
       offset: 20,
       waitEnd: 5,
@@ -81,32 +87,11 @@ export const animationConfig = {
       repeat: 1,
     },
     {
-      id: 'fl-fg-transfer',
-      name: 'Yuk ortgich — tayyor mahsulot → tayyor mahsulotlar ombori',
-      route: [
-        [-14, 3.4],
-        [-14, -20],
-        [35.5, -20],
-        [35.5, 4.5],
-        [92, 4.5],
-        [92, 38.5],
-      ] as P2[],
-      loadedOut: true,
-      /** uzoq tashqi marshrut — tezroq harakat (m/s) */
-      speedLoaded: 4.0,
-      speedEmpty: 4.6,
-      cargo: 'crate',
-      offset: 34,
-      waitEnd: 6,
-      waitStart: 6,
-      repeat: 1,
-    },
-    {
       id: 'fl-fg-load',
-      name: 'Yuk ortgich — tayyor mahsulotni yuk mashinasiga yuklash',
+      name: 'Yuk ortgich — tayyor mahsulotni yuk mashinasiga yuklash (1-darvoza)',
       route: [
-        [116, 41.5],
-        [116, 16.6],
+        [14, 7],
+        [14, -16.4],
       ] as P2[],
       loadedOut: true,
       cargo: 'crate',
@@ -127,5 +112,5 @@ export const animationConfig = {
   ],
 
   /** Darvozalarni avtomatik ochish masofasi, m */
-  doorTriggerDistance: 11,
+  doorTriggerDistance: 6.5,
 };

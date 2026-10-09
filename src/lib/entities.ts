@@ -25,8 +25,8 @@ export interface Entity {
 
 export const PROCESS_STEPS: { step: number; name: string; ids: string[] }[] = [
   { step: 1, name: 'Katta yo‘l → kirish darvozasi', ids: ['road', 'site-gate'] },
-  { step: 2, name: 'Xomashyo qabul qilish', ids: ['front-yard', 'raw-buffer'] },
-  { step: 3, name: 'Xomashyo ombori', ids: ['raw-warehouse'] },
+  { step: 2, name: 'Xomashyo qabul qilish (3-darvoza)', ids: ['door-3', 'front-yard'] },
+  { step: 3, name: 'Xomashyo ombori', ids: ['raw-buffer'] },
   { step: 4, name: 'Shishani liniyaga uzatish', ids: ['loader'] },
   { step: 5, name: 'Kesish', ids: ['cutting', 'breakout'] },
   { step: 6, name: 'Chetlariga ishlov berish', ids: ['edger'] },
@@ -34,9 +34,9 @@ export const PROCESS_STEPS: { step: number; name: string; ids: string[] }[] = [
   { step: 8, name: 'Texnologik yig‘ish', ids: ['pillar', 'sealer', 'assembly'] },
   { step: 9, name: 'Vakuum hosil qilish va germetiklash', ids: ['vacuum'] },
   { step: 10, name: 'OTK/GPO sifat nazorati', ids: ['qc-zone', 'inspection', 'testing'] },
-  { step: 11, name: 'Qadoqlash', ids: ['packing', 'fg-buffer'] },
-  { step: 12, name: 'Tayyor mahsulotlar ombori', ids: ['fg-warehouse'] },
-  { step: 13, name: 'Jo‘natish', ids: ['site-exit'] },
+  { step: 11, name: 'Qadoqlash', ids: ['packing'] },
+  { step: 12, name: 'Tayyor mahsulotlar ombori', ids: ['fg-buffer'] },
+  { step: 13, name: 'Jo‘natish (1–2-darvozalar → chiqish)', ids: ['door-1', 'site-exit'] },
 ];
 
 let cache: Entity[] | null = null;
@@ -49,7 +49,7 @@ export function getEntities(): Entity[] {
   const L = computeLineLayout();
 
   /* ---- Bino segmentlari ---- */
-  const segNext: Record<string, string> = { front: 'seg-tbd', tbd: 'seg-production', production: 'seg-rear' };
+  const segNext: Record<string, string> = { front: 'seg-production', production: 'seg-rear' };
   for (const s of segs) {
     out.push({
       id: `seg-${s.id}`,
@@ -62,14 +62,14 @@ export function getEntities(): Entity[] {
         height: s.height,
         status: s.lengthStatus === 'confirmed' && s.heightStatus === 'confirmed' ? 'confirmed' : 'unconfirmed',
         note:
-          s.id === 'tbd'
-            ? 'Uzunlik 125 − 95 = 30 m farqdan kelib chiqqan; balandligi berilmagan.'
-            : s.id === 'rear'
-              ? `${s.floors} qavat; 1-qavat balandligi ≈ ${cfg.building.rearFirstFloorHeight} m (taxminiy).`
+          s.id === 'rear'
+            ? `${s.floors} qavat; 1-qavat balandligi ≈ ${cfg.building.rearFirstFloorHeight} m (taxminiy).`
+            : s.id === 'front'
+              ? '40 × 40 m ombor maydoni: xomashyo ombori + tayyor mahsulotlar ombori.'
               : undefined,
       },
       bounds: { min: [-HALF_W, 0, s.z0], max: [HALF_W, s.height, s.z1] },
-      role: s.id === 'production' ? 'Asosiy texnologik jarayon (4–11-bosqichlar)' : s.id === 'front' ? 'Xomashyo qabul qilish va tayyor mahsulot buferi (2, 11-bosqichlar)' : undefined,
+      role: s.id === 'production' ? 'Asosiy texnologik jarayon (4–11-bosqichlar)' : s.id === 'front' ? 'Xomashyo va tayyor mahsulotlarni saqlash (3, 12-bosqichlar)' : undefined,
       nextId: segNext[s.id],
       group: 'Asosiy bino (40 × 125 m)',
     });
@@ -80,27 +80,27 @@ export function getEntities(): Entity[] {
   out.push({
     id: 'raw-buffer',
     kind: 'zone',
-    name: 'Xomashyo qabul qilish va saqlash (old korpus)',
+    name: 'Xomashyo ombori',
     description:
-      'Chizmada "Склад хом." deb belgilangan qism. 3-darvoza orqali shisha listlari qabul qilinadi, A-stellajlarda saqlanadi va ko‘prik kran yordamida joylashtiriladi.',
-    dims: { length: front.length, width: HALF_W - px, height: front.height, status: 'estimated', note: 'Bo‘luvchi devor joyi chizmadan taxminan olingan.' },
-    bounds: { min: [px, 0, front.z0], max: [HALF_W, front.height, front.z1] },
-    step: 2,
-    role: 'Xomashyo qabul qilish',
-    nextId: 'raw-warehouse',
+      'Old korpusning o‘ng qismi (old fasadga qaraganda). Float-shisha listlari (jumbo 6000 × 3210 mm) 3-darvoza orqali qabul qilinadi, A-stellajlarda saqlanadi va ko‘prik kran bilan joylashtiriladi. Orqa tomondan to‘g‘ridan-to‘g‘ri liniyaning yuklash stoliga uzatiladi.',
+    dims: { length: front.length, width: px + HALF_W, height: front.height, status: 'estimated', note: 'Ikki ombor orasidagi devor joyi chizmadan taxminan olingan.' },
+    bounds: { min: [-HALF_W, 0, front.z0], max: [px, front.height, front.z1] },
+    step: 3,
+    role: 'Xomashyoni qabul qilish va saqlash',
+    nextId: 'loader',
     group: 'Asosiy bino (40 × 125 m)',
   });
   out.push({
     id: 'fg-buffer',
     kind: 'zone',
-    name: 'Tayyor mahsulot buferi (old korpus)',
+    name: 'Tayyor mahsulotlar ombori',
     description:
-      'Chizmada "Гот. продукция" deb belgilangan qism. Qadoqlangan mahsulot ichki yo‘lak orqali shu yerga keltiriladi va 1–2-darvozalar orqali tayyor mahsulotlar omboriga jo‘natiladi.',
-    dims: { length: front.length, width: px + HALF_W, height: front.height, status: 'estimated' },
-    bounds: { min: [-HALF_W, 0, front.z0], max: [px, front.height, front.z1] },
-    step: 11,
-    role: 'Tayyor mahsulotni vaqtincha saqlash va jo‘natish',
-    nextId: 'fg-warehouse',
+      'Old korpusning chap qismi (old fasadga qaraganda). Qadoqlangan vakuumli shisha paketlari ichki yo‘lak orqali keltiriladi, yashik va stellajlarda saqlanadi, 1–2-darvozalar orqali yuk mashinalariga yuklanadi.',
+    dims: { length: front.length, width: HALF_W - px, height: front.height, status: 'estimated' },
+    bounds: { min: [px, 0, front.z0], max: [HALF_W, front.height, front.z1] },
+    step: 12,
+    role: 'Tayyor mahsulotni saqlash va jo‘natish',
+    nextId: 'door-1',
     group: 'Asosiy bino (40 × 125 m)',
   });
 
@@ -112,8 +112,8 @@ export function getEntities(): Entity[] {
     name: 'Showroom (ko‘rgazma zali)',
     term: 'Showroom',
     description:
-      'Old fasadning sharqiy burchagida, binodan oldinga chiqib turgan to‘liq shishali hajm. Alyuminiy profilli vitraj, ichida shisha va oyna mahsulotlari namunalari, ekspozitsiya stendlari va qabul stoyka.',
-    dims: { length: cfg.showroom.depth, width: cfg.showroom.width, height: cfg.showroom.height, status: 'confirmed', note: `9 × 15 m tasdiqlangan; balandligi (${cfg.showroom.height} m) berilmagan — sozlanadigan parametr.` },
+      'Old fasadning o‘ng burchagida (old tomondan qaraganda), binodan oldinga chiqib turgan to‘liq shishali hajm. Alyuminiy profilli vitraj, ichida shisha va oyna mahsulotlari namunalari, ekspozitsiya stendlari va qabul stoyka.',
+    dims: { length: cfg.showroom.depth, width: cfg.showroom.width, height: cfg.showroom.height, status: 'confirmed', note: `9 × 15 m, balandligi ${cfg.showroom.height} m.` },
     bounds: { min: [sr.x0, 0, sr.z0], max: [sr.x1, cfg.showroom.height, sr.z1] },
     group: 'Asosiy bino (40 × 125 m)',
   });
@@ -132,32 +132,18 @@ export function getEntities(): Entity[] {
     });
   }
 
-  /* ---- Ombor binolari ---- */
-  const rw = cfg.rawWarehouse;
-  out.push({
-    id: 'raw-warehouse',
-    kind: 'building',
-    name: rw.name,
-    description: rw.purpose,
-    dims: { length: rw.rect.z1 - rw.rect.z0, width: rw.rect.x1 - rw.rect.x0, height: rw.height, status: 'estimated', note: 'O‘lchamlar masterplan nisbatlaridan taxminiy olingan.' },
-    bounds: { min: [rw.rect.x0, 0, rw.rect.z0], max: [rw.rect.x1, rw.height, rw.rect.z1] },
-    step: 3,
-    role: 'Xomashyoni saqlash',
-    nextId: 'loader',
-    group: 'Tashqi binolar',
-  });
-  const fw = cfg.finishedWarehouse;
-  out.push({
-    id: 'fg-warehouse',
-    kind: 'building',
-    name: fw.name,
-    description: fw.purpose,
-    dims: { length: fw.rect.z1 - fw.wing.z0, width: fw.rect.x1 - fw.rect.x0, height: fw.height, status: 'estimated', note: 'L-shakl va o‘lchamlar masterplan nisbatlaridan taxminiy olingan.' },
-    bounds: { min: [fw.rect.x0, 0, fw.wing.z0], max: [fw.rect.x1, fw.height, fw.rect.z1] },
-    step: 12,
-    role: 'Tayyor mahsulotni saqlash',
-    nextId: 'site-exit',
-    group: 'Tashqi binolar',
+  /* ---- Masterplandagi qo‘shni binolar (vazifasi ko‘rsatilmagan) ---- */
+  cfg.neighborBuildings.forEach((nb, i) => {
+    const z0 = Math.min(nb.rect.z0, nb.wing?.z0 ?? nb.rect.z0);
+    out.push({
+      id: nb.id,
+      kind: 'building',
+      name: `Qo‘shni bino ${i + 1}`,
+      description: 'Masterplanda ko‘rsatilgan bino. Vazifasi berilmagan — shunchaki bino sifatida (tomi yopiq) ko‘rsatilgan.',
+      dims: { length: nb.rect.z1 - z0, width: nb.rect.x1 - nb.rect.x0, height: nb.height, status: 'estimated', note: 'O‘lchamlar masterplan nisbatlaridan taxminiy olingan.' },
+      bounds: { min: [nb.rect.x0, 0, z0], max: [nb.rect.x1, nb.height, nb.rect.z1] },
+      group: 'Tashqi binolar',
+    });
   });
   for (const a of cfg.site.auxBuildings) {
     out.push({
@@ -176,14 +162,14 @@ export function getEntities(): Entity[] {
   out.push({
     id: 'front-yard',
     kind: 'site',
-    name: 'Old hovli — tashqi logistika maydoni',
+    name: 'Old logistika maydoni (yuklash-tushirish)',
     description:
-      'Asosiy bino oldidagi 40 × 40 m beton maydon (binoning o‘zi emas). Yuk mashinalari kirish yo‘li, darvozalar oldida manyovr va forklift harakati uchun.',
-    dims: { length: cfg.frontYard.depth, width: cfg.frontYard.width, height: 0, status: 'confirmed' },
+      'Asosiy bino oldidagi beton maydon: yuk mashinalari darvozalar oldida yon tomoni bilan to‘xtaydi, forkliftlar xomashyoni tushiradi va tayyor mahsulotni yuklaydi.',
+    dims: { length: cfg.frontYard.depth, width: cfg.frontYard.width, height: 0, status: 'estimated' },
     bounds: { min: [fy.x0, 0, fy.z0], max: [fy.x1, 0.3, fy.z1] },
     step: 2,
     role: 'Transport kirishi va yuk qabul qilish',
-    nextId: 'raw-warehouse',
+    nextId: 'raw-buffer',
     group: 'Tashqi hudud',
   });
   out.push({
@@ -229,6 +215,41 @@ export function getEntities(): Entity[] {
     bounds: { min: [pk.x0, 0, pk.z0], max: [pk.x1, 0.5, pk.z1] },
     group: 'Tashqi hudud',
   });
+
+  /* ---- Oxirgi qism xonalari ---- */
+  const rear = segs.find((x) => x.id === 'rear')!;
+  const ff = cfg.building.rearFirstFloorHeight;
+  const zA = rear.z0 + cfg.building.wallThickness + cfg.rearCorridorWidth;
+  for (const m of cfg.rearRooms) {
+    const y0 = m.floor === 1 ? 0 : ff;
+    const y1 = m.floor === 1 ? ff : rear.height - cfg.building.parapetHeight;
+    out.push({
+      id: m.id,
+      kind: 'zone',
+      name: `${m.name} (${m.floor}-qavat)`,
+      description: `Oxirgi qismning ${m.floor}-qavatidagi xona. Xonalar ishlab chiqarish tomonidagi koridordan kiriladi. Joylashuv va o‘lchamlar taxminiy.`,
+      dims: { length: rear.z1 - zA, width: m.x1 - m.x0, height: y1 - y0, status: 'unconfirmed' },
+      bounds: { min: [m.x0, y0, zA], max: [m.x1, y1, rear.z1] },
+      group: 'Oxirgi qism xonalari',
+    });
+  }
+
+  /* ---- Quyosh panellari ---- */
+  {
+    const segsS = segs.filter((x) => cfg.solar.segments.includes(x.id));
+    const z0 = Math.min(...segsS.map((x) => x.z0));
+    const z1 = Math.max(...segsS.map((x) => x.z1));
+    const east = cfg.solar.side === 'east';
+    out.push({
+      id: 'solar',
+      kind: 'zone',
+      name: 'Quyosh panellari (tomning yarmi)',
+      description: `Old korpus va ishlab chiqarish zonasi tomining ${east ? 'chap' : 'o‘ng'} yarmida janubga ${cfg.solar.tiltDeg}° qiyalatilgan fotoelektr panellar qatorlari. Quvvati va aniq maydoni loyiha bo‘yicha aniqlashtiriladi.`,
+      dims: { length: z1 - z0, width: HALF_W, height: 0.8, status: 'estimated' },
+      bounds: { min: [east ? 0 : -HALF_W, 4, z0], max: [east ? HALF_W : 0, 13, z1] },
+      group: 'Asosiy bino (40 × 125 m)',
+    });
+  }
 
   /* ---- Uskunalar ---- */
   const stepIdx = (id: string) => PROCESS_STEPS.find((p) => p.ids.includes(id))?.step;

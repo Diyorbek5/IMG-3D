@@ -12,6 +12,7 @@ import {
   roofNormal,
   shutterNormal,
   showroomFloorColor,
+  solarColor,
   woodColor,
 } from './textures';
 
@@ -80,6 +81,7 @@ export function getMaterials(): Lib {
     glassTint: std({ color: '#18232c', metalness: 0.9, roughness: 0.05, envMapIntensity: 1.5, emissive: '#ffcf8a', emissiveIntensity: 0 }),
     glassDark: std({ color: '#141b22', metalness: 0.9, roughness: 0.06, envMapIntensity: 1.3 }),
     steel: std({ color: '#7d8389', metalness: 0.85, roughness: 0.42 }),
+    solar: withMaps(std({ color: '#ffffff', metalness: 0.55, roughness: 0.18, envMapIntensity: 1.3 }), solarColor()),
     galvanized: withMaps(std({ color: '#aeb3b7', metalness: 0.9, roughness: 0.5 }), cladC),
     paintWhite: std({ color: '#e9eae6', metalness: 0.1, roughness: 0.45 }),
     paintGrey: std({ color: '#c6c9c5', metalness: 0.15, roughness: 0.5 }),

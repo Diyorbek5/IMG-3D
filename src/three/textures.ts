@@ -273,6 +273,33 @@ export const showroomFloorColor = () =>
     return toTexture(c, 2.4, 2.4, true);
   });
 
+/** Quyosh paneli: to‘q ko‘k hujayralar, kumushrang chiziqlar, alyuminiy rama (1 modul ≈ 1.05 × 1.05 m) */
+export const solarColor = () =>
+  cached('solar', () => {
+    const w = 256;
+    const h = 256;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#c9ccd0';
+    ctx.fillRect(0, 0, w, h);
+    const m = 6;
+    ctx.fillStyle = '#16233d';
+    ctx.fillRect(m, m, w - 2 * m, h - 2 * m);
+    ctx.strokeStyle = 'rgba(170,185,210,0.55)';
+    ctx.lineWidth = 1.2;
+    const n = 6;
+    for (let i = 1; i < n; i++) {
+      const p = m + ((w - 2 * m) * i) / n;
+      ctx.beginPath();
+      ctx.moveTo(p, m);
+      ctx.lineTo(p, h - m);
+      ctx.moveTo(m, p);
+      ctx.lineTo(w - m, p);
+      ctx.stroke();
+    }
+    return toTexture(c, 1.05, 1.05, true);
+  });
+
 /** Rolikli darvoza lamellari — 0.08 m gorizontal ariqchalar */
 export const shutterNormal = () =>
   cached('shutterNormal', () => {
@@ -331,28 +358,6 @@ export const contactShadowTexture = () =>
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, s, s);
     const t = new THREE.CanvasTexture(c);
-    return t;
-  });
-
-/** Zona: diagonal shtrixlash (aniqlashtiriladigan zona uchun) */
-export const hatchTexture = () =>
-  cached('hatch', () => {
-    const s = 128;
-    const c = makeCanvas(s, s);
-    const ctx = c.getContext('2d')!;
-    ctx.clearRect(0, 0, s, s);
-    ctx.strokeStyle = 'rgba(255,170,40,0.55)';
-    ctx.lineWidth = 10;
-    for (let i = -s; i < s * 2; i += 32) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + s, s);
-      ctx.stroke();
-    }
-    const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(1 / 3, 1 / 3);
-    t.colorSpace = THREE.SRGBColorSpace;
     return t;
   });
 

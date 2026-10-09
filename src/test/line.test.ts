@@ -6,15 +6,15 @@ import { computeLineLayout, panelStates } from '../lib/lineLayout';
 describe('ishlab chiqarish liniyasi', () => {
   const L = computeLineLayout();
   const prod = getSegment('production');
-  const tbd = getSegment('tbd');
+  const front = getSegment('front');
 
-  it('barcha stansiyalar ishlab chiqarish zonasida, aniqlashtiriladigan zonada uskuna yo‘q', () => {
+  it('barcha stansiyalar ishlab chiqarish zonasida, omborlar maydonida uskuna yo‘q', () => {
     for (const s of L.stations) {
       const z0 = Math.min(s.zIn, s.zOut);
       const z1 = Math.max(s.zIn, s.zOut);
       expect(z0).toBeGreaterThanOrEqual(prod.z0);
       expect(z1).toBeLessThanOrEqual(prod.z1);
-      expect(z1 <= tbd.z0 || z0 >= tbd.z1).toBe(true);
+      expect(z0).toBeGreaterThanOrEqual(front.z1);
     }
     for (const o of L.optional) expect(o.cz).toBeGreaterThan(prod.z0);
   });
@@ -33,6 +33,16 @@ describe('ishlab chiqarish liniyasi', () => {
 
   it('stansiyalar oqim yo‘lida ketma-ket (yuklash/tushirish tomonlari mos)', () => {
     for (let i = 1; i < L.stations.length; i++) expect(L.stations[i].s).toBeGreaterThan(L.stations[i - 1].s);
+  });
+
+  it('U-oqim: xomashyo tarmog‘i o‘ngda (x < 0), OTK va qadoqlash chapda (x > 0), uzatish o‘ngdan chapga', () => {
+    const loader = L.stations.find((s) => s.type === 'loader')!;
+    const packing = L.stations.find((s) => s.type === 'packing')!;
+    expect(loader.cx).toBeLessThan(0);
+    expect(packing.cx).toBeGreaterThan(0);
+    expect(L.qualityZone.x0).toBeGreaterThan(0);
+    const tr = L.conveyors.find((c) => c.id === 'transfer')!;
+    expect(tr.b[0]).toBeGreaterThan(tr.a[0]);
   });
 
   it('OTK/GPO zonasi nazorat stansiyalarini o‘z ichiga oladi', () => {

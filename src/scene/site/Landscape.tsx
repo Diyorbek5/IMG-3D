@@ -187,7 +187,7 @@ function lampPositions(): { x: number; z: number; rot: number }[] {
   for (let z = -30; z < 4; z += 16) out.push({ x: 24, z, rot: Math.PI });
   for (let x = cfg.site.parking.x0 + 6; x < cfg.site.parking.x1; x += 14) out.push({ x, z: cfg.site.parking.z0 + 18.25, rot: Math.PI / 2 });
   out.push({ x: cfg.site.exitGateX + 7.5, z: siteNorthZ(cfg.site.exitGateX) + 3, rot: Math.PI });
-  out.push({ x: -24, z: -38, rot: 0 });
+  out.push({ x: -38, z: -30, rot: 0 });
   for (let z = 76; z < cfg.building.totalLength; z += 24) out.push({ x: 23, z, rot: Math.PI });
   return out;
 }

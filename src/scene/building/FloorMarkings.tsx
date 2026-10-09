@@ -1,18 +1,19 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { equipmentConfig } from '../../config/equipmentConfig';
-import { getSegment, HALF_W } from '../../lib/layout';
+import { factoryConfig } from '../../config/factoryConfig';
+import { getSegment, HALF_W, rollerDoors } from '../../lib/layout';
 import { computeLineLayout, FLOOR_Y } from '../../lib/lineLayout';
 import { GeoBuilder } from '../../three/GeoBuilder';
-import { hatchTexture, signTexture } from '../../three/textures';
-import { Built, Selectable } from '../common/Built';
+import { signTexture } from '../../three/textures';
+import { Built } from '../common/Built';
 
 /**
  * Ichki pol belgilari: forklift yo‘laklari (sariq), piyodalar yo‘laklari (yashil),
- * piyodalar o‘tish joylari va "Vazifasi aniqlashtiriladigan zona" shtrixlash belgisi.
+ * piyodalar o‘tish joylari, darvozalar oldidagi yo‘laklar va omborlar nomlari.
  */
 export function FloorMarkings() {
-  const tbd = getSegment('tbd');
+  const front = getSegment('front');
   const prod = getSegment('production');
   const layout = useMemo(() => computeLineLayout(), []);
   const parts = useMemo(() => {
@@ -22,57 +23,49 @@ export function FloorMarkings() {
       b.boxMinMax(key, x0, y - 0.002, z0, x1, y, z1);
     const lw = 0.12;
     const a = equipmentConfig.aisles;
-    const zA0 = tbd.z0 + 0.5;
     const zCentralEnd = layout.transferZ - equipmentConfig.transferWidth / 2 - 2.5;
-    // markaziy forklift yo‘lagi
-    for (const x of [a.forkliftCentral.x0, a.forkliftCentral.x1]) line('markingYellow', x - lw / 2, zA0, x + lw / 2, zCentralEnd);
-    // g‘arbiy forklift yo‘lagi (qadoqlangan mahsulot → old korpus)
-    const zWestEnd = layout.packedStaging.z0 - 0.3;
-    for (const x of [a.forkliftWest.x0, a.forkliftWest.x1]) line('markingYellow', x - lw / 2, 0.6, x + lw / 2, zWestEnd);
-    // piyodalar yo‘laklari
-    for (const w of [a.walkwayEast, a.walkwayWest]) {
-      line('markingGreen', w.x0, zA0, w.x1, prod.z1 - 1);
+    // markaziy forklift yo‘lagi (ishlab chiqarish zonasi bo‘ylab)
+    for (const x of [a.forkliftCentral.x0, a.forkliftCentral.x1]) line('markingYellow', x - lw / 2, prod.z0 + 0.5, x + lw / 2, zCentralEnd);
+    // xomashyo ombori → yuklash stoli
+    for (const x of [a.forkliftRaw.x0, a.forkliftRaw.x1]) line('markingYellow', x - lw / 2, front.z1 - 20, x + lw / 2, prod.z0 + 0.6);
+    // qadoqlangan mahsulot → tayyor mahsulotlar ombori
+    for (const x of [a.forkliftFinished.x0, a.forkliftFinished.x1]) line('markingYellow', x - lw / 2, front.z1 - 8, x + lw / 2, layout.packedStaging.z0 - 0.3);
+    // darvozalardan kirish yo‘laklari
+    for (const d of rollerDoors()) {
+      for (const sx of [-1, 1]) line('markingYellow', d.cx + sx * (d.width / 2 + 0.1) - lw / 2, 0.4, d.cx + sx * (d.width / 2 + 0.1) + lw / 2, 9);
+      line('markingYellow', d.cx - d.width / 2 - 0.1, 9, d.cx + d.width / 2 + 0.1, 9 + lw);
     }
+    // piyodalar yo‘laklari
+    for (const w of [a.walkwayEast, a.walkwayWest]) line('markingGreen', w.x0, prod.z0 + 0.5, w.x1, prod.z1 - 1);
     // yo‘nalish strelkalari (markaziy yo‘lakda)
-    for (let z = zA0 + 6; z < zCentralEnd - 4; z += 14) {
+    for (let z = prod.z0 + 6; z < zCentralEnd - 4; z += 14) {
       line('markingWhite', -0.1, z, 0.1, z + 2.2);
       b.add('markingWhite', new THREE.CylinderGeometry(0.0001, 0.55, 0.002, 3), [0, y - 0.001, z + 2.6], [0, Math.PI, 0], [1, 1, 1.4]);
     }
-    // piyodalar o‘tish joyi (zebra) — markaziy yo‘lak kesishmalarida
+    // piyodalar o‘tish joyi (zebra)
     for (const z of [prod.z0 + 2, prod.z0 + 30]) {
       for (let x = a.forkliftCentral.x0 + 0.2; x < a.forkliftCentral.x1 - 0.3; x += 0.8) line('markingWhite', x, z, x + 0.45, z + 2.5);
     }
-    // TBD zonasi chegarasi (qizil-oq punktir)
-    for (let x = -HALF_W + 0.5; x < HALF_W - 0.5; x += 1.6) {
-      line('markingRed', x, tbd.z0 + 0.15, x + 0.8, tbd.z0 + 0.3);
-      line('markingRed', x, tbd.z1 - 0.3, x + 0.8, tbd.z1 - 0.15);
-    }
+    // omborlar va ishlab chiqarish chegarasi (qizil punktir)
+    for (let x = -HALF_W + 0.5; x < HALF_W - 0.5; x += 1.6) line('markingRed', x, front.z1 - 0.3, x + 0.8, front.z1 - 0.15);
     return b.build();
-  }, [tbd, prod, layout]);
+  }, [front, prod, layout]);
 
-  const w0 = HALF_W * 2 - 1;
-  const hatch = useMemo(() => {
-    const t = hatchTexture().clone();
-    t.repeat.set(w0 / 3, (tbd.length - 0.8) / 3);
-    t.needsUpdate = true;
-    return t;
-  }, [w0, tbd.length]);
-  const label = signTexture(`VAZIFASI ANIQLASHTIRILADIGAN ZONA — ${tbd.length} m`, { fg: '#b45309', w: 2048, h: 200, weight: 800 });
-  const w = w0;
+  const px = factoryConfig.building.frontPartitionX;
+  const rawLabel = signTexture('XOMASHYO OMBORI', { fg: '#c27803', w: 1024, h: 140, weight: 800 });
+  const fgLabel = signTexture('TAYYOR MAHSULOTLAR OMBORI', { fg: '#1f7a46', w: 1600, h: 140, weight: 800 });
   return (
     <group name="FloorMarkings">
       <Built parts={parts} castShadow={false} />
-      <Selectable id="seg-tbd">
-        {/* shtrixlash — aniqlashtiriladigan zona */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR_Y + 0.006, (tbd.z0 + tbd.z1) / 2]} receiveShadow>
-          <planeGeometry args={[w, tbd.length - 0.8]} />
-          <meshStandardMaterial map={hatch} transparent opacity={0.55} depthWrite={false} polygonOffset polygonOffsetFactor={-3} roughness={0.8} />
-        </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, Math.PI]} position={[-9.5, FLOOR_Y + 0.008, (tbd.z0 + tbd.z1) / 2]}>
-          <planeGeometry args={[16, 1.56]} />
-          <meshStandardMaterial map={label} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} roughness={0.7} />
-        </mesh>
-      </Selectable>
+      {/* omborlar nomi polda (old fasad tomondan o‘qiladi) */}
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI]} position={[(-HALF_W + px) / 2, FLOOR_Y + 0.008, front.z1 - 13]}>
+        <planeGeometry args={[12, 1.64]} />
+        <meshStandardMaterial map={rawLabel} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} roughness={0.7} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI]} position={[(HALF_W + px) / 2, FLOOR_Y + 0.008, front.z1 - 13]}>
+        <planeGeometry args={[14, 1.22]} />
+        <meshStandardMaterial map={fgLabel} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} roughness={0.7} />
+      </mesh>
     </group>
   );
 }

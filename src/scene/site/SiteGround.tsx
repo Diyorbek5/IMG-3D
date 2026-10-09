@@ -6,6 +6,7 @@ import { GeoBuilder, worldUV } from '../../three/GeoBuilder';
 import { getMaterials } from '../../three/materials';
 import { Built, Selectable } from '../common/Built';
 import { polygonGeometry } from './RoadNetwork';
+import { animationConfig } from '../../config/animationConfig';
 
 /** Dunyo-metr UV bilan gorizontal tekislik */
 function groundPlane(w: number, d: number, cx: number, cz: number, y: number) {
@@ -39,8 +40,8 @@ export function SiteGround() {
     const yA = 0.035;
 
     /* ---- asfalt maydon (yuk mashinalari aylanma yo‘li va yuklash maydonlari) ---- */
-    const fw = cfg.finishedWarehouse;
-    const rw = cfg.rawWarehouse;
+    const [rw, fw] = cfg.neighborBuildings;
+    const fwZ0 = Math.min(fw.rect.z0, fw.wing?.z0 ?? fw.rect.z0);
     b.add(
       'asphalt',
       polygonGeometry(
@@ -48,26 +49,29 @@ export function SiteGround() {
           [W, fz(W)],
           [cfg.site.exitGateX + 6, fz(cfg.site.exitGateX + 6)],
           [cfg.site.exitGateX + 6, fw.rect.z0],
-          [fw.wing.x1, fw.rect.z0],
-          [fw.wing.x1, fw.wing.z0],
-          [fw.wing.x0, fw.wing.z0],
-          [fw.wing.x0, rw.rect.z0],
+          [fw.wing ? fw.wing.x1 : fw.rect.x0, fw.rect.z0],
+          [fw.wing ? fw.wing.x1 : fw.rect.x0, fwZ0],
+          [fw.rect.x0, fwZ0],
+          [fw.rect.x0, rw.rect.z0],
           [W, rw.rect.z0],
         ],
         yA,
       ),
     );
+    // yuk mashinalari aylanma yo‘li (hovlining g‘arbiy tomoni)
+    b.add('asphalt', polygonGeometry(rectPoly(-W - 16, -cfg.frontYard.depth - 5, W, -cfg.frontYard.depth + 9), yA));
+    b.add('asphalt', polygonGeometry(rectPoly(-W - 16, -cfg.frontYard.depth - 5, -W, -14), yA));
     // kirish yo‘li (darvozadan hovligacha)
     const gx = cfg.site.entryGateX;
     const gw = cfg.site.gateWidth / 2;
     b.add('asphalt', polygonGeometry([[gx - gw, fz(gx - gw)], [gx + gw, fz(gx + gw)], [gx + gw, -cfg.frontYard.depth], [gx - gw, -cfg.frontYard.depth]], yA));
     // binolar atrofidagi yong‘in-texnik yo‘llari (beton)
-    b.add('concrete', polygonGeometry(rectPoly(-W - 7, -cfg.frontYard.depth, -W, L + 7), yA));
+    b.add('concrete', polygonGeometry(rectPoly(-W - 7, -14, -W, L + 7), yA));
     b.add('concrete', polygonGeometry(rectPoly(-W - 7, L, W + 10, L + 7), yA));
     b.add('concrete', polygonGeometry(rectPoly(W, rw.rect.z0, rw.rect.x0, L), yA));
     b.add('concrete', polygonGeometry(rectPoly(rw.rect.x0, rw.rect.z1, rw.rect.x1 + 2, rw.rect.z1 + 4), yA));
 
-    /* ---- 40 × 40 m old hovli (beton, 5 m choklar bilan) ---- */
+    /* ---- old logistika maydoni (beton, 5 m choklar bilan) ---- */
     const y = frontYardRect();
     b.add('yardConcrete', polygonGeometry(rectPoly(y.x0, y.z0, y.x1, y.z1), 0.07));
     const yl = 0.075;
@@ -85,8 +89,8 @@ export function SiteGround() {
       mark('markingYellow', x1 - 0.2, -4.2, x1, -0.05);
       for (let x = x0 + 0.6; x < x1 - 0.6; x += 1.0) b.add('markingYellow', new THREE.BoxGeometry(0.18, 0.004, 1.6), [x, yl + 0.002, -2.1], [0, 0.6, 0]);
     }
-    // forklift yo‘nalishi (hovlida)
-    for (let z = -2; z > -19; z -= 3) mark('markingWhite', -14.08, z - 1.6, -13.92, z);
+    // forklift yo‘nalishlari (darvozalardan yuk mashinasi to‘xtash joyigacha)
+    for (const d of rollerDoors()) for (let z = -4.6; z > -17; z -= 3) mark('markingWhite', d.cx - 0.08, z - 1.6, d.cx + 0.08, z);
 
     /* ---- avtoturargoh ---- */
     const pk = cfg.site.parking;
@@ -108,43 +112,16 @@ export function SiteGround() {
       b.boxMinMax('grass', pk.x0 + 0.15, 0.161, z0 + 0.15, pk.x1 - 0.15, 0.165, z1 - 0.15);
     }
 
-    /* ---- piyodalar yo‘lagi: avtoturargoh → showroom ---- */
-    const sr = { x: cfg.building.width / 2 - cfg.showroom.width + 2.2, z: -cfg.showroom.depth };
-    b.add('concrete', polygonGeometry(rectPoly(sr.x - 1.2, -25.5, pk.x0, -23.5), 0.085));
-    b.add('concrete', polygonGeometry(rectPoly(sr.x - 1.2, -25.5, sr.x + 1.2, sr.z - 2.2), 0.085));
-    // zebra o‘tish joylari
-    for (const [x0, x1, z0, z1, along] of [
-      [28, 32.6, -25.5, -23.5, 'x'],
-      [sr.x - 1.2, sr.x + 1.2, -21, -19, 'z'],
-    ] as const) {
-      if (along === 'x') for (let z = z0 + 0.1; z < z1; z += 0.6) mark('markingWhite', x0, z, x1, z + 0.35);
-      else for (let x = x0 + 0.1; x < x1; x += 0.6) mark('markingWhite', x, z0 - 1.5, x + 0.35, z1 + 1.5);
+    /* ---- yuk mashinalari to‘xtash joylari (darvozalar oldida, yon tomoni bilan) ---- */
+    const lz = animationConfig.trucks.laneZ;
+    for (const stop of [animationConfig.trucks.raw.stop, animationConfig.trucks.finished.stop]) {
+      const x0 = stop[0] - 13.4;
+      const x1 = stop[0] + 4.2;
+      mark('markingYellow', x0, lz - 1.6, x1, lz - 1.45);
+      mark('markingYellow', x0, lz + 1.45, x1, lz + 1.6);
+      mark('markingYellow', x0, lz - 1.6, x0 + 0.15, lz + 1.6);
+      mark('markingYellow', x1 - 0.15, lz - 1.6, x1, lz + 1.6);
     }
-
-    /* ---- yuk mashinalari yo‘nalish chiziqlari ---- */
-    const lane = (x0: number, z0: number, x1: number, z1: number) => {
-      const len = Math.hypot(x1 - x0, z1 - z0);
-      const n = Math.floor(len / 6);
-      for (let i = 0; i < n; i++) {
-        const t0 = (i * 6) / len;
-        const t1 = Math.min(1, (i * 6 + 3) / len);
-        const ax = x0 + (x1 - x0) * t0;
-        const az = z0 + (z1 - z0) * t0;
-        const bx = x0 + (x1 - x0) * t1;
-        const bz = z0 + (z1 - z0) * t1;
-        b.boxMinMax('markingWhite', Math.min(ax, bx) - 0.06, yA + 0.012, Math.min(az, bz) - 0.06, Math.max(ax, bx) + 0.06, yA + 0.016, Math.max(az, bz) + 0.06);
-      }
-    };
-    lane(36.5, -10, 36.5, 6);
-    lane(42, 17.5, 134, 17.5);
-    lane(42, 7.5, 134, 7.5);
-    // to‘xtash joylari (yuk mashinalari) — sariq ramka
-    for (const [cx] of [[50], [116]]) {
-      mark('markingYellow', cx - 9, 10.4, cx + 9, 10.55);
-      mark('markingYellow', cx - 9, 13.45, cx + 9, 13.6);
-    }
-    // forklift o‘tish joyi (yuk mashinasi yo‘lagi kesishmasida)
-    for (let z = 7.8; z < 17; z += 0.8) mark('markingYellow', 90.8, z, 93.2, z + 0.4);
 
     /* ---- masterplandagi yashil maydonlar (chegara to‘siq — past butalar) ---- */
     for (const l of cfg.site.lawns) {

@@ -6,10 +6,10 @@
  * ko‘rsatilmaydi. Har bir stansiyaning uzunligi/kengligi/balandligi va oraliqlarini o‘zgartirsangiz,
  * konveyerlar, shisha oqimi animatsiyasi va info-panel ma’lumotlari avtomatik qayta hisoblanadi.
  *
- * Liniya U-shaklida (qo‘lda chizilgan rejadagi strelkalar bo‘yicha):
- *  1-tarmoq (sharqiy): ishlab chiqarish zonasining boshidan orqaga (+z yo‘nalishi)
- *  ko‘ndalang uzatish konveyeri (sharqdan g‘arbga)
- *  2-tarmoq (g‘arbiy): orqadan oldinga (−z yo‘nalishi), OTK/GPO va qadoqlash
+ * Liniya U-shaklida (qo‘lda chizilgan rejadagi strelkalar bo‘yicha, old fasadga qaraganda):
+ *  1-tarmoq (o‘ng / g‘arbiy, xomashyo ombori tomonida): ishlab chiqarish zonasining boshidan orqaga (+z)
+ *  ko‘ndalang uzatish konveyeri: o‘ngdan chapga (g‘arbdan sharqqa)
+ *  2-tarmoq (chap / sharqiy, tayyor mahsulotlar ombori tomonida): orqadan oldinga (−z), OTK/GPO va qadoqlash
  *
  * Koordinatalar ishlab chiqarish zonasining boshlanishiga (zStart) nisbatan beriladi,
  * shuning uchun segmentlar tartibi yoki uzunligi o‘zgarsa, liniya ham birga siljiydi.
@@ -82,8 +82,8 @@ export const equipmentConfig = {
 
   legs: [
     {
-      id: 'east',
-      x: 10,
+      id: 'right',
+      x: -10,
       startOffset: 1.0,
       direction: 1,
       tailConveyor: 0,
@@ -204,8 +204,8 @@ export const equipmentConfig = {
       ],
     },
     {
-      id: 'west',
-      x: -10,
+      id: 'left',
+      x: 10,
       /** Ikkinchi tarmoq ko‘ndalang uzatish konveyerining chetidan boshlanadi (avtomatik) */
       startOffset: 0,
       direction: -1,
@@ -286,7 +286,7 @@ export const equipmentConfig = {
       description:
         'Issiqlik bilan ishlov berish texnologik konfiguratsiyaga bog‘liq. Shu sababli asosiy liniyaga kiritilmagan, qo‘shimcha faollashtiriladigan uskuna sifatida ko‘rsatilgan.',
       /** zStart ga nisbatan markaz va o‘lchamlar */
-      x: -2,
+      x: 2,
       zOffset: 67,
       length: 24,
       width: 3.2,
@@ -296,14 +296,17 @@ export const equipmentConfig = {
   ],
 
   /** OTK/GPO sifat nazorati zonasi — alohida ajratilgan hudud (zStart ga nisbatan) */
-  qualityZone: { x0: -18.6, x1: -4.8, zOffset0: 29.5, zOffset1: 43.8 },
+  qualityZone: { x0: 4.8, x1: 18.6, zOffset0: 29.5, zOffset1: 43.8 },
   /** Qadoqlangan mahsulot buferi (zStart ga nisbatan) */
-  packedStaging: { x0: -16.6, x1: -12.2, zOffset0: 22.8, zOffset1: 26.6 },
+  packedStaging: { x0: 12.2, x1: 16.6, zOffset0: 22.8, zOffset1: 26.6 },
 
   /** Yo‘laklar (x oralig‘i) */
   aisles: {
     forkliftCentral: { x0: -3, x1: 3 },
-    forkliftWest: { x0: -16.2, x1: -12.4 },
+    /** qadoqlangan mahsulot → tayyor mahsulotlar ombori */
+    forkliftFinished: { x0: 12.4, x1: 16.2 },
+    /** xomashyo ombori → yuklash stoli */
+    forkliftRaw: { x0: -9.6, x1: -6.4 },
     walkwayEast: { x0: 18.0, x1: 19.4 },
     walkwayWest: { x0: -19.4, x1: -18.0 },
   },

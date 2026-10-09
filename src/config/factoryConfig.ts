@@ -17,7 +17,7 @@
 
 export type ValueStatus = 'confirmed' | 'estimated' | 'unconfirmed';
 
-export type SegmentId = 'front' | 'tbd' | 'production' | 'rear';
+export type SegmentId = 'front' | 'production' | 'rear';
 
 export interface BuildingSegment {
   id: SegmentId;
@@ -55,33 +55,21 @@ export const factoryConfig = {
     totalLengthStatus: 'confirmed' as ValueStatus,
     /**
      * Segmentlar old fasaddan (z = 0) orqaga qarab tartiblangan.
-     * Tartibni o‘zgartirish mumkin — geometriya, o‘lchamlar va uskunalar avtomatik qayta hisoblanadi.
-     * Diqqat: 10 + 75 + 10 = 95 m. Qolgan 30 m — "Vazifasi aniqlashtiriladigan zona".
+     * 40 + 75 + 10 = 125 m. Old korpus (40 × 40 m) — ikkiga bo‘lingan ombor maydoni:
+     * xomashyo ombori va tayyor mahsulotlar ombori (buyurtmachi tomonidan aniqlashtirildi).
      */
     segments: [
       {
         id: 'front',
-        name: 'Old korpus — xomashyo qabul qilish va tayyor mahsulot buferi',
-        shortName: 'Old korpus',
-        length: 10,
+        name: 'Old korpus — omborlar maydoni (xomashyo ombori + tayyor mahsulotlar ombori)',
+        shortName: 'Omborlar (40 × 40 m)',
+        length: 40,
         height: 12,
         floors: 1,
         lengthStatus: 'confirmed',
         heightStatus: 'confirmed',
         purpose:
-          'Chizma bo‘yicha: sharqiy qismi — xomashyo (shisha listlari) qabul qilish va saqlash, g‘arbiy qismi — tayyor mahsulot buferi. Old fasadda 3 ta rolikli darvoza joylashgan.',
-      },
-      {
-        id: 'tbd',
-        name: 'Vazifasi aniqlashtiriladigan zona — 30 m',
-        shortName: 'Aniqlashtiriladigan zona',
-        length: 30,
-        height: 12,
-        floors: 1,
-        lengthStatus: 'unconfirmed',
-        heightStatus: 'unconfirmed',
-        purpose:
-          'Umumiy uzunlik (125 m) va ko‘rsatilgan uzunliklar yig‘indisi (95 m) orasidagi farq. Vazifasi tasdiqlanmaguncha bu yerga ishlab chiqarish uskunalari joylashtirilmagan — faqat transport yo‘laklari o‘tadi. Balandligi berilmagan (vaqtincha old korpus bilan teng).',
+          'Showroom ortidagi 40 × 40 m maydon ikkiga bo‘lingan: o‘ng tomoni — xomashyo ombori (shisha listlari A-stellajlarda, ko‘prik kran), chap tomoni — tayyor mahsulotlar ombori. Old fasad to‘liq shishadan, unda 3 ta rolikli darvoza.',
       },
       {
         id: 'production',
@@ -93,7 +81,7 @@ export const factoryConfig = {
         lengthStatus: 'confirmed',
         heightStatus: 'confirmed',
         purpose:
-          'Shishani kesish, chetlariga ishlov berish, yuvish-quritish, vakuumli shisha paketini yig‘ish, germetiklash, OTK/GPO sifat nazorati va qadoqlash. Oqim U-shaklida: sharqiy tomon bo‘ylab orqaga, g‘arbiy tomon bo‘ylab oldinga (chizmadagi strelkalar bo‘yicha).',
+          'Shishani kesish, chetlariga ishlov berish, yuvish-quritish, vakuumli shisha paketini yig‘ish, germetiklash, OTK/GPO sifat nazorati va qadoqlash. Oqim U-shaklida (chizmadagi strelkalar bo‘yicha): o‘ng tomon bo‘ylab orqaga, orqada o‘ngdan chapga, chap tomon bo‘ylab oldinga.',
       },
       {
         id: 'rear',
@@ -105,7 +93,7 @@ export const factoryConfig = {
         lengthStatus: 'confirmed',
         heightStatus: 'confirmed',
         purpose:
-          '1-qavat: xodimlar kirish joyi, kiyinish xonalari, oshxona, texnik xonalar. 2-qavat: ofislar, laboratoriya, yig‘ilishlar zali (xonalar taqsimoti taxminiy).',
+          '1-qavat: oshxona va ovqatlanish zali, kiyinish va sanitariya xonalari, texnik xona, tibbiyot xonasi, kirish va zinapoya. 2-qavat: ishlab chiqarish rahbari xonasi, muhandis-texnologlar xonasi, yig‘ilishlar zali, OTK laboratoriyasi.',
       },
     ] as BuildingSegment[],
     wallThickness: 0.25,
@@ -113,46 +101,53 @@ export const factoryConfig = {
     /** Oxirgi qismning birinchi qavat balandligi (berilmagan — taxminiy) */
     rearFirstFloorHeight: 4.0,
     rearFirstFloorHeightStatus: 'unconfirmed' as ValueStatus,
-    /** Old korpusdagi bo‘luvchi devor (chizmada ko‘rsatilgan) — x koordinatasi */
-    frontPartitionX: -2,
+    /**
+     * Old korpusdagi omborlarni ajratuvchi devor (chizmadagi chiziq) — x koordinatasi.
+     * x < frontPartitionX — xomashyo ombori (old fasadga qaraganda o‘ng tomon),
+     * x > frontPartitionX — tayyor mahsulotlar ombori (chap tomon).
+     */
+    frontPartitionX: 2,
     frontPartitionXStatus: 'estimated' as ValueStatus,
     /** Ustunlar qadami (konstruktiv), m */
     bayLength: 6,
   },
 
   /**
-   * Showroom — chizma bo‘yicha old fasadning sharqiy burchagida, binodan tashqariga chiqib turadi.
+   * Showroom — old fasadga qaraganda o‘ng burchakda (g‘arbiy burchak), binodan tashqariga chiqib turadi.
    * 9 m — fasad bo‘ylab kenglik, 15 m — fasaddan oldinga chiqish (chuqurlik).
    */
   showroom: {
     width: 9,
     depth: 15,
     sizeStatus: 'confirmed' as ValueStatus,
-    /** Balandligi berilmagan — sozlanadigan parametr */
-    height: 6.5,
-    heightStatus: 'unconfirmed' as ValueStatus,
-    /** Sharqiy cheti bino burchagi bilan bir chiziqda (x = width/2) */
-    alignEastEdge: true,
+    height: 6,
+    heightStatus: 'confirmed' as ValueStatus,
   },
 
   /**
-   * Shisha burchak: showroomning ikki tashqi fasadi (shimol va sharq) hamda
-   * old korpusning shu burchakdagi to‘liq balandlikdagi qismi — butunlay vitraj.
+   * Shisha fasad: old fasad (showroom va darvozalar tomoni) to‘liq vitraj;
+   * showroom burchagida yon fasad ham `sideDepth` uzunlikda shishadan.
+   * side — showroom joylashgan burchak: 'west' = old fasadga qaraganda o‘ng tomon.
    */
   glassCorner: {
-    side: 'east' as 'east' | 'west',
-    /** Old korpus fasadining shisha qismi kengligi (burchakdan), m */
+    side: 'west' as 'east' | 'west',
+    /** Old fasad to‘liq shishadan */
+    fullFrontGlazing: true,
+    /** Showroom burchagidagi shisha qism kengligi (to‘liq shisha o‘chirilgan holat uchun), m */
     facadeWidth: 9,
-    /** Sharqiy yon fasadda shisha qismining uzunligi (old fasaddan), m */
+    /** Yon fasadda shisha qismining uzunligi (old fasaddan), m */
     sideDepth: 10,
     mullionSpacing: 1.5,
     transomSpacing: 2.2,
   },
 
-  /** 3 ta rolikli darvoza (rollstavni) — old fasadda, shisha burchakning g‘arbiy tomonida */
+  /**
+   * 3 ta rolikli darvoza (rollstavni) — shisha old fasadda, showroomdan chap tomonda.
+   * 1 va 2 — tayyor mahsulotlar ombori, 3 — xomashyo ombori.
+   */
   rollerDoors: {
     /** Soni o‘zgartirilmaydi: 3 ta */
-    centersX: [-14, -6, 3],
+    centersX: [14, 6, -3],
     centersStatus: 'estimated' as ValueStatus,
     width: 4.5,
     height: 5.0,
@@ -160,36 +155,52 @@ export const factoryConfig = {
     names: ['1-darvoza (tayyor mahsulot jo‘natish)', '2-darvoza (tayyor mahsulot jo‘natish)', '3-darvoza (xomashyo qabul qilish)'],
   },
 
-  /** Asosiy bino oldidagi 40 × 40 m tashqi hovli (logistika maydoni) */
+  /** Asosiy bino oldidagi tashqi logistika maydoni (yuk mashinalari, yuklash-tushirish) — o‘lchami taxminiy */
   frontYard: {
     width: 40,
     depth: 40,
-    status: 'confirmed' as ValueStatus,
+    status: 'estimated' as ValueStatus,
   },
 
-  rawWarehouse: {
-    id: 'raw-warehouse',
-    name: 'Xomashyo ombori',
-    rect: { x0: 24, x1: 64, z0: 27, z1: 68 } as Rect,
-    height: 10,
+  /** Tom: yarmida quyosh panellari */
+  solar: {
+    /** panellar joylashgan yarim: 'east' — old fasadga qaraganda chap yarmi */
+    side: 'east' as 'east' | 'west',
+    segments: ['front', 'production'] as SegmentId[],
+    rowPitch: 3.2,
+    rowDepth: 2.1,
+    tiltDeg: 12,
     status: 'estimated' as ValueStatus,
-    purpose:
-      'Float-shisha listlari (jumbo 6000 × 3210 mm) A-shaklidagi stellajlarda saqlanadi. Yuk mashinalari shimoliy fasaddagi darvozalardan tushiriladi, ichki galereya orqali ishlab chiqarish liniyasiga uzatiladi.',
-    /** Asosiy bino bilan bog‘lovchi yopiq galereya (taxminiy) */
-    gallery: { z0: 42.5, z1: 47.5, height: 5.2 },
   },
 
-  finishedWarehouse: {
-    id: 'fg-warehouse',
-    name: 'Tayyor mahsulotlar ombori',
-    rect: { x0: 84, x1: 131, z0: 37, z1: 60 } as Rect,
-    /** Masterplandagi L-shakl: g‘arbiy qismi shimolga ko‘proq chiqadi */
-    wing: { x0: 84, x1: 100, z0: 33, z1: 37 } as Rect,
-    height: 9,
-    status: 'estimated' as ValueStatus,
-    purpose:
-      'Qadoqlangan vakuumli shisha paketlari yog‘och yashiklarda va metall stellajlarda saqlanadi, buyurtma bo‘yicha yuk mashinalariga yuklanadi.',
-  },
+  /**
+   * Oxirgi qism xonalari (x oralig‘i bo‘yicha; xonalar shimoliy koridordan kiriladi).
+   * Joylashuv va o‘lchamlar taxminiy — konfiguratsiyada o‘zgartiriladi.
+   */
+  rearRooms: [
+    { id: 'room-canteen', floor: 1, x0: -20, x1: -8, name: 'Oshxona va ovqatlanish zali', type: 'canteen' },
+    { id: 'room-lockers', floor: 1, x0: -8, x1: -2, name: 'Kiyinish xonalari', type: 'lockers' },
+    { id: 'room-wc', floor: 1, x0: -2, x1: 2, name: 'Sanitariya xonalari (dush, hojatxona)', type: 'wc' },
+    { id: 'room-tech', floor: 1, x0: 2, x1: 10, name: 'Texnik xona (elektr shchit, kompressor, isitish)', type: 'tech' },
+    { id: 'room-medical', floor: 1, x0: 10, x1: 14, name: 'Tibbiyot xonasi', type: 'medical' },
+    { id: 'room-lobby', floor: 1, x0: 14, x1: 20, name: 'Xodimlar kirishi, qorovul va zinapoya', type: 'lobby' },
+    { id: 'room-manager', floor: 2, x0: -20, x1: -12, name: 'Ishlab chiqarish rahbari xonasi', type: 'manager' },
+    { id: 'room-engineers', floor: 2, x0: -12, x1: -4, name: 'Muhandis-texnologlar xonasi', type: 'office' },
+    { id: 'room-meeting', floor: 2, x0: -4, x1: 5, name: 'Yig‘ilishlar zali', type: 'meeting' },
+    { id: 'room-lab', floor: 2, x0: 5, x1: 14, name: 'OTK laboratoriyasi', type: 'lab' },
+    { id: 'room-hall2', floor: 2, x0: 14, x1: 20, name: 'Zinapoya va hol', type: 'lobby' },
+  ] as { id: string; floor: 1 | 2; x0: number; x1: number; name: string; type: string }[],
+  /** Xonalar oldidagi koridor kengligi (ishlab chiqarish devori tomonda), m */
+  rearCorridorWidth: 1.8,
+
+  /**
+   * Masterplandagi asosiy bino yonidagi ikki bino — vazifasi ko‘rsatilmagan, shunchaki bino sifatida
+   * (nomsiz, tomi yopiq) ko‘rsatiladi. O‘lchamlar masterplan nisbatlaridan taxminiy.
+   */
+  neighborBuildings: [
+    { id: 'bldg-1', rect: { x0: 24, x1: 64, z0: 27, z1: 68 } as Rect, height: 10 },
+    { id: 'bldg-2', rect: { x0: 84, x1: 131, z0: 37, z1: 60 } as Rect, wing: { x0: 84, x1: 100, z0: 33, z1: 37 } as Rect, height: 9 },
+  ] as { id: string; rect: Rect; wing?: Rect; height: number }[],
 
   /** Katta avtomobil yo‘li (masterplanda qizil chiziq bilan belgilangan) */
   road: {

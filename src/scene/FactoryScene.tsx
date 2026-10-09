@@ -10,7 +10,7 @@ import { AnimationController } from './AnimationController';
 import { CameraController } from './CameraController';
 import { Lighting } from './Lighting';
 import { FactoryBuilding } from './building/FactoryBuilding';
-import { AuxBuildings, FinishedGoodsWarehouse, RawMaterialWarehouse } from './building/Warehouse';
+import { AuxBuildings, NeighborBuildings } from './building/Warehouse';
 import { ProductionLine } from './equipment/ProductionLine';
 import { ExternalModels } from './ExternalModels';
 import { Dimensions, FlowArrows, ScaleGrid, SelectedTag, SelectionHighlight, ZoneLabels } from './overlays/Overlays';
@@ -48,8 +48,7 @@ function SceneContent() {
       <RoadNetwork />
       <Landscape />
       <FactoryBuilding />
-      <RawMaterialWarehouse />
-      <FinishedGoodsWarehouse />
+      <NeighborBuildings />
       <AuxBuildings />
       <ProductionLine />
       <Vehicles />

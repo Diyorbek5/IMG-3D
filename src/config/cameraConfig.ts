@@ -18,6 +18,8 @@ export const cameraConfig: {
     rear: { position: [-40, 30, 245], target: [10, 4, 62], label: 'Orqa tomondan' },
     iso: { position: [-150, 165, -135], target: [45, 0, 45], label: 'Izometrik' },
     interior: { position: [52, 48, 30], target: [-2, 0, 78], label: 'Ichki maket' },
+    /** Showroom ichi: kirish yonidan resepshn va brend devoriga qarab */
+    showroom: { position: [-13.6, 4.3, -23.3], target: [-14.3, 1.7, -5], label: 'Showroom ichi' },
   },
   top: { center: [65, 0, 38], extent: [250, 235] },
   walkthrough: {

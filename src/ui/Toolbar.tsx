@@ -11,6 +11,7 @@ const VIEWS: { id: CameraPreset; label: string; icon: ComponentType; key: string
   { id: 'top', label: 'Yuqoridan', icon: Icon.top, key: '5' },
   { id: 'iso', label: 'Izometrik', icon: Icon.iso, key: '6' },
   { id: 'interior', label: 'Ichki maket', icon: Icon.interior, key: '7' },
+  { id: 'showroom', label: 'Showroom ichi', icon: Icon.showroom, key: '8' },
 ];
 
 export function toggleFullscreen() {

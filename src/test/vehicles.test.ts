@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { animationConfig } from '../config/animationConfig';
 import { footprint, minGap } from '../lib/footprint';
 import { buildVehicles, sampleVehicle } from '../lib/vehicles';
+import { showroomRect } from '../lib/layout';
 
 describe('transport harakati', () => {
   const vehicles = buildVehicles();
@@ -46,5 +47,22 @@ describe('transport harakati', () => {
       expect(best.z, v.id).toBeLessThan(6);
       expect(Math.abs(best.x - doorX[v.kind]), v.id).toBeLessThan(0.3);
     }
+  });
+
+  it('yuk mashinalari showroom (12 × 24 m) bilan to‘qnashmaydi', () => {
+    const sr = showroomRect();
+    let worst = Infinity;
+    for (const v of vehicles.filter((x) => x.kind.startsWith('truck'))) {
+      for (let t = 0; t < animationConfig.masterCycle; t += 0.1) {
+        const fp = footprint(v, t);
+        if (!fp) continue;
+        for (const c of fp) {
+          const dx = Math.max(sr.x0 - c.x, 0, c.x - sr.x1);
+          const dz = Math.max(sr.z0 - c.z, 0, c.z - sr.z1);
+          worst = Math.min(worst, Math.hypot(dx, dz) - c.r);
+        }
+      }
+    }
+    expect(worst).toBeGreaterThan(1);
   });
 });

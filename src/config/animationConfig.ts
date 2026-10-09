@@ -55,14 +55,15 @@ export const animationConfig = {
     finished: {
       offset: 78,
       dwell: 30,
+      /** showroom (24 m oldinga chiqadi) oldidan o‘tadi — z = −31 chizig‘ida, showroomdan ≈5.7 m uzoqda */
       approach: [
-        [5, -24],
-        [-16, -24],
+        [5, -31],
+        [-14, -31],
       ] as P2[],
       /** tirkama 1-darvoza (tayyor mahsulotlar ombori) orqali biroz ichkariga kiradi */
       reverse: [
-        [-16, -24],
-        [14, -24],
+        [-14, -31],
+        [14, -31],
         [14, 14],
       ] as P2[],
       stopZ: -10,

@@ -32,7 +32,7 @@ export function runChecks(cfg = factoryConfig): Check[] {
     { label: 'Old korpus — omborlar maydoni', ok: front.length === 40 && cfg.building.width === 40 && front.height === 12, detail: `${cfg.building.width} × ${front.length} m, ${front.height} m balandlik; 2 ta ombor (bo‘luvchi devor x = ${px} m)` },
     { label: 'O‘rta (ishlab chiqarish) qism', ok: prod.length === 75 && prod.height === 5, detail: `${prod.length} m × ${prod.height} m balandlik` },
     { label: 'Oxirgi qism', ok: rear.length === 10 && rear.height === 8 && rear.floors === 2, detail: `${rear.length} m × ${rear.height} m, ${rear.floors} qavat, ${cfg.rearRooms.length} ta xona` },
-    { label: 'Showroom', ok: cfg.showroom.width === 9 && cfg.showroom.depth === 15 && cfg.showroom.height === 9 && showroomRight, detail: `${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m, old fasadning o‘ng tomonida` },
+    { label: 'Showroom', ok: cfg.showroom.width === 12 && cfg.showroom.depth === 24 && cfg.showroom.height === 9 && showroomRight, detail: `${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m, old fasadning o‘ng tomonida` },
     { label: 'Old fasad', ok: cfg.glassCorner.fullFrontGlazing, detail: 'showroom va darvozalar tomoni to‘liq shishadan' },
     { label: 'Rolikli darvozalar', ok: rollerDoors(cfg).length === 3, detail: `${rollerDoors(cfg).length} ta, har biri ${cfg.rollerDoors.width} × ${cfg.rollerDoors.height} m (taxminiy)` },
     { label: 'Quyosh panellari', ok: cfg.solar.segments.length > 0, detail: `faqat ishlab chiqarish zonasi tomining ${cfg.solar.side === 'east' ? 'chap' : 'o‘ng'} yarmida` },

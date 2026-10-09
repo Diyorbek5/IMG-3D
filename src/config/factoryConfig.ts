@@ -114,11 +114,11 @@ export const factoryConfig = {
 
   /**
    * Showroom — old fasadga qaraganda o‘ng burchakda (g‘arbiy burchak), binodan tashqariga chiqib turadi.
-   * 9 m — fasad bo‘ylab kenglik, 15 m — fasaddan oldinga chiqish (chuqurlik).
+   * 12 m — fasad bo‘ylab kenglik, 24 m — fasaddan oldinga chiqish (chuqurlik).
    */
   showroom: {
-    width: 9,
-    depth: 15,
+    width: 12,
+    depth: 24,
     sizeStatus: 'confirmed' as ValueStatus,
     height: 9,
     heightStatus: 'confirmed' as ValueStatus,
@@ -134,7 +134,7 @@ export const factoryConfig = {
     /** Old fasad to‘liq shishadan */
     fullFrontGlazing: true,
     /** Showroom burchagidagi shisha qism kengligi (to‘liq shisha o‘chirilgan holat uchun), m */
-    facadeWidth: 9,
+    facadeWidth: 12,
     /** Yon fasadda shisha qismining uzunligi (old fasaddan), m */
     sideDepth: 0,
     mullionSpacing: 1.5,

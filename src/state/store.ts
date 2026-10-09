@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { LightingMode } from '../three/materials';
 
-export type CameraPreset = 'reset' | 'front' | 'side' | 'rear' | 'top' | 'iso' | 'interior';
+export type CameraPreset = 'reset' | 'front' | 'side' | 'rear' | 'top' | 'iso' | 'interior' | 'showroom';
 export type Quality = 'high' | 'medium' | 'low';
 export type DoorMode = 'auto' | 'open' | 'closed';
 export type PlayState = 'playing' | 'paused' | 'stopped';

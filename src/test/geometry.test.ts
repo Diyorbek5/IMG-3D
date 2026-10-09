@@ -44,10 +44,10 @@ describe('bino o‘lchamlari (konfiguratsiya)', () => {
     expect(segs.map((s) => s.id)).toEqual(['front', 'production', 'rear']);
   });
 
-  it('showroom 9 × 15 × 9 m old fasadning o‘ng tomonida (x < 0), 3 ta darvoza', () => {
+  it('showroom 12 × 24 × 9 m old fasadning o‘ng tomonida (x < 0), 3 ta darvoza', () => {
     const r = showroomRect();
-    expect(r.x1 - r.x0).toBe(9);
-    expect(r.z1 - r.z0).toBe(15);
+    expect(r.x1 - r.x0).toBe(12);
+    expect(r.z1 - r.z0).toBe(24);
     expect(factoryConfig.showroom.height).toBe(9);
     expect(r.x1).toBeLessThanOrEqual(0);
     expect(rollerDoors()).toHaveLength(3);
@@ -176,8 +176,8 @@ describe('o‘lcham chiziqlari geometriyadan hisoblanadi', () => {
     ['len-rear', 10],
     ['h-production', 5],
     ['h-rear', 8],
-    ['sr-width', 9],
-    ['sr-depth', 15],
+    ['sr-width', 12],
+    ['sr-depth', 24],
     ['sr-height', 9],
   ])('%s = %d m', (id, v) => {
     expect(specs[id].value).toBeCloseTo(v as number, 6);

@@ -260,18 +260,188 @@ export const floorColor = () =>
     return toTexture(c, 12, 12, true);
   });
 
+/** Marmar tomirlari — chegaradan o‘tganda qarama-qarshi tomondan davom etadi (tileable) */
+function drawVeins(ctx: CanvasRenderingContext2D, w: number, h: number, count: number, color: string, width: number, s: number) {
+  seed = s;
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < count; i++) {
+    const pts: [number, number][] = [];
+    let x = rnd() * w;
+    let y = rnd() * h;
+    let a = -0.6 + rnd() * 1.2 + (rnd() < 0.5 ? 0 : Math.PI);
+    const n = 6 + Math.floor(rnd() * 8);
+    for (let k = 0; k < n; k++) {
+      pts.push([x, y]);
+      a += (rnd() - 0.5) * 0.9;
+      const step = w * (0.05 + rnd() * 0.08);
+      x += Math.cos(a) * step;
+      y += Math.sin(a) * step;
+    }
+    const lw = width * (0.4 + rnd());
+    for (const ox of [-w, 0, w])
+      for (const oy of [-h, 0, h]) {
+        ctx.lineWidth = lw;
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0] + ox, pts[0][1] + oy);
+        for (let k = 1; k < pts.length - 1; k++) {
+          const mx = (pts[k][0] + pts[k + 1][0]) / 2;
+          const my = (pts[k][1] + pts[k + 1][1]) / 2;
+          ctx.quadraticCurveTo(pts[k][0] + ox, pts[k][1] + oy, mx + ox, my + oy);
+        }
+        ctx.stroke();
+        // ingichka yo‘ldosh tomir
+        ctx.lineWidth = lw * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0] + ox + lw * 3, pts[0][1] + oy + lw * 2);
+        for (let k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0] + ox + lw * 3, pts[k][1] + oy + lw * 2);
+        ctx.stroke();
+      }
+  }
+}
+
+/** Showroom poli: sayqallangan och kulrang marmar plitalar (1.2 × 1.2 m) */
 export const showroomFloorColor = () =>
   cached('showroomFloor', () => {
-    const w = 512;
-    const h = 512;
-    const n = fbm(w, h, 64, 4, 41);
-    const c = colorFromNoise(n, w, h, (v, x, y) => {
-      let g = 214 + v * 18;
-      if (x % 256 < 2 || y % 256 < 2) g = 150;
-      return [g, g * 0.985, g * 0.96];
+    const w = 1024;
+    const h = 1024;
+    const n = fbm(w, h, 128, 4, 41);
+    const c = colorFromNoise(n, w, h, (v) => {
+      const g = 206 + v * 22;
+      return [g, g * 0.99, g * 0.975];
     });
+    const ctx = c.getContext('2d')!;
+    drawVeins(ctx, w, h, 9, 'rgba(120,118,115,0.22)', 3, 77);
+    drawVeins(ctx, w, h, 5, 'rgba(255,255,255,0.35)', 2, 78);
+    // plitalar orasidagi choklar (2 × 2 plita)
+    ctx.fillStyle = 'rgba(110,108,104,0.55)';
+    for (const p of [0, w / 2]) {
+      ctx.fillRect(p, 0, 2, h);
+      ctx.fillRect(0, p, w, 2);
+    }
     return toTexture(c, 2.4, 2.4, true);
   });
+
+/** Qora marmar (brend devori, resepshn, podiumlar): oq-kulrang tomirlar */
+export const marbleDarkColor = () =>
+  cached('marbleDark', () => {
+    const w = 1024;
+    const h = 1024;
+    const n = fbm(w, h, 128, 4, 63);
+    const c = colorFromNoise(n, w, h, (v) => {
+      const g = 26 + v * 16;
+      return [g, g * 1.01, g * 1.04];
+    });
+    const ctx = c.getContext('2d')!;
+    drawVeins(ctx, w, h, 7, 'rgba(210,212,214,0.55)', 2.4, 91);
+    drawVeins(ctx, w, h, 12, 'rgba(160,162,166,0.25)', 1.4, 92);
+    return toTexture(c, 3.0, 3.0, true);
+  });
+
+/** Ko‘p qatorli ro‘yxat paneli (mahsulotlar yo‘nalishlari) — shaffof fon, oq matn, ixtiyoriy belgi-ikonkalar */
+export function listTexture(lines: string[], opts: { icons?: boolean; title?: string; w?: number; h?: number; fg?: string } = {}) {
+  return cached(`list-${opts.title ?? ''}-${lines.join('|')}-${opts.icons}`, () => {
+    const w = opts.w ?? 512;
+    const h = opts.h ?? 1024;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    ctx.clearRect(0, 0, w, h);
+    const fg = opts.fg ?? '#f2f2f0';
+    let y = h * 0.06;
+    if (opts.title) {
+      ctx.fillStyle = fg;
+      ctx.font = `800 ${w * 0.11}px ${FONT}`;
+      ctx.textBaseline = 'top';
+      ctx.fillText(opts.title, w * 0.06, y);
+      y += w * 0.2;
+    }
+    const step = (h - y - h * 0.04) / lines.length;
+    const size = Math.min(w * 0.078, step * 0.4);
+    ctx.font = `600 ${size}px ${FONT}`;
+    ctx.textBaseline = 'middle';
+    lines.forEach((line, i) => {
+      const cy = y + step * (i + 0.5);
+      let x = w * 0.06;
+      if (opts.icons) {
+        const s2 = size * 1.5;
+        ctx.strokeStyle = fg;
+        ctx.lineWidth = Math.max(1.5, size * 0.09);
+        ctx.strokeRect(x, cy - s2 / 2, s2, s2);
+        ctx.beginPath();
+        ctx.moveTo(x + s2 * 0.5, cy - s2 * 0.32);
+        ctx.lineTo(x + s2 * 0.5, cy + s2 * 0.32);
+        ctx.moveTo(x + s2 * 0.22, cy);
+        ctx.lineTo(x + s2 * 0.78, cy);
+        ctx.stroke();
+        x += s2 * 1.6;
+      }
+      ctx.fillStyle = fg;
+      let x2 = x;
+      for (const ch of line.toUpperCase()) {
+        ctx.fillText(ch, x2, cy);
+        x2 += ctx.measureText(ch).width + size * 0.08;
+      }
+    });
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 8;
+    return t;
+  });
+}
+
+/** Shisha fasadli bino fotosurati (showroomdagi reklama paneli uchun stilizatsiya) */
+export function towerPhotoTexture() {
+  return cached('towerPhoto', () => {
+    const w = 512;
+    const h = 768;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    const sky = ctx.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#3f7fc4');
+    sky.addColorStop(0.7, '#b9d6ee');
+    sky.addColorStop(1, '#e8eef2');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, h);
+    // ikki yuzali shisha minora
+    const faces: [number, number, number, number, string, string][] = [
+      [w * 0.18, w * 0.52, h * 0.12, h * 0.86, '#2d5c86', '#9cc7e6'],
+      [w * 0.52, w * 0.8, h * 0.16, h * 0.86, '#1d3c5a', '#5f8fb5'],
+    ];
+    for (const [x0, x1, y0, y1, c0, c1] of faces) {
+      const g = ctx.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, c1);
+      g.addColorStop(1, c0);
+      ctx.fillStyle = g;
+      ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+      ctx.strokeStyle = 'rgba(20,30,40,0.75)';
+      ctx.lineWidth = 2;
+      for (let x = x0; x <= x1 + 0.5; x += (x1 - x0) / 6) {
+        ctx.beginPath();
+        ctx.moveTo(x, y0);
+        ctx.lineTo(x, y1);
+        ctx.stroke();
+      }
+      for (let y = y0; y <= y1 + 0.5; y += (y1 - y0) / 14) {
+        ctx.beginPath();
+        ctx.moveTo(x0, y);
+        ctx.lineTo(x1, y);
+        ctx.stroke();
+      }
+    }
+    // daraxtlar va yer
+    ctx.fillStyle = '#4d6b3a';
+    for (let i = 0; i < 9; i++) {
+      ctx.beginPath();
+      ctx.arc(w * (0.05 + i * 0.12), h * 0.86, w * 0.07, Math.PI, 0);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#9a9890';
+    ctx.fillRect(0, h * 0.86, w, h * 0.14);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  });
+}
 
 /** Quyosh paneli: to‘q ko‘k hujayralar, kumushrang chiziqlar, alyuminiy rama (1 modul ≈ 1.05 × 1.05 m) */
 export const solarColor = () =>

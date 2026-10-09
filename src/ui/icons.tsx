@@ -48,6 +48,12 @@ export const Icon = {
       <rect x="9" y="13" width="6" height="4" />
     </Svg>
   ),
+  showroom: () => (
+    <Svg>
+      <path d="M3 21h18M4 21V8h16v13M4 8l2-4h12l2 4" />
+      <path d="M9 21v-7h6v7M12 14v7" />
+    </Svg>
+  ),
   walk: () => (
     <Svg>
       <circle cx="13" cy="4" r="1.6" />

@@ -112,8 +112,8 @@ export function getEntities(): Entity[] {
     name: 'Showroom (ko‘rgazma zali)',
     term: 'Showroom',
     description:
-      'Old fasadning o‘ng burchagida (old tomondan qaraganda), binodan oldinga chiqib turgan to‘liq shishali hajm. Alyuminiy profilli vitraj, ichida shisha va oyna mahsulotlari namunalari, ekspozitsiya stendlari va qabul stoyka.',
-    dims: { length: cfg.showroom.depth, width: cfg.showroom.width, height: cfg.showroom.height, status: 'confirmed', note: `9 × 15 m, balandligi ${cfg.showroom.height} m.` },
+      'Old fasadning o‘ng burchagida (old tomondan qaraganda), binodan oldinga chiqib turgan to‘liq shishali ko‘rgazma zali. Ichida: qora marmar brend devori va iMG logotipi, marmar resepshn, arxitektura shishalari vitrinasi (shaffof, yashil, kulrang, ko‘k, bronza, oyna), alyuminiy profil tizimlari stendi (Thermo, Engelberg, Slide Master, Pergola), eshik-rom tizimlari bokslari, shisha to‘siqli antresol va zinapoya, mehmonlar lounge zonasi, trek-chiroqlar va LED yoritish.',
+    dims: { length: cfg.showroom.depth, width: cfg.showroom.width, height: cfg.showroom.height, status: 'confirmed', note: `${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m.` },
     bounds: { min: [sr.x0, 0, sr.z0], max: [sr.x1, cfg.showroom.height, sr.z1] },
     group: 'Asosiy bino (40 × 125 m)',
   });

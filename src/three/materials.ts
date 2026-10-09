@@ -12,6 +12,7 @@ import {
   roofNormal,
   shutterNormal,
   showroomFloorColor,
+  marbleDarkColor,
   solarColor,
   woodColor,
 } from './textures';
@@ -66,6 +67,19 @@ function makeGlass(mode: 'transmission' | 'alpha', tone: 'clear' | 'facade' = 'c
   });
 }
 
+function tintGlass(color: string, opacity: number) {
+  return new THREE.MeshPhysicalMaterial({
+    color,
+    metalness: 0.05,
+    roughness: 0.04,
+    transparent: true,
+    opacity,
+    envMapIntensity: 1.8,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+}
+
 export function getMaterials(): Lib {
   if (lib) return lib;
   const cladN = claddingNormal();
@@ -112,6 +126,14 @@ export function getMaterials(): Lib {
       side: THREE.DoubleSide,
       depthWrite: false,
     }),
+    // showroom: rangli shisha namunalari, qora marmar, tosh panellar, och mato
+    glassGreen: tintGlass('#4f9b86', 0.62),
+    glassBronze: tintGlass('#9a7a55', 0.66),
+    glassBlue: tintGlass('#3f78a8', 0.6),
+    glassGrey: tintGlass('#4c5459', 0.7),
+    marbleDark: withMaps(std({ color: '#ffffff', roughness: 0.14, metalness: 0.05, envMapIntensity: 1.1 }), marbleDarkColor()),
+    stoneGrey: withMaps(std({ color: '#8d8984', roughness: 0.78 }), concreteColor(), concreteNormal(), 0.3),
+    fabricLight: std({ color: '#d8d2c8', roughness: 0.96 }),
     shutter: withMaps(std({ color: '#b7bcc1', metalness: 0.75, roughness: 0.4 }), undefined, shutterNormal(), 1),
     lightPanel: std({ color: '#ffffff', emissive: '#f4f8ff', emissiveIntensity: 1.3 }),
     lampWarm: std({ color: '#fff3d6', emissive: '#ffd9a0', emissiveIntensity: 0.25 }),

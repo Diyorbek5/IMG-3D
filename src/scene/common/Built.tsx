@@ -5,7 +5,7 @@ import { getMaterials } from '../../three/materials';
 import { useStore } from '../../state/store';
 
 /** Soya tashlamaydigan materiallar */
-const NO_CAST = new Set<MatKey>(['glass', 'glassSheet', 'lightPanel', 'screen', 'lampWarm', 'heat']);
+const NO_CAST = new Set<MatKey>(['glass', 'glassFacade', 'glassSheet', 'lightPanel', 'screen', 'lampWarm', 'heat']);
 
 interface BuiltProps {
   parts: BuiltPart[];
@@ -30,8 +30,8 @@ export function Built({ parts, castShadow = true, receiveShadow = true, dispose 
           geometry={p.geometry}
           material={mats[p.key]}
           castShadow={castShadow && !NO_CAST.has(p.key)}
-          receiveShadow={receiveShadow && p.key !== 'glass'}
-          renderOrder={p.key === 'glass' || p.key === 'glassSheet' ? 2 : 0}
+          receiveShadow={receiveShadow && p.key !== 'glass' && p.key !== 'glassFacade'}
+          renderOrder={p.key === 'glass' || p.key === 'glassFacade' || p.key === 'glassSheet' ? 2 : 0}
         />
       ))}
     </>

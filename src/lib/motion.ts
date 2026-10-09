@@ -233,6 +233,12 @@ export interface MoveStep {
   /** yo‘lni oxiridan boshiga qarab bosib o‘tish */
   backwards?: boolean;
   loaded?: boolean;
+  /**
+   * Tirkama yo‘nalishini hisoblash uchun to‘liq yo‘l (bo‘lak chegarasida uzilish bo‘lmasligi uchun)
+   * va ushbu bo‘lakning shu yo‘ldagi boshlanish masofasi.
+   */
+  trailerPath?: Path2D;
+  trailerBase?: number;
 }
 export interface WaitStep {
   kind: 'wait';
@@ -301,7 +307,15 @@ export class Schedule {
         // yuzlanish = urinma + (teskari yo‘nalishda o‘tish ? π) + (orqaga yurish ? π)
         const heading = pose.heading + (it.step.backwards ? Math.PI : 0) + (it.step.reverse ? Math.PI : 0);
         let trailer = heading;
-        if (trailerOffset > 0) {
+        if (trailerOffset > 0 && it.step.trailerPath) {
+          // orqaga yurishda tirkama harakat yo‘nalishida oldinda bo‘ladi
+          const dir = (it.step.backwards ? 1 : -1) * (it.step.reverse ? -1 : 1);
+          const tp = it.step.trailerPath;
+          const sAbs = (it.step.trailerBase ?? 0) + s;
+          const back = tp.poseAt(sAbs + dir * trailerOffset);
+          trailer = Math.atan2(pose.z - back.z, pose.x - back.x);
+          if (sAbs + dir * trailerOffset < 0) trailer = heading;
+        } else if (trailerOffset > 0) {
           const dir = it.step.backwards ? 1 : -1;
           const back = p.poseAt(s + dir * trailerOffset);
           trailer = Math.atan2(pose.z - back.z, pose.x - back.x);

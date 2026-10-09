@@ -1,9 +1,9 @@
 import { animationConfig } from '../config/animationConfig';
 import { factoryConfig } from '../config/factoryConfig';
 import { roadFrame } from './layout';
-import { Path2D, Schedule, type P2, type ScheduleSample, type Step } from './motion';
+import { Path2D, Schedule, type MoveStep, type ScheduleSample, type Step } from './motion';
 
-export type VehicleKind = 'truck-raw' | 'truck-fg' | 'forklift' | 'car';
+export type VehicleKind = 'truck-raw' | 'truck-fg' | 'car';
 
 export interface VehicleDef {
   id: string;
@@ -21,112 +21,82 @@ export interface VehicleDef {
   path?: Path2D;
 }
 
-export interface TruckRoute {
-  path: Path2D;
+type TruckCfg = (typeof animationConfig)['trucks']['raw'];
+
+export interface TruckPlan {
+  approach: Path2D;
+  reverse: Path2D;
+  reverseEndS: number;
+  exit: Path2D;
   gateInS: number;
   gateOutS: number;
 }
 
-export function truckRoute(cfg = animationConfig, fcfg = factoryConfig): TruckRoute {
+/** Yuk mashinasi marshruti: kirish → orqaga yurib ombor darvozasiga → chiqish (bitta darvoza) */
+export function truckPlan(t: TruckCfg, cfg = animationConfig, fcfg = factoryConfig): TruckPlan {
   const rf = roadFrame(fcfg);
   const v = rf.eastboundOuterV;
-  const site = cfg.trucks.siteRoute;
-  const first = site[0];
-  const last = site[site.length - 1];
+  const { inX, outX } = cfg.trucks.gate;
+  const r = cfg.trucks.cornerRadius;
   const entryLane = rf.toWorld(cfg.trucks.roadEntryU, v);
   const exitLane = rf.toWorld(cfg.trucks.roadExitU, v);
-  const entryCorner: P2 = [first[0], rf.zAt(first[0], v)];
-  const exitCorner: P2 = [last[0], rf.zAt(last[0], v)];
-  const pts: P2[] = [[entryLane.x, entryLane.z], entryCorner, ...site, exitCorner, [exitLane.x, exitLane.z]];
-  const path = Path2D.rounded(pts, cfg.trucks.cornerRadius);
-  const gateInS = path.nearestS(first[0], rf.zAt(first[0], rf.fenceV));
-  const gateOutS = path.nearestS(last[0], rf.zAt(last[0], rf.fenceV));
-  return { path, gateInS, gateOutS };
+  const approach = Path2D.rounded([[entryLane.x, entryLane.z], [inX, rf.zAt(inX, v)], ...t.approach], r);
+  const reverse = Path2D.rounded(t.reverse, r);
+  const doorX = t.reverse[t.reverse.length - 1][0];
+  const reverseEndS = reverse.nearestS(doorX, t.stopZ);
+  const exit = Path2D.rounded([...t.exit, [outX, rf.zAt(outX, v)], [exitLane.x, exitLane.z]], r);
+  const gateInS = approach.nearestS(inX, rf.zAt(inX, rf.fenceV));
+  const gateOutS = exit.nearestS(outX, rf.zAt(outX, rf.fenceV));
+  return { approach, reverse, reverseEndS, exit, gateInS, gateOutS };
 }
 
-function truckSteps(route: TruckRoute, stop: P2, dwell: number, loadedBefore: boolean, cfg = animationConfig): Step[] {
-  const { path } = route;
+function move(path: Path2D, s0: number, s1: number, o: Omit<MoveStep, 'kind' | 'path' | 'trailerPath' | 'trailerBase'>): MoveStep {
+  return { kind: 'move', path: path.slice(s0, s1), trailerPath: path, trailerBase: s0, ...o };
+}
+
+function truckSteps(plan: TruckPlan, dwell: number, loadedBefore: boolean, cfg = animationConfig): Step[] {
   const sp = cfg.speeds;
-  const sStop = path.nearestS(stop[0], stop[1]);
-  const slowIn = Math.max(0, route.gateInS - 30);
-  const fastOut = Math.min(path.length, route.gateOutS + 25);
   const a = loadedBefore;
+  const ap = plan.approach;
+  const ex = plan.exit;
+  const slowIn = Math.max(0, plan.gateInS - 30);
+  const fastOut = Math.min(ex.length, plan.gateOutS + 25);
   return [
-    { kind: 'move', path: path.slice(0, slowIn), vMax: sp.road, vStart: sp.road, vEnd: sp.site, loaded: a },
-    { kind: 'move', path: path.slice(slowIn, sStop), vMax: sp.site, vStart: sp.site, vEnd: 0, loaded: a },
+    move(ap, 0, slowIn, { vMax: sp.road, vStart: sp.road, vEnd: sp.site, loaded: a }),
+    move(ap, slowIn, ap.length, { vMax: sp.site, vStart: sp.site, vEnd: 0, loaded: a }),
+    { kind: 'wait', duration: 1.5, loaded: a },
+    move(plan.reverse, 0, plan.reverseEndS, { vMax: cfg.trucks.reverseSpeed, reverse: true, loaded: a }),
     { kind: 'wait', duration: dwell * 0.5, loaded: a },
     { kind: 'wait', duration: dwell * 0.5, loaded: !a },
-    { kind: 'move', path: path.slice(sStop, fastOut), vMax: sp.site, vStart: 0, vEnd: sp.site, loaded: !a },
-    { kind: 'move', path: path.slice(fastOut, path.length), vMax: sp.road, vStart: sp.site, vEnd: sp.road, loaded: !a },
+    move(ex, 0, fastOut, { vMax: sp.site, vStart: 0, vEnd: sp.site, loaded: !a }),
+    move(ex, fastOut, ex.length, { vMax: sp.road, vStart: sp.site, vEnd: sp.road, loaded: !a }),
   ];
-}
-
-/** Yuk mashinasi to‘xtash joyiga yetib kelish vaqti (sikl ichida) */
-function arrivalTime(steps: Step[], offset: number, accel = 1.2): number {
-  const sch = new Schedule(steps.slice(0, 2), offset, 1e9, false, accel);
-  return offset + sch.duration;
 }
 
 export function buildVehicles(cfg = animationConfig, fcfg = factoryConfig): VehicleDef[] {
   const C = cfg.masterCycle;
-  const route = truckRoute(cfg, fcfg);
   const out: VehicleDef[] = [];
-
-  const rawSteps = truckSteps(route, cfg.trucks.raw.stop, cfg.trucks.raw.dwell, true, cfg);
-  const fgSteps = truckSteps(route, cfg.trucks.finished.stop, cfg.trucks.finished.dwell, false, cfg);
-  const arrivals: Record<string, number> = {
-    raw: arrivalTime(rawSteps, cfg.trucks.raw.offset),
-    finished: arrivalTime(fgSteps, cfg.trucks.finished.offset),
-  };
+  const rawPlan = truckPlan(cfg.trucks.raw, cfg, fcfg);
+  const fgPlan = truckPlan(cfg.trucks.finished, cfg, fcfg);
 
   out.push({
     id: 'truck-raw',
     kind: 'truck-raw',
     name: 'Yuk mashinasi — xomashyo (shisha listlari) yetkazib berish',
-    schedule: new Schedule(rawSteps, cfg.trucks.raw.offset, C),
+    schedule: new Schedule(truckSteps(rawPlan, cfg.trucks.raw.dwell, true, cfg), cfg.trucks.raw.offset, C),
     trailerOffset: 9.5,
     length: 16.5,
     width: 2.55,
-    path: route.path,
   });
   out.push({
     id: 'truck-fg',
     kind: 'truck-fg',
     name: 'Yuk mashinasi — tayyor mahsulotni jo‘natish',
-    schedule: new Schedule(fgSteps, cfg.trucks.finished.offset, C),
+    schedule: new Schedule(truckSteps(fgPlan, cfg.trucks.finished.dwell, false, cfg), cfg.trucks.finished.offset, C),
     trailerOffset: 9.5,
     length: 16.5,
     width: 2.55,
-    path: route.path,
   });
-
-  for (const f of cfg.forklifts) {
-    const path = Path2D.rounded(f.route, 2.5);
-    const sp = cfg.speeds;
-    const steps: Step[] = [];
-    const ff = f as typeof f & { speedLoaded?: number; speedEmpty?: number };
-    const vLoaded = ff.speedLoaded ?? sp.forkliftLoaded;
-    const vEmpty = ff.speedEmpty ?? sp.forklift;
-    for (let i = 0; i < f.repeat; i++) {
-      steps.push({ kind: 'move', path, vMax: f.loadedOut ? vLoaded : vEmpty, loaded: f.loadedOut });
-      steps.push({ kind: 'wait', duration: f.waitEnd, loaded: !f.loadedOut });
-      steps.push({ kind: 'move', path, vMax: f.loadedOut ? vEmpty : vLoaded, backwards: true, reverse: true, loaded: !f.loadedOut });
-      steps.push({ kind: 'wait', duration: f.waitStart, loaded: false });
-    }
-    const sync = 'syncWith' in f && f.syncWith ? arrivals[f.syncWith as string] ?? 0 : 0;
-    const offset = sync + f.offset;
-    out.push({
-      id: f.id,
-      kind: 'forklift',
-      name: f.name,
-      schedule: new Schedule(steps, offset, C, true, 0.9),
-      trailerOffset: 0,
-      cargo: f.cargo as 'glass' | 'crate',
-      length: 3.6,
-      width: 1.5,
-      path,
-    });
-  }
 
   const rf = roadFrame(fcfg);
   for (const c of cfg.cars) {

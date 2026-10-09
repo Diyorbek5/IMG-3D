@@ -21,8 +21,6 @@ export function footprint(v: VehicleDef, t: number): Circle[] | null {
     const tx = Math.cos(th);
     const tz = Math.sin(th);
     for (let d = 1.5; d <= 12.6; d += 2.2) out.push({ x: s.x - tx * d, z: s.z - tz * d, r: 1.45 });
-  } else if (v.kind === 'forklift') {
-    for (const d of [-0.9, 0.6, 1.9]) out.push({ x: s.x + hx * d, z: s.z + hz * d, r: 0.85 });
   } else {
     for (const d of [-1.3, 0, 1.3]) out.push({ x: s.x + hx * d, z: s.z + hz * d, r: 1.0 });
   }

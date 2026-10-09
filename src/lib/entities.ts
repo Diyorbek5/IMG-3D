@@ -36,7 +36,7 @@ export const PROCESS_STEPS: { step: number; name: string; ids: string[] }[] = [
   { step: 10, name: 'OTK/GPO sifat nazorati', ids: ['qc-zone', 'inspection', 'testing'] },
   { step: 11, name: 'Qadoqlash', ids: ['packing'] },
   { step: 12, name: 'Tayyor mahsulotlar ombori', ids: ['fg-buffer'] },
-  { step: 13, name: 'Jo‘natish (1–2-darvozalar → chiqish)', ids: ['door-1', 'site-exit'] },
+  { step: 13, name: 'Jo‘natish (1-darvoza → kirish-chiqish darvozasi)', ids: ['door-1', 'site-gate'] },
 ];
 
 let cache: Entity[] | null = null;
@@ -63,7 +63,7 @@ export function getEntities(): Entity[] {
         status: s.lengthStatus === 'confirmed' && s.heightStatus === 'confirmed' ? 'confirmed' : 'unconfirmed',
         note:
           s.id === 'rear'
-            ? `${s.floors} qavat; 1-qavat balandligi ≈ ${cfg.building.rearFirstFloorHeight} m (taxminiy).`
+            ? `${s.floors} qavat; 1-qavat balandligi ≈ ${cfg.building.rearFirstFloorHeight} m (taxminiy). Ishlab chiqarishga qaragan tomoni — to‘liq vitraj.`
             : s.id === 'front'
               ? '40 × 40 m ombor maydoni: xomashyo ombori + tayyor mahsulotlar ombori.'
               : undefined,
@@ -164,7 +164,7 @@ export function getEntities(): Entity[] {
     kind: 'site',
     name: 'Old logistika maydoni (yuklash-tushirish)',
     description:
-      'Asosiy bino oldidagi beton maydon: yuk mashinalari darvozalar oldida yon tomoni bilan to‘xtaydi, forkliftlar xomashyoni tushiradi va tayyor mahsulotni yuklaydi.',
+      'Asosiy bino oldidagi beton maydon: yuk mashinasi KPP orqali kirib, burilish joyida to‘xtaydi va orqasi bilan o‘z darvozasiga biroz kiradi — xomashyo 3-darvozada tushiriladi, tayyor mahsulot 1-darvozada yuklanadi; so‘ng shu KPP orqali chiqib ketadi.',
     dims: { length: cfg.frontYard.depth, width: cfg.frontYard.width, height: 0, status: 'estimated' },
     bounds: { min: [fy.x0, 0, fy.z0], max: [fy.x1, 0.3, fy.z1] },
     step: 2,
@@ -187,22 +187,12 @@ export function getEntities(): Entity[] {
   out.push({
     id: 'site-gate',
     kind: 'site',
-    name: 'Kirish darvozasi va nazorat-o‘tkazish punkti (KPP)',
-    description: 'Yuk va yengil transport uchun asosiy kirish. Shlagbaum va qo‘riqchi budkasi bilan.',
+    name: 'Kirish-chiqish darvozasi va nazorat-o‘tkazish punkti (KPP)',
+    description: 'Hududga yagona kirish va chiqish joyi: kirish (g‘arbiy) va chiqish (sharqiy) bo‘laklari, shlagbaumlar va qo‘riqchi budkasi. Yuk mashinalari shu yerdan kirib, shu yerdan chiqadi.',
     dims: { length: 12, width: cfg.site.gateWidth, height: 3, status: 'estimated' },
     bounds: { min: [cfg.site.entryGateX - 10, 0, -58], max: [cfg.site.entryGateX + 8, 4, -44] },
     step: 1,
     nextId: 'front-yard',
-    group: 'Tashqi hudud',
-  });
-  out.push({
-    id: 'site-exit',
-    kind: 'site',
-    name: 'Chiqish darvozasi (jo‘natish)',
-    description: 'Tayyor mahsulot ortilgan yuk mashinalari uchun alohida chiqish — xomashyo oqimi bilan kesishmaydi.',
-    dims: { length: 12, width: cfg.site.gateWidth, height: 3, status: 'estimated' },
-    bounds: { min: [cfg.site.exitGateX - 7, 0, -40], max: [cfg.site.exitGateX + 7, 4, -26] },
-    step: 13,
     group: 'Tashqi hudud',
   });
   const pk = cfg.site.parking;
@@ -227,7 +217,7 @@ export function getEntities(): Entity[] {
       id: m.id,
       kind: 'zone',
       name: `${m.name} (${m.floor}-qavat)`,
-      description: `Oxirgi qismning ${m.floor}-qavatidagi xona. Xonalar ishlab chiqarish tomonidagi koridordan kiriladi. Joylashuv va o‘lchamlar taxminiy.`,
+      description: `Oxirgi qismning ${m.floor}-qavatidagi xona. Xonalar ishlab chiqarish tomonidagi koridordan kiriladi; oshxona va ofis xonalari koridorga shisha bo‘linma bilan ochiladi (ishlab chiqarish ko‘rinib turadi). Joylashuv va o‘lchamlar taxminiy.`,
       dims: { length: rear.z1 - zA, width: m.x1 - m.x0, height: y1 - y0, status: 'unconfirmed' },
       bounds: { min: [m.x0, y0, zA], max: [m.x1, y1, rear.z1] },
       group: 'Oxirgi qism xonalari',

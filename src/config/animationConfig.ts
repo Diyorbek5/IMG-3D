@@ -12,96 +12,67 @@ export const animationConfig = {
   speeds: {
     road: 13,
     site: 6,
-    forklift: 2.6,
-    forkliftLoaded: 2.0,
     car: 15,
   },
 
+  /**
+   * Yuk mashinalari bitta kirish-chiqish darvozasi (KPP) orqali kiradi va chiqadi:
+   * kirishda g‘arbiy bo‘lak (inX), chiqishda sharqiy bo‘lak (outX).
+   * Har bir mashina: hovliga kiradi → to‘xtaydi → orqasi bilan ombor darvozasiga biroz kiradi →
+   * tushiradi/yuklaydi → oldinga yurib o‘sha darvozadan chiqib ketadi.
+   */
   trucks: {
-    /**
-     * Hudud ichidagi marshrut: kirish darvozasidan hovli orqali shisha fasad oldidagi yo‘lakka,
-     * so‘ng chiqish darvozasigacha (yo‘l bo‘laklari avtomatik qo‘shiladi).
-     */
-    siteRoute: [
-      [8, -38],
-      [-30, -38],
-      [-30, -21],
-      [30, -21],
-      [30, 12],
-      [140, 12],
-    ] as P2[],
-    /** Darvozalar oldidagi yuk mashinalari yo‘lagi (z) */
-    laneZ: -21,
+    gate: { inX: 5, outX: 11 },
     cornerRadius: 9,
-    roadCornerRadius: 12,
+    /** Orqaga yurish tezligi, m/s */
+    reverseSpeed: 2.2,
     /** Yo‘lning qaysi qismidan kiradi / chiqadi (yo‘l bo‘ylama koordinatasi, m) */
     roadEntryU: -210,
     roadExitU: 260,
-    /** Xomashyo — 3-darvoza oldida, tayyor mahsulot — 1–2-darvozalar oldida */
-    raw: { offset: 0, stop: [3.2, -21] as P2, dwell: 30 },
-    finished: { offset: 75, stop: [16.2, -21] as P2, dwell: 28 },
+    raw: {
+      offset: 0,
+      dwell: 30,
+      /** hovliga kirish (oxirgi nuqta — orqaga yurish boshlanadigan joy) */
+      approach: [
+        [5, -24],
+        [26, -24],
+      ] as P2[],
+      /** orqaga yurish: tirkama 3-darvoza (xomashyo ombori) orqali biroz ichkariga kiradi */
+      reverse: [
+        [26, -24],
+        [-3, -24],
+        [-3, 14],
+      ] as P2[],
+      /** tirkama ilgagining to‘xtash nuqtasi (z) — tirkama orqasi ≈3.5 m ichkarida */
+      stopZ: -10,
+      /** chiqish (darvozadan kirish-chiqish darvozasigacha) */
+      exit: [
+        [-3, -10],
+        [-3, -30],
+        [11, -40],
+      ] as P2[],
+    },
+    finished: {
+      offset: 78,
+      dwell: 30,
+      approach: [
+        [5, -24],
+        [-16, -24],
+      ] as P2[],
+      /** tirkama 1-darvoza (tayyor mahsulotlar ombori) orqali biroz ichkariga kiradi */
+      reverse: [
+        [-16, -24],
+        [14, -24],
+        [14, 14],
+      ] as P2[],
+      stopZ: -10,
+      exit: [
+        [14, -10],
+        [14, -34],
+        [11, -42],
+      ] as P2[],
+    },
   },
-
-  forklifts: [
-    {
-      id: 'fl-raw-unload',
-      name: 'Yuk ortgich — yuk mashinasidan xomashyoni tushirish (3-darvoza)',
-      route: [
-        [-3, 7],
-        [-3, -16.4],
-      ] as P2[],
-      loadedOut: false,
-      cargo: 'glass',
-      offset: 0,
-      syncWith: 'raw',
-      waitEnd: 3,
-      waitStart: 2,
-      repeat: 2,
-    },
-    {
-      id: 'fl-raw-internal',
-      name: 'Yuk ortgich — xomashyo omboridan yuklash stoliga',
-      route: [
-        [-8, 21],
-        [-8, 37.4],
-      ] as P2[],
-      loadedOut: true,
-      cargo: 'glass',
-      offset: 6,
-      waitEnd: 6,
-      waitStart: 10,
-      repeat: 2,
-    },
-    {
-      id: 'fl-fg-internal',
-      name: 'Yuk ortgich — qadoqlangan mahsulot → tayyor mahsulotlar ombori',
-      route: [
-        [14.3, 30],
-        [14.3, 60.4],
-      ] as P2[],
-      loadedOut: false,
-      cargo: 'crate',
-      offset: 20,
-      waitEnd: 5,
-      waitStart: 8,
-      repeat: 1,
-    },
-    {
-      id: 'fl-fg-load',
-      name: 'Yuk ortgich — tayyor mahsulotni yuk mashinasiga yuklash (1-darvoza)',
-      route: [
-        [14, 7],
-        [14, -16.4],
-      ] as P2[],
-      loadedOut: true,
-      cargo: 'crate',
-      offset: 0,
-      syncWith: 'finished',
-      waitEnd: 3,
-      waitStart: 2,
-      repeat: 2,
-    },
-  ],
 
   /** Katta yo‘ldagi yengil avtomobillar (faqat g‘arbga yo‘nalgan bo‘laklarda — zavod transporti bilan kesishmaydi) */
   cars: [
@@ -112,5 +83,5 @@ export const animationConfig = {
   ],
 
   /** Darvozalarni avtomatik ochish masofasi, m */
-  doorTriggerDistance: 6.5,
+  doorTriggerDistance: 9,
 };

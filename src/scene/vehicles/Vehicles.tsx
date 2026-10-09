@@ -50,6 +50,9 @@ function buildTractorWheels() {
   return b;
 }
 
+/** Egar qurilmasidan tirkama orqa bamperigacha masofa, m */
+const TRAILER_REAR = 13;
+
 function buildTrailer(kind: 'flat' | 'box') {
   const b = new GeoBuilder();
   const len = 13.6;
@@ -75,40 +78,6 @@ function buildTrailer(kind: 'flat' | 'box') {
 function buildTrailerWheels() {
   const b = new GeoBuilder();
   wheelsAt(b, [-9.5, -10.8, -12.1], 0.95, 0.48);
-  return b;
-}
-
-function buildForklift() {
-  const b = new GeoBuilder();
-  // korpus
-  b.box('paintOrange', [-0.2, 0.75, 0], [2.0, 0.9, 1.15]);
-  b.box('paintDark', [-1.15, 0.85, 0], [0.45, 1.0, 1.15]);
-  b.box('paintDark', [0.15, 1.25, 0], [0.8, 0.12, 1.0]);
-  // o‘rindiq va rul
-  b.box('fabric', [-0.45, 1.45, 0], [0.5, 0.15, 0.5]);
-  b.box('fabric', [-0.7, 1.75, 0], [0.12, 0.5, 0.5]);
-  b.beam('paintDark', [0.3, 1.25, 0], [0.1, 1.75, 0], 0.05);
-  // himoya tomi
-  for (const [x, s] of [
-    [0.55, -1],
-    [0.55, 1],
-    [-0.95, -1],
-    [-0.95, 1],
-  ])
-    b.box('paintDark', [x, 1.75, s * 0.52], [0.06, 1.3, 0.06]);
-  b.box('paintDark', [-0.2, 2.4, 0], [1.6, 0.06, 1.1]);
-  // mast
-  for (const s of [-1, 1]) b.box('steel', [1.05, 1.25, s * 0.38], [0.1, 2.5, 0.1]);
-  b.box('steel', [1.05, 2.45, 0], [0.1, 0.1, 0.86]);
-  b.box('lampWarm', [0.95, 2.48, 0.5], [0.08, 0.1, 0.12]);
-  wheelsAt(b, [0.6, -0.9], 0.5, 0.3, 0.22);
-  return b;
-}
-
-function buildForks() {
-  const b = new GeoBuilder();
-  b.box('paintDark', [1.15, 0.45, 0], [0.08, 0.6, 0.95]);
-  for (const s of [-1, 1]) b.box('steel', [1.7, 0.18, s * 0.3], [1.1, 0.05, 0.12]);
   return b;
 }
 
@@ -140,7 +109,9 @@ function Truck({ v }: { v: VehicleDef }) {
   }, [v.kind]);
   useFrame(() => {
     const s = sampleVehicle(v, simClock.t);
-    vehicleState.set(v.id, { x: s.x, z: s.z, visible: s.visible });
+    // tirkama orqa qismi (darvozaga orqasi bilan kiradi — avtomatik darvoza shu nuqta bo‘yicha ochiladi)
+    const th = s.trailerHeading ?? s.heading;
+    vehicleState.set(v.id, { x: s.x, z: s.z, rx: s.x - Math.cos(th) * TRAILER_REAR, rz: s.z - Math.sin(th) * TRAILER_REAR, visible: s.visible });
     if (!root.current) return;
     root.current.visible = s.visible;
     if (!s.visible) return;
@@ -185,51 +156,6 @@ function LogoDecal({ position, rotationY }: { position: [number, number, number]
   );
 }
 
-function Forklift({ v }: { v: VehicleDef }) {
-  const root = useRef<THREE.Group>(null);
-  const forks = useRef<THREE.Group>(null);
-  const load = useRef<THREE.Group>(null);
-  const parts = useMemo(() => {
-    const l = new GeoBuilder();
-    const lg = new GeoBuilder();
-    if (v.cargo === 'glass') {
-      addAFrame(l, lg, 1.75, 0, 2.2, 3, Math.PI / 2, 0.22);
-    } else {
-      addCrate(l, 1.75, 0, 0.22, 1.0, 1.0, 1.3);
-    }
-    return { body: buildForklift().build(), forks: buildForks().build(), load: l.build(), loadGlass: lg.build() };
-  }, [v.cargo]);
-  useFrame(() => {
-    const s = sampleVehicle(v, simClock.t);
-    vehicleState.set(v.id, { x: s.x, z: s.z, visible: s.visible });
-    if (!root.current) return;
-    root.current.visible = s.visible;
-    if (!s.visible) return;
-    root.current.position.set(s.x, 0.15 * (isInside(s.x, s.z) ? 1 : 0), s.z);
-    root.current.rotation.y = -s.heading;
-    const lift = s.loaded ? 0.22 : 0.08;
-    if (forks.current) forks.current.position.y = lift;
-    if (load.current) load.current.visible = s.loaded;
-  });
-  return (
-    <group ref={root} visible={false}>
-      <Built parts={parts.body} dispose={false} />
-      <group ref={forks}>
-        <Built parts={parts.forks} dispose={false} />
-        <group ref={load}>
-          <Built parts={parts.load} dispose={false} />
-          <Built parts={parts.loadGlass} castShadow={false} dispose={false} />
-        </group>
-      </group>
-    </group>
-  );
-}
-
-/** Bino yoki ombor ichidami (pol sathi 0.15 m balandroq) */
-function isInside(x: number, z: number) {
-  return x > -20 && x < 20 && z > 0 && z < 125;
-}
-
 function RoadCar({ v }: { v: VehicleDef }) {
   const root = useRef<THREE.Group>(null);
   const parts = useMemo(() => {
@@ -263,7 +189,7 @@ function RoadCar({ v }: { v: VehicleDef }) {
   );
 }
 
-/** Barcha transport vositalari (yuk mashinalari, forkliftlar, yengil avtomobillar) */
+/** Barcha transport vositalari (yuk mashinalari, yengil avtomobillar) */
 export function Vehicles() {
   const vehicles = useMemo(() => buildVehicles(), []);
   const visible = useStore((s) => s.layers.vehicles);
@@ -274,7 +200,7 @@ export function Vehicles() {
   return (
     <group name="Vehicles">
       {vehicles.map((v) =>
-        v.kind === 'forklift' ? <Forklift key={v.id} v={v} /> : v.kind === 'car' ? <RoadCar key={v.id} v={v} /> : <Truck key={v.id} v={v} />,
+        v.kind === 'car' ? <RoadCar key={v.id} v={v} /> : <Truck key={v.id} v={v} />,
       )}
     </group>
   );

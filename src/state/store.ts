@@ -148,4 +148,4 @@ export const simClock = {
 };
 
 /** Transportlarning joriy holati (darvozalarni avtomatik ochish uchun) */
-export const vehicleState = new Map<string, { x: number; z: number; visible: boolean }>();
+export const vehicleState = new Map<string, { x: number; z: number; rx?: number; rz?: number; visible: boolean }>();

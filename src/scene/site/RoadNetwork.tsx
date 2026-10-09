@@ -74,7 +74,7 @@ export function RoadNetwork() {
     }
     // hududga kirish va chiqish tutashuvlari (asfalt)
     const fenceV = rf.fenceV;
-    for (const gx of [cfg.site.entryGateX, cfg.site.exitGateX]) {
+    for (const gx of [cfg.site.entryGateX]) {
       const gw = cfg.site.gateWidth / 2;
       const flare = 7;
       const pts: [number, number][] = [
@@ -86,8 +86,8 @@ export function RoadNetwork() {
         [gx - gw, rf.zAt(gx - gw, half + cfg.road.sidewalkWidth + 1.5)],
       ];
       b.add('asphalt', polygonGeometry(pts, 0.135));
-      // to‘xtash chizig‘i (chiqishda)
-      b.add('markingWhite', new THREE.BoxGeometry(gw, 0.01, 0.4), [gx + (gx === cfg.site.exitGateX ? -gw / 2 : gw / 2), 0.15, rf.zAt(gx, fenceV - 0.5)], [0, ang, 0]);
+      // to‘xtash chizig‘i (chiqish bo‘lagida) va bo‘laklar orasidagi chiziq
+      b.add('markingWhite', new THREE.BoxGeometry(gw, 0.01, 0.4), [gx + gw / 2, 0.15, rf.zAt(gx + gw / 2, fenceV - 0.5)], [0, ang, 0]);
     }
     return b.build();
   }, []);

@@ -44,11 +44,11 @@ describe('bino o‘lchamlari (konfiguratsiya)', () => {
     expect(segs.map((s) => s.id)).toEqual(['front', 'production', 'rear']);
   });
 
-  it('showroom 9 × 15 × 6 m old fasadning o‘ng tomonida (x < 0), 3 ta darvoza', () => {
+  it('showroom 9 × 15 × 9 m old fasadning o‘ng tomonida (x < 0), 3 ta darvoza', () => {
     const r = showroomRect();
     expect(r.x1 - r.x0).toBe(9);
     expect(r.z1 - r.z0).toBe(15);
-    expect(factoryConfig.showroom.height).toBe(6);
+    expect(factoryConfig.showroom.height).toBe(9);
     expect(r.x1).toBeLessThanOrEqual(0);
     expect(rollerDoors()).toHaveLength(3);
   });
@@ -102,6 +102,26 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     expect(slab.min.z).toBeGreaterThanOrEqual(115);
   });
 
+  it('oxirgi qismning ishlab chiqarishga qaragan devori shishadan (ikkala qavat)', () => {
+    const near = (parts: { key: string; geometry: THREE.BufferGeometry }[]) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      for (const part of parts) {
+        if (part.key !== 'glass') continue;
+        const pos = part.geometry.getAttribute('position');
+        for (let i = 0; i < pos.count; i++) {
+          if (Math.abs(pos.getZ(i) - 115.12) > 0.05) continue;
+          minX = Math.min(minX, pos.getX(i));
+          maxX = Math.max(maxX, pos.getX(i));
+        }
+      }
+      return maxX - minX;
+    };
+    const fresh = buildMainShell();
+    expect(near(fresh.glass.build())).toBeGreaterThan(39);
+    expect(near(fresh.upperGlass.build())).toBeGreaterThan(39);
+  });
+
   it('old fasad to‘liq shisha (40 m bo‘ylab), yon fasad (xomashyo ombori) yopiq', () => {
     const glass = p.glass.build();
     // old fasaddagi shisha (z ≈ 0) qamrovi
@@ -110,17 +130,18 @@ describe('3D geometriya haqiqiy metrlarda', () => {
     let maxY = 0;
     let sideMaxZ = 0;
     for (const part of glass) {
-      if (part.key !== 'glass') continue;
+      if (part.key !== 'glassFacade' && part.key !== 'glass') continue;
       const pos = part.geometry.getAttribute('position');
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const z = pos.getZ(i);
-        if (Math.abs(z) < 0.1) {
+        if (Math.abs(z) < 0.1 && part.key === 'glassFacade') {
           minX = Math.min(minX, x);
           maxX = Math.max(maxX, x);
           maxY = Math.max(maxY, pos.getY(i));
         }
-        if (x < -19.9) sideMaxZ = Math.max(sideMaxZ, z);
+        // omborlar va ishlab chiqarish yon devori (oxirgi 2 qavatli qism derazalari hisobga olinmaydi)
+        if (x < -19.9 && z < 115) sideMaxZ = Math.max(sideMaxZ, z);
       }
     }
     expect(minX).toBeLessThan(-19.5);
@@ -157,7 +178,7 @@ describe('o‘lcham chiziqlari geometriyadan hisoblanadi', () => {
     ['h-rear', 8],
     ['sr-width', 9],
     ['sr-depth', 15],
-    ['sr-height', 6],
+    ['sr-height', 9],
   ])('%s = %d m', (id, v) => {
     expect(specs[id].value).toBeCloseTo(v as number, 6);
   });

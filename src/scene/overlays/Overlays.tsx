@@ -94,8 +94,7 @@ export function ZoneLabels() {
     const rp = rf.toWorld(-40, 0);
     out.push({ id: 'road', text: 'Katta avtomobil yo‘li', pos: [rp.x, 2, rp.z], kind: 'major' });
     out.push({ id: 'parking', text: 'Avtoturargoh', pos: [(c.site.parking.x0 + c.site.parking.x1) / 2, 2, (c.site.parking.z0 + c.site.parking.z1) / 2], kind: 'minor' });
-    out.push({ id: 'site-gate', text: 'Kirish (KPP)', pos: [c.site.entryGateX, 4, -50], kind: 'minor' });
-    out.push({ id: 'site-exit', text: 'Chiqish', pos: [c.site.exitGateX, 4, -30], kind: 'minor' });
+    out.push({ id: 'site-gate', text: 'Kirish-chiqish (KPP)', pos: [c.site.entryGateX, 4, -50], kind: 'minor' });
     // ichki zonalar (kesim rejimida)
     for (const st of L.stations) out.push({ id: st.id, text: st.name, pos: [st.cx, FLOOR_Y + st.height + 0.9, st.cz], kind: 'minor' });
     out.push({ id: 'qc-zone', text: 'OTK/GPO sifat nazorati', pos: [(L.qualityZone.x0 + L.qualityZone.x1) / 2 - 3, 3.0, (L.qualityZone.z0 + L.qualityZone.z1) / 2], kind: 'major' });
@@ -164,34 +163,29 @@ export function FlowArrows() {
     const L = computeLineLayout();
     const lane = rf.eastboundOuterV;
     const tr = animationConfig.trucks;
-    const fl = animationConfig.forklifts;
-    const find = (id: string) => fl.find((f) => f.id === id)!.route;
     const roadIn = rf.toWorld(-90, lane);
-    const roadOut = rf.toWorld(90 + factoryConfig.site.exitGateX, lane);
-    const rawFl = find('fl-raw-unload');
-    const rawIn = find('fl-raw-internal');
+    const roadOut = rf.toWorld(90 + tr.gate.outX, lane);
     const linePts: P2[] = L.path.sample(1.0);
-    // Katta yo‘l → kirish → 3-darvoza oldida tushirish → xomashyo ombori → yuklash stoli
+    const rawDoorX = tr.raw.reverse[tr.raw.reverse.length - 1][0];
+    const fgDoorX = tr.finished.reverse[tr.finished.reverse.length - 1][0];
+    // Katta yo‘l → kirish-chiqish darvozasi → 3-darvoza (xomashyo ombori) → yuklash stoli
     const raw: P2[] = [
       [roadIn.x, roadIn.z],
-      [tr.siteRoute[0][0], rf.zAt(tr.siteRoute[0][0], lane)],
-      ...tr.siteRoute.slice(0, 3),
-      [rawFl[0][0], tr.laneZ],
-      [rawFl[0][0], rawFl[0][1]],
-      [rawIn[0][0], rawIn[0][1]],
-      [rawIn[1][0], rawIn[1][1]],
+      [tr.gate.inX, rf.zAt(tr.gate.inX, lane)],
+      ...tr.raw.approach,
+      ...tr.raw.reverse.slice(1, -1),
+      [rawDoorX, 6],
+      [-8, 20],
+      [-8, 38],
       linePts[0],
     ];
-    const fgIn = find('fl-fg-internal');
-    const fgOut = find('fl-fg-load');
-    // qadoqlash → tayyor mahsulotlar ombori → 1-darvoza → yuk mashinasi → chiqish
+    // qadoqlash → tayyor mahsulotlar ombori → 1-darvoza → yuk mashinasi → o‘sha darvozadan chiqish
     const fg: P2[] = [
-      [fgIn[1][0], L.packedStaging.z0 + 1],
-      [fgIn[0][0], fgIn[0][1]],
-      [fgOut[0][0], fgOut[0][1]],
-      [fgOut[0][0], tr.laneZ],
-      ...tr.siteRoute.slice(3),
-      [factoryConfig.site.exitGateX, rf.zAt(factoryConfig.site.exitGateX, lane)],
+      [14.3, L.packedStaging.z0 + 1],
+      [14.3, 30],
+      [fgDoorX, 5],
+      ...tr.finished.exit,
+      [tr.gate.outX, rf.zAt(tr.gate.outX, lane)],
       [roadOut.x, roadOut.z],
     ];
     const paths = [

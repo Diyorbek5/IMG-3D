@@ -47,8 +47,8 @@ export function SiteGround() {
       polygonGeometry(
         [
           [W, fz(W)],
-          [cfg.site.exitGateX + 6, fz(cfg.site.exitGateX + 6)],
-          [cfg.site.exitGateX + 6, fw.rect.z0],
+          [cfg.site.apronEastX, fz(cfg.site.apronEastX)],
+          [cfg.site.apronEastX, fw.rect.z0],
           [fw.wing ? fw.wing.x1 : fw.rect.x0, fw.rect.z0],
           [fw.wing ? fw.wing.x1 : fw.rect.x0, fwZ0],
           [fw.rect.x0, fwZ0],
@@ -89,8 +89,6 @@ export function SiteGround() {
       mark('markingYellow', x1 - 0.2, -4.2, x1, -0.05);
       for (let x = x0 + 0.6; x < x1 - 0.6; x += 1.0) b.add('markingYellow', new THREE.BoxGeometry(0.18, 0.004, 1.6), [x, yl + 0.002, -2.1], [0, 0.6, 0]);
     }
-    // forklift yo‘nalishlari (darvozalardan yuk mashinasi to‘xtash joyigacha)
-    for (const d of rollerDoors()) for (let z = -4.6; z > -17; z -= 3) mark('markingWhite', d.cx - 0.08, z - 1.6, d.cx + 0.08, z);
 
     /* ---- avtoturargoh ---- */
     const pk = cfg.site.parking;
@@ -112,15 +110,13 @@ export function SiteGround() {
       b.boxMinMax('grass', pk.x0 + 0.15, 0.161, z0 + 0.15, pk.x1 - 0.15, 0.165, z1 - 0.15);
     }
 
-    /* ---- yuk mashinalari to‘xtash joylari (darvozalar oldida, yon tomoni bilan) ---- */
-    const lz = animationConfig.trucks.laneZ;
-    for (const stop of [animationConfig.trucks.raw.stop, animationConfig.trucks.finished.stop]) {
-      const x0 = stop[0] - 13.4;
-      const x1 = stop[0] + 4.2;
-      mark('markingYellow', x0, lz - 1.6, x1, lz - 1.45);
-      mark('markingYellow', x0, lz + 1.45, x1, lz + 1.6);
-      mark('markingYellow', x0, lz - 1.6, x0 + 0.15, lz + 1.6);
-      mark('markingYellow', x1 - 0.15, lz - 1.6, x1, lz + 1.6);
+    /* ---- yuk mashinalari orqaga yurib kiradigan zonalar (ombor darvozalari oldida) ---- */
+    for (const t of [animationConfig.trucks.raw, animationConfig.trucks.finished]) {
+      const dx = t.reverse[t.reverse.length - 1][0];
+      const z0 = t.stopZ - 6;
+      mark('markingYellow', dx - 1.75, z0, dx - 1.6, -0.3);
+      mark('markingYellow', dx + 1.6, z0, dx + 1.75, -0.3);
+      mark('markingYellow', dx - 1.75, z0, dx + 1.75, z0 + 0.15);
     }
 
     /* ---- masterplandagi yashil maydonlar (chegara to‘siq — past butalar) ---- */

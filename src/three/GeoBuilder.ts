@@ -12,6 +12,7 @@ export type MatKey =
   | 'aluminium'
   | 'aluDark'
   | 'glass'
+  | 'glassFacade'
   | 'glassTint'
   | 'glassDark'
   | 'solar'

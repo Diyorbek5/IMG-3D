@@ -192,7 +192,7 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
             const hz1 = zc + dz + 1.1;
             holes.push({ a0: hz0, a1: hz1, y0: wy0, y1: wy1 });
             curtainWall(target === 'upper' ? upperGlass : glass, target === 'upper' ? upper : shell, 'z', x + side * -0.08, hz0, hz1, wy0, wy1, 1.1, [], {
-              glassKey: 'glassTint',
+              glassKey: 'glass',
               depth: 0.12,
             });
           }
@@ -244,10 +244,10 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
       let x = -W + 0.12;
       for (const d of [...doors, null]) {
         const xe = d ? d.cx - d.width / 2 - 0.12 : W - 0.12;
-        if (xe - x > 0.3) curtainWall(glass, shell, 'x', 0.02, x, xe, FLOOR_Y, roofY, gc.mullionSpacing, transoms, { heavyEvery: 4, depth: 0.2 });
+        if (xe - x > 0.3) curtainWall(glass, shell, 'x', 0.02, x, xe, FLOOR_Y, roofY, gc.mullionSpacing, transoms, { heavyEvery: 4, depth: 0.2, glassKey: 'glassFacade' });
         if (d) {
           // darvoza ustidagi vitraj
-          curtainWall(glass, shell, 'x', 0.02, d.cx - d.width / 2 - 0.12, d.cx + d.width / 2 + 0.12, d.height + 0.12, roofY, gc.mullionSpacing, transoms.filter((y) => y > d.height + 0.5), { depth: 0.2 });
+          curtainWall(glass, shell, 'x', 0.02, d.cx - d.width / 2 - 0.12, d.cx + d.width / 2 + 0.12, d.height + 0.12, roofY, gc.mullionSpacing, transoms.filter((y) => y > d.height + 0.5), { depth: 0.2, glassKey: 'glassFacade' });
           // darvoza ustidagi ko‘ndalang to‘sin
           shell.boxMinMax('aluDark', d.cx - d.width / 2 - 0.12, d.height, -0.1, d.cx + d.width / 2 + 0.12, d.height + 0.14, t);
           x = d.cx + d.width / 2 + 0.12;
@@ -291,10 +291,30 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
       const holes: Hole[] = isRear ? [{ a0: -2.5, a1: 2.5, y0: 0, y1: 3.2 }, { a0: -15, a1: -12.5, y0: 0, y1: 2.4 }] : [];
       const tgt = hi.id === 'rear' ? upper : shell;
       if (isRear && hi.id === 'rear') {
+        // oxirgi qismning ishlab chiqarishga qaragan tomoni — to‘liq vitraj (ishlab chiqarish ko‘rinib turadi)
         const ff = cfg.building.rearFirstFloorHeight;
-        wallWithHoles(shell, 'paintWhite', 'x', z + inward * 0, inward as 1 | -1, -W + t, W - t, 0, Math.min(ff, lo.height - P), holes, t);
-        wallWithHoles(shell, 'cladding', 'x', z, inward as 1 | -1, -W, W, lo.height - P - 0.3, ff, [], t);
-        wallWithHoles(upper, 'cladding', 'x', z, inward as 1 | -1, -W, W, ff, hi.height, [], t);
+        const gz = z + inward * 0.12;
+        const yTop = Math.min(ff, lo.height - P) - 0.3;
+        const sorted = holes.slice().sort((a, b) => a.a0 - b.a0);
+        let xa = -W + t;
+        for (const h of [...sorted, null]) {
+          const xe = h ? h.a0 : W - t;
+          if (xe - xa > 0.3) curtainWall(glass, shell, 'x', gz, xa, xe, FLOOR_Y, yTop, 1.5, [2.4], { heavyEvery: 4, depth: 0.14 });
+          if (h) {
+            // eshik ustidagi vitraj va ramka
+            if (yTop - h.y1 > 0.3) curtainWall(glass, shell, 'x', gz, h.a0, h.a1, h.y1, yTop, 1.5, [], { depth: 0.14 });
+            shell.boxMinMax('aluDark', h.a0 - 0.08, FLOOR_Y, gz - 0.1, h.a0, h.y1, gz + 0.1);
+            shell.boxMinMax('aluDark', h.a1, FLOOR_Y, gz - 0.1, h.a1 + 0.08, h.y1, gz + 0.1);
+            xa = h.a1;
+          }
+        }
+        // qavatlararo plita belbog‘i
+        shell.boxMinMax('claddingDark', -W, yTop, Math.min(z, gz) - 0.05, W, lo.height - P + 0.35, Math.max(z, gz) + 0.05);
+        // ikkinchi qavat: ishlab chiqarish tomi ustidan vitraj
+        const uy0 = lo.height - P + 0.35;
+        const uy1 = hi.height - P - 0.15;
+        curtainWall(upperGlass, upper, 'x', gz, -W + t, W - t, uy0, uy1, 1.5, [], { heavyEvery: 4, depth: 0.14 });
+        upper.boxMinMax('cladding', -W, uy1, Math.min(z, gz) - 0.05, W, hi.height, Math.max(z, gz) + 0.05);
       } else {
         wallWithHoles(tgt, 'cladding', 'x', z, inward as 1 | -1, -W, W, fromY, hi.height, [], t);
       }
@@ -313,11 +333,11 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     for (let x = -W + 3; x <= W - 3; x += 4.5) {
       if (Math.abs(x - doorX) < 3) continue;
       holesLower.push({ a0: x - 1.4, a1: x + 1.4, y0: 1.0, y1: ff - 1.1 });
-      curtainWall(glass, shell, 'x', z + 0.08, x - 1.4, x + 1.4, 1.0, ff - 1.1, 1.4, [], { glassKey: 'glassTint', depth: 0.12 });
+      curtainWall(glass, shell, 'x', z + 0.08, x - 1.4, x + 1.4, 1.0, ff - 1.1, 1.4, [], { glassKey: 'glass', depth: 0.12 });
     }
     for (let x = -W + 3; x <= W - 3; x += 4.5) {
       holesUpper.push({ a0: x - 1.4, a1: x + 1.4, y0: ff + 0.9, y1: rear.height - P - 0.6 });
-      curtainWall(upperGlass, upper, 'x', z + 0.08, x - 1.4, x + 1.4, ff + 0.9, rear.height - P - 0.6, 1.4, [], { glassKey: 'glassTint', depth: 0.12 });
+      curtainWall(upperGlass, upper, 'x', z + 0.08, x - 1.4, x + 1.4, ff + 0.9, rear.height - P - 0.6, 1.4, [], { glassKey: 'glass', depth: 0.12 });
     }
     if (rear.floors >= 2) {
       wallWithHoles(shell, 'cladding', 'x', z, -1, -W, W, plinth, ff, holesLower, t);
@@ -432,7 +452,7 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
       upper.boxMinMax('concrete', -W + t, ff - 0.3, r.z0 + t, W - t, ff, r.z1 - t);
       upper.boxMinMax('floor', -W + t, ff, r.z0 + t, W - t, ff + 0.02, r.z1 - t);
     }
-    buildRearRooms(cfg, r, interior, upper);
+    buildRearRooms(cfg, r, interior, upper, glass, upperGlass);
   }
 
   /* ---------- Old korpus ichki bo‘luvchi devori (chizmadagi chiziq) ---------- */
@@ -445,8 +465,11 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
   return { shell, glass, roof, upper, upperGlass, interior };
 }
 
+/** Ishlab chiqarish tomoniga shisha bo‘linma bilan ochiladigan xonalar */
+const GLASS_ROOMS = new Set(['canteen', 'manager', 'office', 'meeting', 'lab']);
+
 /** Oxirgi qism xonalari: bo‘linmalar, koridor devori (eshik o‘rinlari bilan) va xona jihozlari */
-function buildRearRooms(cfg: typeof factoryConfig, r: SegmentLayout, lower: GeoBuilder, upper: GeoBuilder) {
+function buildRearRooms(cfg: typeof factoryConfig, r: SegmentLayout, lower: GeoBuilder, upper: GeoBuilder, lowerGlass: GeoBuilder, upperGlass: GeoBuilder) {
   const t = cfg.building.wallThickness;
   const P = cfg.building.parapetHeight;
   const ff = cfg.building.rearFirstFloorHeight;
@@ -465,9 +488,19 @@ function buildRearRooms(cfg: typeof factoryConfig, r: SegmentLayout, lower: GeoB
       // koridor devori (lobby — ochiq)
       if (m.type !== 'lobby') {
         const dx = (m.x0 + m.x1) / 2;
-        b.boxMinMax('paintWhite', Math.max(m.x0, -HALF_W + t), y0, zA - 0.06, dx - 0.55, y1, zA + 0.06);
-        b.boxMinMax('paintWhite', dx + 0.55, y0, zA - 0.06, Math.min(m.x1, HALF_W - t), y1, zA + 0.06);
-        b.boxMinMax('paintWhite', dx - 0.55, y0 + 2.2, zA - 0.06, dx + 0.55, y1, zA + 0.06);
+        const xa = Math.max(m.x0, -HALF_W + t);
+        const xb = Math.min(m.x1, HALF_W - t);
+        if (GLASS_ROOMS.has(m.type)) {
+          // shisha bo‘linma: xonadan koridor va vitraj orqali ishlab chiqarish ko‘rinadi
+          const g = floor === 1 ? lowerGlass : upperGlass;
+          curtainWall(g, b, 'x', zA, xa, dx - 0.55, y0, y1, 1.2, [], { depth: 0.08 });
+          curtainWall(g, b, 'x', zA, dx + 0.55, xb, y0, y1, 1.2, [], { depth: 0.08 });
+          curtainWall(g, b, 'x', zA, dx - 0.55, dx + 0.55, y0 + 2.2, y1, 1.2, [], { depth: 0.08 });
+        } else {
+          b.boxMinMax('paintWhite', xa, y0, zA - 0.06, dx - 0.55, y1, zA + 0.06);
+          b.boxMinMax('paintWhite', dx + 0.55, y0, zA - 0.06, xb, y1, zA + 0.06);
+          b.boxMinMax('paintWhite', dx - 0.55, y0 + 2.2, zA - 0.06, dx + 0.55, y1, zA + 0.06);
+        }
         b.boxMinMax('wood', dx - 0.5, y0, zA - 0.02, dx + 0.5, y0 + 2.15, zA + 0.02);
       }
       // shift yoritgichi

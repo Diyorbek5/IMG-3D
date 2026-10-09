@@ -20,7 +20,7 @@ export function buildShowroom(cfg = factoryConfig) {
   const fascia = 0.9;
   const gTop = H - fascia;
   const step = cfg.glassCorner.mullionSpacing;
-  const transoms = [3.2];
+  const transoms = [3.2, 6.2];
 
   // poydevor va pol
   solid.boxMinMax('concreteDark', r.x0 - 0.05, -0.3, r.z0 - 0.05, r.x1 + 0.05, FLOOR_Y - 0.02, r.z1);
@@ -33,9 +33,9 @@ export function buildShowroom(cfg = factoryConfig) {
   solid.boxMinMax('roof', r.x0 + 0.15, H - 0.12, r.z0 + 0.15, r.x1 - 0.15, H - 0.05, r.z1);
 
   // vitrajlar: shimoliy, sharqiy, g‘arbiy fasadlar
-  curtainWall(glass, solid, 'x', r.z0, r.x0, r.x1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2 });
-  curtainWall(glass, solid, 'z', r.x1, r.z0, r.z1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2 });
-  curtainWall(glass, solid, 'z', r.x0, r.z0, r.z1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2 });
+  curtainWall(glass, solid, 'x', r.z0, r.x0, r.x1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2, glassKey: 'glassFacade' });
+  curtainWall(glass, solid, 'z', r.x1, r.z0, r.z1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2, glassKey: 'glassFacade' });
+  curtainWall(glass, solid, 'z', r.x0, r.z0, r.z1, FLOOR_Y, gTop, step, transoms, { heavyEvery: 2, depth: 0.2, glassKey: 'glassFacade' });
   // burchak ustunlari (alyuminiy)
   for (const [x, z] of [
     [r.x0, r.z0],
@@ -98,13 +98,14 @@ export function buildShowroom(cfg = factoryConfig) {
     solid.cyl('paintDark', [x, FLOOR_Y + 0.3, z], 0.3, 0.6, 'y', 14);
     solid.add('plant', unitIco(), [x, FLOOR_Y + 1.15, z], [0, 0, 0], [0.55, 0.8, 0.55]);
   }
-  // osma chiroqlar
+  // osma chiroqlar (pol sathidan ≈5 m balandlikda)
+  const drop = Math.max(1.4, gTop - FLOOR_Y - 5);
   for (let i = 0; i < 3; i++)
     for (let j = 0; j < 2; j++) {
       const x = r.x0 + 2.5 + j * 4;
       const z = r.z0 + 3 + i * 4.5;
-      solid.cyl('aluDark', [x, (gTop + gTop - 1.4) / 2, z], 0.01, 1.4, 'y', 4);
-      solid.cyl('lampWarm', [x, gTop - 1.5, z], 0.22, 0.18, 'y', 18);
+      solid.cyl('aluDark', [x, gTop - drop / 2, z], 0.01, drop, 'y', 4);
+      solid.cyl('lampWarm', [x, gTop - drop - 0.1, z], 0.22, 0.18, 'y', 18);
     }
   solid.boxMinMax('lightPanel', r.x0 + 1, gTop - 0.02, r.z0 + 1, r.x1 - 1, gTop, r.z0 + 1.2);
   return { solid: solid.build(), glass: glass.build(), brandWall: { x: (r.x0 + r.x1) / 2 + 0.6, y: FLOOR_Y + 2.4, z: r.z1 - 1.01 }, fasciaY: gTop + fascia / 2, r };

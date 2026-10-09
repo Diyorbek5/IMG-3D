@@ -27,7 +27,7 @@ function treeLayout(): TreeInst[] {
   const cfg = factoryConfig;
   const rf = roadFrame();
   const out: TreeInst[] = [];
-  const gates = [cfg.site.entryGateX, cfg.site.exitGateX];
+  const gates = [cfg.site.entryGateX];
   // yo‘l bo‘yidagi daraxtlar (hudud tomoni) — old fasad ko‘rinishini ochiq qoldiramiz
   for (let u = -240; u < 320; u += 11) {
     const p = rf.toWorld(u, rf.sidewalkV + 1.7);
@@ -186,7 +186,6 @@ function lampPositions(): { x: number; z: number; rot: number }[] {
   for (let x = 40; x < 136; x += 20) if (![50, 116, 92].some((a) => Math.abs(a - x) < 4)) out.push({ x, z: 21.5, rot: Math.PI / 2 });
   for (let z = -30; z < 4; z += 16) out.push({ x: 24, z, rot: Math.PI });
   for (let x = cfg.site.parking.x0 + 6; x < cfg.site.parking.x1; x += 14) out.push({ x, z: cfg.site.parking.z0 + 18.25, rot: Math.PI / 2 });
-  out.push({ x: cfg.site.exitGateX + 7.5, z: siteNorthZ(cfg.site.exitGateX) + 3, rot: Math.PI });
   out.push({ x: -38, z: -30, rot: 0 });
   for (let z = 76; z < cfg.building.totalLength; z += 24) out.push({ x: 23, z, rot: Math.PI });
   return out;
@@ -226,27 +225,29 @@ function SiteFurniture() {
         }
       }
     };
-    const { westX, eastX, southZ, entryGateX, exitGateX, gateWidth } = cfg.site;
+    const { westX, eastX, southZ, entryGateX, gateWidth } = cfg.site;
     const gh = gateWidth / 2 + 1.5;
     const nz = (x: number) => siteNorthZ(x);
     fenceSeg(westX, nz(westX), entryGateX - gh, nz(entryGateX - gh));
-    fenceSeg(entryGateX + gh, nz(entryGateX + gh), exitGateX - gh, nz(exitGateX - gh));
-    fenceSeg(exitGateX + gh, nz(exitGateX + gh), eastX, nz(eastX));
+    fenceSeg(entryGateX + gh, nz(entryGateX + gh), eastX, nz(eastX));
     fenceSeg(westX, nz(westX), westX, southZ);
     fenceSeg(westX, southZ, eastX, southZ);
     fenceSeg(eastX, nz(eastX), eastX, southZ);
     // darvoza ustunlari va surma darvozalar (ochiq holatda)
-    for (const gx of [entryGateX, exitGateX]) {
+    for (const gx of [entryGateX]) {
       for (const s of [-1, 1]) {
         const x = gx + s * gh;
         b.box('paintDark', [x, 1.4, nz(x)], [0.5, 2.8, 0.5]);
       }
       b.box('aluDark', [gx - gh - 5, 1.1, nz(gx - gh - 5) + 0.6], [9, 1.8, 0.08]);
-      // shlagbaum
-      const bx = gx + gh - 1.2;
-      const bz = nz(bx) + 4;
-      b.box('paintGrey', [bx, 0.55, bz], [0.4, 1.1, 0.4]);
-      for (let k = 0; k < 6; k++) b.add(k % 2 ? 'paintWhite' : 'paintRed', new THREE.BoxGeometry(0.1, 0.95, 0.1), [bx, 1.6 + k * 0.95, bz], [0, 0, 0.15]);
+      // shlagbaumlar: kirish (g‘arbiy) va chiqish (sharqiy) bo‘laklari
+      for (const bx of [gx - gh + 1.2, gx + gh - 1.2]) {
+        const bz = nz(bx) + 4;
+        b.box('paintGrey', [bx, 0.55, bz], [0.4, 1.1, 0.4]);
+        for (let k = 0; k < 6; k++) b.add(k % 2 ? 'paintWhite' : 'paintRed', new THREE.BoxGeometry(0.1, 0.95, 0.1), [bx, 1.6 + k * 0.95, bz], [0, 0, bx < gx ? -0.15 : 0.15]);
+      }
+      // bo‘laklarni ajratuvchi orolcha
+      b.box('curb', [gx, 0.1, nz(gx) + 3], [0.8, 0.2, 7]);
     }
     /* ---- KPP (nazorat-o‘tkazish punkti) ---- */
     {
@@ -308,11 +309,6 @@ function SiteFurniture() {
       <Selectable id="site-gate">
         <mesh visible={false} position={[factoryConfig.site.entryGateX - 6, 1.5, siteNorthZ(factoryConfig.site.entryGateX) + 4]}>
           <boxGeometry args={[14, 3, 9]} />
-        </mesh>
-      </Selectable>
-      <Selectable id="site-exit">
-        <mesh visible={false} position={[factoryConfig.site.exitGateX, 1.5, siteNorthZ(factoryConfig.site.exitGateX) + 3]}>
-          <boxGeometry args={[14, 3, 6]} />
         </mesh>
       </Selectable>
     </group>

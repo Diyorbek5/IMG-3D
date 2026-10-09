@@ -56,7 +56,7 @@ function RollerShutterDoor({ door, curtainMat }: { door: DoorLayout; curtainMat:
       const r = animationConfig.doorTriggerDistance;
       for (const v of vehicleState.values()) {
         if (!v.visible) continue;
-        if (Math.hypot(v.x - cx, v.z) < r) {
+        if (Math.hypot(v.x - cx, v.z) < r || (v.rx !== undefined && Math.hypot(v.rx - cx, (v.rz ?? 0)) < r)) {
           target = 1;
           break;
         }

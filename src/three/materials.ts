@@ -36,13 +36,15 @@ function withMaps(m: THREE.MeshStandardMaterial, map?: THREE.Texture, normal?: T
   return m;
 }
 
-function makeGlass(mode: 'transmission' | 'alpha') {
+/** tone: 'clear' — oddiy shisha; 'facade' — old fasad vitraji (biroz qoraytirilgan, quyoshdan himoya) */
+function makeGlass(mode: 'transmission' | 'alpha', tone: 'clear' | 'facade' = 'clear') {
+  const facade = tone === 'facade';
   if (mode === 'transmission') {
     return new THREE.MeshPhysicalMaterial({
-      color: '#d6e4e8',
+      color: facade ? '#8d9fa7' : '#d6e4e8',
       metalness: 0,
       roughness: 0.03,
-      transmission: 0.92,
+      transmission: facade ? 0.72 : 0.92,
       thickness: 0.02,
       ior: 1.52,
       envMapIntensity: 1.6,
@@ -51,12 +53,12 @@ function makeGlass(mode: 'transmission' | 'alpha') {
     });
   }
   return new THREE.MeshPhysicalMaterial({
-    color: '#6f8792',
+    color: facade ? '#43535c' : '#6f8792',
     metalness: 0.15,
     roughness: 0.03,
     transparent: true,
-    opacity: 0.38,
-    envMapIntensity: 2.2,
+    opacity: facade ? 0.55 : 0.38,
+    envMapIntensity: facade ? 2.4 : 2.2,
     specularIntensity: 1,
     ior: 1.52,
     depthWrite: false,
@@ -78,6 +80,7 @@ export function getMaterials(): Lib {
     aluminium: std({ color: '#c3c7cb', metalness: 1, roughness: 0.3 }),
     aluDark: std({ color: '#2a2d31', metalness: 0.75, roughness: 0.38 }),
     glass: makeGlass(glassMode),
+    glassFacade: makeGlass(glassMode, 'facade'),
     glassTint: std({ color: '#18232c', metalness: 0.9, roughness: 0.05, envMapIntensity: 1.5, emissive: '#ffcf8a', emissiveIntensity: 0 }),
     glassDark: std({ color: '#141b22', metalness: 0.9, roughness: 0.06, envMapIntensity: 1.3 }),
     steel: std({ color: '#7d8389', metalness: 0.85, roughness: 0.42 }),
@@ -137,12 +140,17 @@ export function setGlassMode(mode: 'transmission' | 'alpha') {
   if (glassMode === mode && lib) return;
   glassMode = mode;
   if (!lib) return;
-  const old = lib.glass;
-  const next = makeGlass(mode);
-  // mavjud material obyektini almashtirish o‘rniga xususiyatlarni ko‘chiramiz (mesh havolalari saqlanadi)
-  (old as THREE.MeshPhysicalMaterial).copy(next as THREE.MeshPhysicalMaterial);
-  old.needsUpdate = true;
-  next.dispose();
+  for (const [key, tone] of [
+    ['glass', 'clear'],
+    ['glassFacade', 'facade'],
+  ] as const) {
+    const old = lib[key];
+    const next = makeGlass(mode, tone);
+    // mavjud material obyektini almashtirish o‘rniga xususiyatlarni ko‘chiramiz (mesh havolalari saqlanadi)
+    (old as THREE.MeshPhysicalMaterial).copy(next as THREE.MeshPhysicalMaterial);
+    old.needsUpdate = true;
+    next.dispose();
+  }
 }
 
 export type LightingMode = 'day' | 'sunset' | 'night';

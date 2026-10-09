@@ -120,7 +120,7 @@ export const factoryConfig = {
     width: 9,
     depth: 15,
     sizeStatus: 'confirmed' as ValueStatus,
-    height: 6,
+    height: 9,
     heightStatus: 'confirmed' as ValueStatus,
   },
 
@@ -223,8 +223,10 @@ export const factoryConfig = {
     westX: -48,
     eastX: 178,
     southZ: 150,
+    /** Yagona kirish-chiqish darvozasi (KPP): kirish va chiqish bitta joydan */
     entryGateX: 8,
-    exitGateX: 140,
+    /** Asfalt maydonning sharqiy chegarasi */
+    apronEastX: 146,
     gateWidth: 12,
     parking: { x0: 39, x1: 78, z0: -30, z1: -3 } as Rect,
     lawns: [

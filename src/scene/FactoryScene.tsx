@@ -5,7 +5,7 @@ import { EffectComposer, N8AO, SMAA, ToneMapping, Bloom } from '@react-three/pos
 import { ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 import { cameraConfig } from '../config/cameraConfig';
-import { useStore } from '../state/store';
+import { simClock, useStore } from '../state/store';
 import { AnimationController } from './AnimationController';
 import { CameraController } from './CameraController';
 import { Lighting } from './Lighting';
@@ -78,8 +78,8 @@ export function FactoryScene() {
       dpr={DPR[quality] as unknown as [number, number]}
       camera={{ fov: cameraConfig.fov, near: 0.5, far: 6000, position: cameraConfig.presets.reset.position }}
       gl={{ antialias: quality !== 'high', powerPreference: 'high-performance', preserveDrawingBuffer: false, stencil: false }}
-      onCreated={({ gl, scene }) => {
-        if (new URLSearchParams(window.location.search).has('debug')) Object.assign(window, { __three: { gl, scene } });
+      onCreated={({ gl, scene, get }) => {
+        if (new URLSearchParams(window.location.search).has('debug')) Object.assign(window, { __three: { gl, scene, get, simClock } });
         gl.localClippingEnabled = true;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.outputColorSpace = THREE.SRGBColorSpace;

@@ -30,11 +30,21 @@ describe('transport harakati', () => {
     expect(worst.gap).toBeGreaterThan(0.3);
   });
 
-  it('yuk ortgichlar o‘z sikli davomida harakatlanadi', () => {
-    for (const v of vehicles.filter((x) => x.kind === 'forklift')) {
-      expect(v.schedule.duration).toBeLessThanOrEqual(animationConfig.masterCycle);
-      const a = sampleVehicle(v, v.schedule.offset + 1);
-      expect(a.visible).toBe(true);
+  it('yuk mashinalari orqasi bilan o‘z darvozasiga biroz kiradi (xomashyo — 3-darvoza, tayyor mahsulot — 1-darvoza)', () => {
+    const doorX = { 'truck-raw': -3, 'truck-fg': 14 } as Record<string, number>;
+    for (const v of vehicles.filter((x) => x.kind.startsWith('truck'))) {
+      let best = { z: -Infinity, x: 0 };
+      for (let t = 0; t < animationConfig.masterCycle; t += 0.2) {
+        const s = sampleVehicle(v, t);
+        if (!s.visible) continue;
+        const th = s.trailerHeading ?? s.heading;
+        const rz = s.z - Math.sin(th) * 13;
+        if (rz > best.z) best = { z: rz, x: s.x - Math.cos(th) * 13 };
+      }
+      // tirkama orqasi bino ichida 1–6 m, darvoza o‘qida
+      expect(best.z, v.id).toBeGreaterThan(1);
+      expect(best.z, v.id).toBeLessThan(6);
+      expect(Math.abs(best.x - doorX[v.kind]), v.id).toBeLessThan(0.3);
     }
   });
 });

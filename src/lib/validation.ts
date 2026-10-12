@@ -27,14 +27,14 @@ export function runChecks(cfg = factoryConfig): Check[] {
   const qcLeft = L.qualityZone.x0 > 0;
   const showroomRight = sr.x1 <= 0;
   return [
-    { label: 'Umumiy uzunlik', ok: Math.abs(sum - cfg.building.totalLength) < 1e-6 && cfg.building.totalLength === 125, detail: `${segs.map((s) => s.length).join(' + ')} = ${sum} m, talab 125 m` },
+    { label: 'Umumiy uzunlik', ok: Math.abs(sum - cfg.building.totalLength) < 1e-6 && cfg.building.totalLength === 135, detail: `${segs.map((s) => s.length).join(' + ')} = ${sum} m, talab 135 m` },
     { label: 'Umumiy kenglik', ok: cfg.building.width === 40, detail: `${cfg.building.width} m` },
     {
       label: 'Old korpus — omborlar maydoni',
       ok: front.length === 40 && cfg.building.width === 40 && front.height === 12 && px + cfg.building.width / 2 === 22,
       detail: `${cfg.building.width} × ${front.length} m, ${front.height} m balandlik; xomashyo ombori ${px + cfg.building.width / 2} m, tayyor mahsulotlar ombori ${cfg.building.width / 2 - px} m`,
     },
-    { label: 'O‘rta (ishlab chiqarish) qism', ok: prod.length === 75 && prod.height === 5, detail: `${prod.length} m × ${prod.height} m balandlik` },
+    { label: 'O‘rta (ishlab chiqarish) qism', ok: prod.length === 85 && prod.height === 5, detail: `${prod.length} m × ${prod.height} m balandlik` },
     {
       label: 'Oxirgi qism',
       ok: rear.length === 10 && rear.height === 8 && rear.floors === 2 && cfg.building.rearFirstFloorHeight === 4 && rear.height - cfg.building.rearFirstFloorHeight === 4,

@@ -15,18 +15,25 @@ describe('odamlar (xodimlar va mehmonlar)', () => {
     expect(people.some((p) => p.behaviour.kind === 'route')).toBe(true);
   });
 
-  it('hech kim uskunalar ichidan o‘tmaydi', () => {
+  it('hech kim uskunalar, konveyerlar va toblash pechi ichidan o‘tmaydi', () => {
     const L = computeLineLayout();
     const rects = L.stations.map((s) => ({ id: s.id, x0: s.cx - s.width / 2, x1: s.cx + s.width / 2, z0: Math.min(s.zIn, s.zOut), z1: Math.max(s.zIn, s.zOut) }));
+    // konveyerlar va ixtiyoriy uskunalar (toblash pechi)
+    for (const c of L.conveyors) {
+      const hw = c.width / 2;
+      rects.push(c.axis === 'x' ? { id: c.id, x0: Math.min(c.a[0], c.b[0]), x1: Math.max(c.a[0], c.b[0]), z0: c.a[1] - hw, z1: c.a[1] + hw } : { id: c.id, x0: c.a[0] - hw, x1: c.a[0] + hw, z0: Math.min(c.a[1], c.b[1]), z1: Math.max(c.a[1], c.b[1]) });
+    }
+    for (const o of L.optional) rects.push({ id: o.id, x0: o.cx - o.width / 2, x1: o.cx + o.width / 2, z0: o.cz - o.length / 2, z1: o.cz + o.length / 2 });
+    const hits: string[] = [];
     for (const p of people.filter((q) => q.y < 1 && !q.upper)) {
       for (const t of times) {
         const s = samplePerson(p, t);
         for (const r of rects) {
-          const inside = s.x > r.x0 + 0.05 && s.x < r.x1 - 0.05 && s.z > r.z0 + 0.05 && s.z < r.z1 - 0.05;
-          expect(inside, `${p.role} → ${r.id} (t=${t})`).toBe(false);
+          if (s.x > r.x0 + 0.05 && s.x < r.x1 - 0.05 && s.z > r.z0 + 0.05 && s.z < r.z1 - 0.05) hits.push(`${p.role} → ${r.id} (t=${t})`);
         }
       }
     }
+    expect(hits.slice(0, 5)).toEqual([]);
   });
 
   it('har kim o‘z hududida (bino, showroom, oxirgi qism, hudud)', () => {

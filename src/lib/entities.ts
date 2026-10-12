@@ -71,7 +71,7 @@ export function getEntities(): Entity[] {
       bounds: { min: [-HALF_W, 0, s.z0], max: [HALF_W, s.height, s.z1] },
       role: s.id === 'production' ? 'Asosiy texnologik jarayon (4–11-bosqichlar)' : s.id === 'front' ? 'Xomashyo va tayyor mahsulotlarni saqlash (3, 12-bosqichlar)' : undefined,
       nextId: segNext[s.id],
-      group: 'Asosiy bino (40 × 125 m)',
+      group: `Asosiy bino (${cfg.building.width} × ${cfg.building.totalLength} m)`,
     });
   }
 
@@ -88,7 +88,7 @@ export function getEntities(): Entity[] {
     step: 3,
     role: 'Xomashyoni qabul qilish va saqlash',
     nextId: 'loader',
-    group: 'Asosiy bino (40 × 125 m)',
+    group: `Asosiy bino (${cfg.building.width} × ${cfg.building.totalLength} m)`,
   });
   out.push({
     id: 'fg-buffer',
@@ -101,7 +101,7 @@ export function getEntities(): Entity[] {
     step: 12,
     role: 'Tayyor mahsulotni saqlash va jo‘natish',
     nextId: 'door-1',
-    group: 'Asosiy bino (40 × 125 m)',
+    group: `Asosiy bino (${cfg.building.width} × ${cfg.building.totalLength} m)`,
   });
 
   /* ---- Showroom ---- */
@@ -115,7 +115,7 @@ export function getEntities(): Entity[] {
       'Old fasadning o‘ng burchagida (old tomondan qaraganda), binodan oldinga chiqib turgan to‘liq shishali ko‘rgazma zali. Ichida: qora marmar brend devori va iMG logotipi, marmar resepshn, arxitektura shishalari vitrinasi (shaffof, yashil, kulrang, ko‘k, bronza, oyna), alyuminiy profil tizimlari stendi (Thermo, Engelberg, Slide Master, Pergola), eshik-rom tizimlari bokslari, shisha to‘siqli antresol va zinapoya, mehmonlar lounge zonasi, trek-chiroqlar va LED yoritish.',
     dims: { length: cfg.showroom.depth, width: cfg.showroom.width, height: cfg.showroom.height, status: 'confirmed', note: `${cfg.showroom.width} × ${cfg.showroom.depth} m, balandligi ${cfg.showroom.height} m.` },
     bounds: { min: [sr.x0, 0, sr.z0], max: [sr.x1, cfg.showroom.height, sr.z1] },
-    group: 'Asosiy bino (40 × 125 m)',
+    group: `Asosiy bino (${cfg.building.width} × ${cfg.building.totalLength} m)`,
   });
 
   /* ---- Darvozalar ---- */
@@ -237,7 +237,7 @@ export function getEntities(): Entity[] {
       description: `Ishlab chiqarish zonasi tomining ${east ? 'chap' : 'o‘ng'} yarmida janubga ${cfg.solar.tiltDeg}° qiyalatilgan fotoelektr panellar qatorlari. Quvvati va aniq maydoni loyiha bo‘yicha aniqlashtiriladi.`,
       dims: { length: z1 - z0, width: HALF_W, height: 0.8, status: 'confirmed' },
       bounds: { min: [east ? 0 : -HALF_W, 4, z0], max: [east ? HALF_W : 0, 13, z1] },
-      group: 'Asosiy bino (40 × 125 m)',
+      group: `Asosiy bino (${cfg.building.width} × ${cfg.building.totalLength} m)`,
     });
   }
 

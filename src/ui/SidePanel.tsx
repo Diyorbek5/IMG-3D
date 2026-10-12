@@ -20,7 +20,7 @@ const LAYER_GROUPS: { title: string; items: { key: keyof Layers; label: string; 
   {
     title: 'O‘lchamlar',
     items: [
-      { key: 'dimsOverall', label: 'Umumiy o‘lchamlar', hint: '40 × 125 m, 12 m, 40 × 40 m' },
+      { key: 'dimsOverall', label: 'Umumiy o‘lchamlar', hint: '40 × 135 m, 12 m, 40 × 40 m' },
       { key: 'dimsZones', label: 'Zonalar o‘lchamlari', hint: 'segmentlar, balandliklar, showroom' },
       { key: 'grid', label: '5 metrli to‘r', hint: 'masshtab yordamchisi' },
       { key: 'labels', label: 'Zona nomlari' },

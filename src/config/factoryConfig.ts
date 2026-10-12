@@ -51,11 +51,11 @@ export const factoryConfig = {
   building: {
     width: 40,
     widthStatus: 'confirmed' as ValueStatus,
-    totalLength: 125,
+    totalLength: 135,
     totalLengthStatus: 'confirmed' as ValueStatus,
     /**
      * Segmentlar old fasaddan (z = 0) orqaga qarab tartiblangan.
-     * 40 + 75 + 10 = 125 m. Old korpus (40 × 40 m) — ikkiga bo‘lingan ombor maydoni:
+     * 40 + 85 + 10 = 135 m. Old korpus (40 × 40 m) — ikkiga bo‘lingan ombor maydoni:
      * xomashyo ombori va tayyor mahsulotlar ombori (buyurtmachi tomonidan aniqlashtirildi).
      */
     segments: [
@@ -75,7 +75,7 @@ export const factoryConfig = {
         id: 'production',
         name: 'Asosiy ishlab chiqarish zonasi',
         shortName: 'Ishlab chiqarish',
-        length: 75,
+        length: 85,
         height: 5,
         floors: 1,
         lengthStatus: 'confirmed',

@@ -1,7 +1,7 @@
 # iMG — MIRROR & GLASS · Oyna zavodining interaktiv 3D raqamli maketi
 
 React + TypeScript + Vite + Three.js (React Three Fiber) asosidagi, brauzerda ishlaydigan professional 3D vizualizatsiya:
-asosiy ishlab chiqarish binosi (40 × 125 m), to‘liq shisha old fasad, showroom, 3 ta rolikli darvoza, 40 × 40 m omborlar
+asosiy ishlab chiqarish binosi (40 × 135 m), to‘liq shisha old fasad, showroom, 3 ta rolikli darvoza, 40 × 40 m omborlar
 maydoni (xomashyo ombori + tayyor mahsulotlar ombori), quyosh panellari, ikki qavatli ma’muriy-maishiy blok xonalari,
 katta avtomobil yo‘li, ichki ishlab chiqarish liniyasi, OTK/GPO zonasi, animatsiyalar va CAD uslubidagi o‘lcham chiziqlari.
 
@@ -14,7 +14,7 @@ katta avtomobil yo‘li, ichki ishlab chiqarish liniyasi, OTK/GPO zonasi, animat
 
 | Bo‘lim | Tavsif |
 | --- | --- |
-| **3D model** | Barcha geometriya haqiqiy metrlarda (1 birlik = 1 m). Segmentlar: old korpus — omborlar maydoni 40 m / 12 m (40 × 40 m, ikkiga bo‘lingan), ishlab chiqarish 75 m / 5 m, oxirgi qism 10 m / 8 m (2 qavat). Jami 125 m. |
+| **3D model** | Barcha geometriya haqiqiy metrlarda (1 birlik = 1 m). Segmentlar: old korpus — omborlar maydoni 40 m / 12 m (40 × 40 m, ikkiga bo‘lingan), ishlab chiqarish 85 m / 5 m, oxirgi qism 10 m / 8 m (2 qavat). Jami 135 m. |
 | **Omborlar** | Old korpus ichida: o‘ng tomonda (old fasadga qaraganda) xomashyo ombori — A-stellajlar, ko‘prik kran; chap tomonda tayyor mahsulotlar ombori — yashiklar qatorlari. Masterplandagi yon binolar nomsiz, tomi yopiq. |
 | **Fasad** | Old fasad (showroom va darvozalar tomoni) to‘liq alyuminiy profilli vitraj (biroz qoraytirilgan, tonirovkali shisha); yon fasadlarda gofrirlangan sendvich-panellar, pilastrlar, lenta derazalar, parapet qoplamalari, suv quvurlari; iMG logotipi. |
 | **Tom** | Ishlab chiqarish zonasi tomining yarmida janubga qiyalatilgan quyosh panellari qatorlari, ikkinchi yarmida zenit fonarlari va ventilyatsiya uskunalari. Omborlar tomida panel yo‘q. |
@@ -25,7 +25,7 @@ katta avtomobil yo‘li, ichki ishlab chiqarish liniyasi, OTK/GPO zonasi, animat
 | **Tashqi hudud** | Masterplanga mos: og‘ma katta yo‘l (2 × 2 bo‘lak, belgilar), yagona kirish-chiqish darvozasi (KPP: kirish va chiqish bo‘laklari, ikki shlagbaum), shisha fasad oldidagi yuklash-tushirish maydoni, avtoturargoh, yashil maydonlar, to‘siq, chiroqlar, daraxtlar. |
 | **Odamlar** | ≈65 nafar animatsiyali odam (`Odamlar` qatlami): liniyadagi har bir stansiyada operator (jilet, qo‘lqop), smena boshlig‘i, texnolog, yordamchi ishchilar va elektrik yo‘laklarda yuradi; OTK/GPO nazoratchilari; omborlarda omborchi-yuklovchilar va mudirlar (kaska, signal jilet); oshxonada tushlik qilayotgan xodimlar va oshpazlar; yig‘ilishlar zalida yig‘ilish va ma’ruzachi; ofislarda kompyuterda ishlayotgan muhandislar, direktor, laborantlar, hamshira, qorovul; showroomda resepshn, konsultantlar va mijozlar (lounge, vitrinalar, antresol), KPP qorovuli. Har bir odam protsedural 3D model: 17 suyakli skelet, silliq teri va kiyim, yuz (ko‘z, qosh, burun, lab, quloq), soch turmagi, rol bo‘yicha kiyim; yurish sikli (son, tizza, to‘piq, tos, qo‘llar), ishlash, o‘tirish, yozish, ovqatlanish, suhbat va atrofga qarash pozalari. Harakat simulyatsiya vaqtiga bog‘langan (pauza/tezlik ishlaydi); uskunalar ichidan o‘tmasligi va bir-biriga urilmasligi test bilan tekshiriladi. Tashqi model fayllarisiz (litsenziya muammosiz). |
 | **Transport** | 2 ta yuk mashinasi (forkliftlar yo‘q): ikkalasi ham bitta KPP orqali kiradi va chiqadi. Xomashyo mashinasi maydonda burilib, orqasi bilan 3-darvozaga (xomashyo ombori) biroz kiradi va tushiriladi; tayyor mahsulot mashinasi orqasi bilan 1-darvozaga (tayyor mahsulot ombori) biroz kirib yuklanadi va chiqib ketadi. Tirkama burilishi real hisoblanadi, avtomatik darvozalar tirkama yaqinlashganda ochiladi; yo‘ldagi avtomobillar — to‘qnashmaslik avtomatik test bilan tekshirilgan. |
-| **O‘lchamlar** | CAD uslubidagi o‘lcham chiziqlari (chiqarish chiziqlari, 45° belgilar, raqamlar): 40 × 125 m, 12 m, omborlar 40 × 40 m (22 + 18 m), 75 m / 5 m, 10 m / 8 m, qavatlar 4 + 4 m, showroom 12 × 24 × 9 m; umumiy va zona o‘lchamlari alohida yoqiladi, 5 m to‘r. Barcha bino va maydon o‘lchamlari aniq qiymat sifatida ko‘rsatiladi. Yozuvlar bir-birining ustiga chiqmaydi va bino orqasida qolganda yashiriladi. |
+| **O‘lchamlar** | CAD uslubidagi o‘lcham chiziqlari (chiqarish chiziqlari, 45° belgilar, raqamlar): 40 × 135 m, 12 m, omborlar 40 × 40 m (22 + 18 m), 85 m / 5 m, 10 m / 8 m, qavatlar 4 + 4 m, showroom 12 × 24 × 9 m; umumiy va zona o‘lchamlari alohida yoqiladi, 5 m to‘r. Barcha bino va maydon o‘lchamlari aniq qiymat sifatida ko‘rsatiladi. Yozuvlar bir-birining ustiga chiqmaydi va bino orqasida qolganda yashiriladi. |
 | **Xodimlar** | O‘ng paneldagi “Xodimlar” bo‘limi — oyna zavodining shtat jadvali (kamida 100 nafarga mo‘ljallangan, hozir 112 nafar, 14 bo‘lim, 2 smena): rahbariyat (direktor/CEO 1), sotuv (ROP va menejerlar), ishlab chiqarish va har bir liniya stansiyasi operatorlari, texnik xizmat, HR, marketing, IT, OTK/GPO, logistika va omborlar, ta’minot, moliya, ma’muriy-xo‘jalik, oshxona, mehnat muhofazasi. Faqat lavozimlar va soni (ism-familiyasiz); ish joyi maketda bor lavozim bosilsa, kamera o‘sha joyga boradi. Sonlar `src/config/staffConfig.ts` da o‘zgartiriladi. |
 | **Kamera** | Orbit / zoom / pan, Asosiy, Old fasad, Yon, Orqa, Yuqoridan (masterplan), Izometrik, Ichki maket (kesim), Showroom ichi, ichki sayr (walkthrough), to‘liq ekran. Barcha o‘tishlar silliq. |
 | **Interaktivlik** | Istalgan bino/zona/uskunani bosish → info-panel: vazifasi, o‘lchamlari, jarayondagi o‘rni, keyingi jarayon, parametrlar, “Fokuslash”. |
@@ -115,9 +115,9 @@ src/
 
 Chap/o‘ng yo‘nalishlar **old fasadga qarab turgan kuzatuvchi** nuqtai nazaridan berilgan.
 
-1. **Qo‘lda chizilgan reja.** 40 m kenglik, 125 m uzunlik. Old qism (H-12) — 40 × 40 m ombor maydoni, ichki devor bilan ikkiga
+1. **Qo‘lda chizilgan reja.** 40 m kenglik, 125 m uzunlik (keyinchalik buyurtmachi 135 m ga o‘zgartirdi — qo‘shimcha 10 m ishlab chiqarish zonasiga). Old qism (H-12) — 40 × 40 m ombor maydoni, ichki devor bilan ikkiga
    bo‘lingan: “Склад хом.” (xomashyo ombori, o‘ng) va “Гот. продукция” (tayyor mahsulotlar ombori, chap). Old fasadda 3 juft
-   chiziq — 3 ta darvoza; showroom o‘ng burchakdan oldinga chiqib turadi (12 × 24 m); o‘rta qism 75 m / 5 m; oxirgi qism 10 m / 8 m.
+   chiziq — 3 ta darvoza; showroom o‘ng burchakdan oldinga chiqib turadi (12 × 24 m); o‘rta qism 75 m / 5 m (hozir 85 m); oxirgi qism 10 m / 8 m.
    Strelkalar U-shaklidagi oqimni ko‘rsatadi: o‘ng tomon bo‘ylab orqaga, orqada o‘ngdan chapga, chap tomon bo‘ylab oldinga.
 2. **Fotorealistik render.** Katta shisha old fasad, iliq kulrang gofrirlangan panellar, past qiyalikdagi tom, beton ustunli
    to‘siq, butalar orolchalari, kiparislar, to‘q sariq gradientli iMG logotipi.
@@ -127,8 +127,8 @@ Chap/o‘ng yo‘nalishlar **old fasadga qarab turgan kuzatuvchi** nuqtai nazari
 
 ### O‘lchamlar hisoboti
 
-**Aniq o‘lchamlar (sahnada `≈` belgisiz):** asosiy bino 40 × 125 m; old qism — omborlar maydoni 40 × 40 m, balandligi 12 m:
-xomashyo ombori 22 × 40 m, tayyor mahsulotlar ombori 18 × 40 m; ishlab chiqarish zonasi 75 m, 5 m; oxirgi qism 10 m, 8 m,
+**Aniq o‘lchamlar (sahnada `≈` belgisiz):** asosiy bino 40 × 135 m; old qism — omborlar maydoni 40 × 40 m, balandligi 12 m:
+xomashyo ombori 22 × 40 m, tayyor mahsulotlar ombori 18 × 40 m; ishlab chiqarish zonasi 85 m, 5 m; oxirgi qism 10 m, 8 m,
 2 qavat — har bir qavat 4 m (1-qavat 0–4 m, 2-qavat 4–8 m); showroom 12 × 24 m (12 m — fasad bo‘ylab, 24 m — oldinga chiqishi),
 balandligi 9 m, o‘ng burchakda; old fasad to‘liq shisha; 3 ta darvoza, har biri 4.5 × 5 m; old logistika maydoni 40 × 40 m;
 xomashyo ombori yon devori yopiq; quyosh panellari faqat ishlab chiqarish zonasi tomining chap yarmida;
@@ -145,10 +145,10 @@ Ilovadagi **“Hisobot”** bo‘limi shu ro‘yxatni va texnik talablar bo‘yi
 ## Test va sifat nazorati
 
 `npm run test` (46 ta test):
-* Umumiy uzunlik 125 m = 40 + 75 + 10 m, balandliklar 12 / 5 / 8 m, oxirgi qism 2 qavat, omborlar maydoni 40 × 40 m.
-* **3D geometriyaning o‘zi** o‘lchanadi: fasad panellari 40 × 125 m konturda, har bir segment devorining balandligi
+* Umumiy uzunlik 135 m = 40 + 85 + 10 m, balandliklar 12 / 5 / 8 m, oxirgi qism 2 qavat, omborlar maydoni 40 × 40 m.
+* **3D geometriyaning o‘zi** o‘lchanadi: fasad panellari 40 × 135 m konturda, har bir segment devorining balandligi
   12 / 5 / 8 m, qavatlararo plita, old fasad 40 m bo‘ylab to‘liq shisha, yon devor yopiq, oxirgi qismning ishlab chiqarishga qaragan devori ikkala qavatda shisha, quyosh panellari faqat ishlab chiqarish zonasi tomining yarmida.
-* O‘lcham chiziqlari qiymatlari geometriyadan hisoblanadi (40, 125, 12, 40, 75, 10, 5, 8, 12, 24, 9 m; omborlar 22 / 18 m; qavatlar 4 / 4 m), barchasi `≈` belgisiz.
+* O‘lcham chiziqlari qiymatlari geometriyadan hisoblanadi (40, 135, 12, 40, 85, 10, 5, 8, 12, 24, 9 m; omborlar 22 / 18 m; qavatlar 4 / 4 m), barchasi `≈` belgisiz.
 * Showroom 12 × 24 × 9 m o‘ng tomonda, 3 ta darvoza, oxirgi qismda oshxona, rahbar xonasi, texnik xona.
 * Liniya: barcha stansiyalar ishlab chiqarish zonasida, xomashyo tarmog‘i o‘ngda, OTK va qadoqlash chapda, uzatish
   o‘ngdan chapga, jarayon tartibi, shisha panellar bir-biriga tegmaydi.

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { factoryConfig } from '../config/factoryConfig';
 import { dimensionSpecs, dimText } from '../lib/dimensions';
-import { getSegments, rollerDoors, segmentsTotalLength, showroomRect } from '../lib/layout';
+import { getSegment, getSegments, rollerDoors, segmentsTotalLength, showroomRect } from '../lib/layout';
 import { runChecks } from '../lib/validation';
 import { buildMainShell } from '../scene/building/shellBuilders';
 import type { BuiltPart } from '../three/GeoBuilder';
@@ -29,14 +29,14 @@ function bounds(parts: BuiltPart[], key: string) {
 }
 
 describe('bino o‘lchamlari (konfiguratsiya)', () => {
-  it('umumiy uzunlik 125 m: omborlar 40 + ishlab chiqarish 75 + oxirgi qism 10', () => {
-    expect(factoryConfig.building.totalLength).toBe(125);
-    expect(segmentsTotalLength()).toBe(125);
+  it('umumiy uzunlik 135 m: omborlar 40 + ishlab chiqarish 85 + oxirgi qism 10', () => {
+    expect(factoryConfig.building.totalLength).toBe(135);
+    expect(segmentsTotalLength()).toBe(135);
     const segs = getSegments();
     const byId = Object.fromEntries(segs.map((s) => [s.id, s]));
     expect(byId.front.length).toBe(40);
     expect(byId.front.height).toBe(12);
-    expect(byId.production.length).toBe(75);
+    expect(byId.production.length).toBe(85);
     expect(byId.production.height).toBe(5);
     expect(byId.rear.length).toBe(10);
     expect(byId.rear.height).toBe(8);
@@ -80,12 +80,12 @@ describe('3D geometriya haqiqiy metrlarda', () => {
   const upper = p.upper.build();
   const all = [...shell, ...upper];
 
-  it('fasad panellari 40 × 125 m konturda', () => {
+  it('fasad panellari 40 × 135 m konturda', () => {
     const b = bounds(all, 'cladding');
     expect(b.min.x).toBeCloseTo(-20, 3);
     expect(b.max.x).toBeCloseTo(20, 3);
     expect(b.min.z).toBeCloseTo(0, 3);
-    expect(b.max.z).toBeCloseTo(125, 3);
+    expect(b.max.z).toBeCloseTo(135, 3);
     expect(b.max.y).toBeCloseTo(12, 3);
   });
 
@@ -99,7 +99,7 @@ describe('3D geometriya haqiqiy metrlarda', () => {
   it('oxirgi qism ikki qavatli: qavatlararo plita mavjud', () => {
     const slab = bounds(upper, 'concrete');
     expect(slab.max.y).toBeCloseTo(factoryConfig.building.rearFirstFloorHeight, 3);
-    expect(slab.min.z).toBeGreaterThanOrEqual(115);
+    expect(slab.min.z).toBeGreaterThanOrEqual(getSegment('rear').z0);
   });
 
   it('oxirgi qismning ishlab chiqarishga qaragan devori shishadan (ikkala qavat)', () => {
@@ -110,7 +110,7 @@ describe('3D geometriya haqiqiy metrlarda', () => {
         if (part.key !== 'glass') continue;
         const pos = part.geometry.getAttribute('position');
         for (let i = 0; i < pos.count; i++) {
-          if (Math.abs(pos.getZ(i) - 115.12) > 0.05) continue;
+          if (Math.abs(pos.getZ(i) - (getSegment('rear').z0 + 0.12)) > 0.05) continue;
           minX = Math.min(minX, pos.getX(i));
           maxX = Math.max(maxX, pos.getX(i));
         }
@@ -141,7 +141,7 @@ describe('3D geometriya haqiqiy metrlarda', () => {
           maxY = Math.max(maxY, pos.getY(i));
         }
         // omborlar va ishlab chiqarish yon devori (oxirgi 2 qavatli qism derazalari hisobga olinmaydi)
-        if (x < -19.9 && z < 115) sideMaxZ = Math.max(sideMaxZ, z);
+        if (x < -19.9 && z < getSegment('rear').z0) sideMaxZ = Math.max(sideMaxZ, z);
       }
     }
     expect(minX).toBeLessThan(-19.5);
@@ -169,10 +169,10 @@ describe('o‘lcham chiziqlari geometriyadan hisoblanadi', () => {
   const specs = Object.fromEntries(dimensionSpecs().map((d) => [d.id, d]));
   it.each([
     ['bld-width', 40],
-    ['bld-length', 125],
+    ['bld-length', 135],
     ['front-height', 12],
     ['len-front', 40],
-    ['len-production', 75],
+    ['len-production', 85],
     ['len-rear', 10],
     ['h-production', 5],
     ['h-rear', 8],

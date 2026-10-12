@@ -189,9 +189,11 @@ export function buildPeople(cfg = factoryConfig): PersonDef[] {
 
   // smena boshlig‘i, yordamchi ishchilar, texnolog, mexanik — markaziy yo‘lak va piyodalar yo‘lagi
   const prod = getSegment('production', cfg);
-  add('Smena boshlig‘i (master)', 'production', 'master', false, route([[-1.2, prod.z0 + 4], [-1.2, prod.z1 - 21], [1.3, prod.z1 - 21], [1.3, prod.z0 + 4]], 1.15, [{ at: 1, dur: 5, pose: 'look', face: FACE.nx }, { at: 3, dur: 4, pose: 'talk', face: FACE.px }]));
-  add('Liniya yordamchi ishchisi', 'production', 'operator', false, route([[-4.5, prod.z0 + 6], [-4.5, prod.z1 - 19]], 1.25, [{ at: 0, dur: 3, pose: 'work', face: FACE.nx }, { at: 1, dur: 3, pose: 'work', face: FACE.nx }], true), { offset: 11 });
-  add('Liniya yordamchi ishchisi', 'production', 'operator', false, route([[3.6, prod.z0 + 5], [3.6, prod.z1 - 19]], 1.2, [{ at: 1, dur: 4, pose: 'idle' }], true), { offset: 37 });
+  // markaziy yo‘lak uzatish konveyeri va toblash pechidan oldin tugaydi
+  const laneEnd = Math.min(L.transferZ, ...L.optional.map((o) => o.cz - o.length / 2)) - 3;
+  add('Smena boshlig‘i (master)', 'production', 'master', false, route([[-1.2, prod.z0 + 4], [-1.2, laneEnd], [1.3, laneEnd], [1.3, prod.z0 + 4]], 1.15, [{ at: 1, dur: 5, pose: 'look', face: FACE.nx }, { at: 3, dur: 4, pose: 'talk', face: FACE.px }]));
+  add('Liniya yordamchi ishchisi', 'production', 'operator', false, route([[-4.5, prod.z0 + 6], [-4.5, laneEnd + 2]], 1.25, [{ at: 0, dur: 3, pose: 'work', face: FACE.nx }, { at: 1, dur: 3, pose: 'work', face: FACE.nx }], true), { offset: 11 });
+  add('Liniya yordamchi ishchisi', 'production', 'operator', false, route([[3.6, prod.z0 + 5], [3.6, laneEnd + 1]], 1.2, [{ at: 1, dur: 4, pose: 'idle' }], true), { offset: 37 });
   add('Texnolog', 'production', 'master', true, route([[-2.3, prod.z0 + 20], [-2.3, prod.z0 + 33]], 0.8, [{ at: 0, dur: 9, pose: 'look', face: FACE.nx }, { at: 1, dur: 7, pose: 'talk', face: FACE.nx }], true));
   add('Ta’mirlovchi mexanik', 'washer', 'mechanic', false, fixed([st('washer').cx - st('washer').width / 2 - 0.6, (st('washer').zIn + st('washer').zOut) / 2], FACE.px, 'work'));
   add('Elektrik', 'production', 'mechanic', false, route([[18.7, prod.z0 + 3], [18.7, prod.z1 - 4]], 1.1, [{ at: 1, dur: 5, pose: 'look', face: FACE.px }], true), { offset: 20 });

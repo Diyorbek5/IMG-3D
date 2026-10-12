@@ -12,7 +12,7 @@ import { FrontBlockInterior } from './FrontBlockInterior';
 import { FloorMarkings } from './FloorMarkings';
 
 /**
- * Asosiy ishlab chiqarish binosi (40 × 125 m): segmentlar, fasadlar, tom, ichki konstruksiyalar.
+ * Asosiy ishlab chiqarish binosi (40 × 135 m): segmentlar, fasadlar, tom, ichki konstruksiyalar.
  * Bino qobig‘iga bosilganda — bosilgan nuqtaning z koordinatasiga qarab tegishli segment tanlanadi.
  */
 export function FactoryBuilding() {

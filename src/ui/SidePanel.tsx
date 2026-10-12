@@ -35,6 +35,7 @@ const LAYER_GROUPS: { title: string; items: { key: keyof Layers; label: string; 
       { key: 'optionalEquipment', label: 'Qo‘shimcha (ixtiyoriy) uskunalar', hint: 'toblash pechi' },
       { key: 'flow', label: 'Ishlab chiqarish oqimi' },
       { key: 'vehicles', label: 'Transport (yuk mashinalari, avtomobillar)' },
+      { key: 'people', label: 'Odamlar', hint: 'xodimlar va mehmonlar' },
       { key: 'landscape', label: 'Daraxtlar va landshaft' },
     ],
   },

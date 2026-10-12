@@ -19,6 +19,7 @@ import { Landscape } from './site/Landscape';
 import { RoadNetwork } from './site/RoadNetwork';
 import { SiteGround } from './site/SiteGround';
 import { Vehicles } from './vehicles/Vehicles';
+import { People } from './people/People';
 
 const DPR = { high: [1, 2], medium: [1, 1.5], low: [0.75, 1.1] } as const;
 
@@ -52,6 +53,7 @@ function SceneContent() {
       <AuxBuildings />
       <ProductionLine />
       <Vehicles />
+      <People />
       <Suspense fallback={null}>
         <ExternalModels />
       </Suspense>

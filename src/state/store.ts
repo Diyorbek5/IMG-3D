@@ -18,6 +18,7 @@ export interface Layers {
   roofs: boolean;
   upperFloor: boolean;
   vehicles: boolean;
+  people: boolean;
   landscape: boolean;
 }
 
@@ -94,6 +95,7 @@ export const useStore = create<AppState>((set) => ({
     roofs: true,
     upperFloor: true,
     vehicles: true,
+    people: true,
     landscape: true,
   },
   toggleLayer: (k) => set((s) => ({ layers: { ...s.layers, [k]: !s.layers[k] } })),

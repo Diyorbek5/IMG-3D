@@ -527,9 +527,12 @@ function buildRearRooms(cfg: typeof factoryConfig, r: SegmentLayout, lower: GeoB
 /** Xona turiga mos jihozlar */
 function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number, zB: number, y0: number) {
   const zc = (zA + zB) / 2;
-  const chair = (x: number, z: number) => {
-    b.box('fabric', [x, y0 + 0.24, z], [0.45, 0.06, 0.45]);
-    b.box('fabric', [x, y0 + 0.12, z], [0.08, 0.24, 0.08]);
+  /** stul: o‘tirgich 0.48 m, oyoqlar va suyanchiq; face — o‘tirgan odam qaraydigan tomon (+1 → +z, −1 → −z) */
+  const chair = (x: number, z: number, face: 1 | -1 = 1) => {
+    b.box('fabric', [x, y0 + 0.45, z], [0.46, 0.06, 0.44]);
+    for (const sx of [-0.19, 0.19]) for (const sz of [-0.18, 0.18]) b.box('steel', [x + sx, y0 + 0.21, z + sz], [0.03, 0.42, 0.03]);
+    b.box('fabric', [x, y0 + 0.78, z - face * 0.21], [0.44, 0.42, 0.04]);
+    b.box('steel', [x, y0 + 0.62, z - face * 0.21], [0.03, 0.3, 0.03]);
   };
   const desk = (x: number, z: number, w = 1.6, d = 0.8, key: 'paintWhite' | 'wood' = 'paintWhite') => {
     b.box(key, [x, y0 + 0.74, z], [w, 0.05, d]);
@@ -546,8 +549,8 @@ function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number
         for (const z of [zc - 1.6, zc + 1.6]) {
           desk(x, z, 1.8, 0.8, 'wood');
           for (const sx of [-0.5, 0.5]) {
-            chair(x + sx, z - 0.65);
-            chair(x + sx, z + 0.65);
+            chair(x + sx, z - 0.65, 1);
+            chair(x + sx, z + 0.65, -1);
           }
         }
       }
@@ -574,22 +577,22 @@ function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number
     case 'medical':
       b.box('paintWhite', [x0 + 1.0, y0 + 0.45, zc + 0.5], [0.8, 0.5, 2.0]);
       desk(x1 - 1.2, zB - 0.8, 1.4, 0.7);
-      chair(x1 - 1.2, zB - 1.5);
+      chair(x1 - 1.2, zB - 1.5, 1);
       b.box('paintWhite', [x1 - 0.4, y0 + 0.9, zA + 1.2], [0.5, 1.8, 0.9]);
       break;
     case 'lobby':
       if (y0 < 1) {
         desk(x0 + 1.6, zB - 2.6, 2.0, 0.7, 'wood');
-        chair(x0 + 1.6, zB - 1.9);
+        chair(x0 + 1.6, zB - 1.9, -1);
         b.box('screen', [x0 + 1.6, y0 + 1.0, zB - 2.75], [0.5, 0.32, 0.03]);
       }
       break;
     case 'manager': {
       const xc = (x0 + x1) / 2;
       desk(xc, zc + 0.8, 2.2, 0.95, 'wood');
-      chair(xc, zc + 1.6);
-      chair(xc - 0.6, zc - 0.2);
-      chair(xc + 0.6, zc - 0.2);
+      chair(xc, zc + 1.6, -1);
+      chair(xc - 0.6, zc - 0.2, 1);
+      chair(xc + 0.6, zc - 0.2, 1);
       b.box('screen', [xc, y0 + 1.0, zc + 1.05], [0.6, 0.38, 0.03]);
       b.box('wood', [x0 + 0.4, y0 + 1.0, zc], [0.5, 2.0, 3.2]);
       b.box('fabric', [x1 - 1.4, y0 + 0.35, zA + 1.2], [2.0, 0.7, 0.8]);
@@ -601,7 +604,7 @@ function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number
       for (let x = x0 + 1.5; x < x1 - 1; x += 2.6)
         for (const z of [zc - 1.3, zc + 1.6]) {
           desk(x, z);
-          chair(x, z + 0.7);
+          chair(x, z + 0.7, -1);
           b.box('screen', [x, y0 + 1.0, z - 0.2], [0.55, 0.34, 0.03]);
         }
       break;
@@ -609,8 +612,8 @@ function furnish(b: GeoBuilder, type: string, x0: number, x1: number, zA: number
       const xc = (x0 + x1) / 2;
       desk(xc, zc, x1 - x0 - 3, 1.4, 'wood');
       for (let x = x0 + 2.2; x < x1 - 1.8; x += 1.1) {
-        chair(x, zc - 1.05);
-        chair(x, zc + 1.05);
+        chair(x, zc - 1.05, 1);
+        chair(x, zc + 1.05, -1);
       }
       b.box('screen', [x0 + 0.2, y0 + 1.5, zc], [0.05, 1.1, 2.0]);
       break;

@@ -25,6 +25,7 @@ katta avtomobil yo‘li, ichki ishlab chiqarish liniyasi, OTK/GPO zonasi, animat
 | **Tashqi hudud** | Masterplanga mos: og‘ma katta yo‘l (2 × 2 bo‘lak, belgilar), yagona kirish-chiqish darvozasi (KPP: kirish va chiqish bo‘laklari, ikki shlagbaum), shisha fasad oldidagi yuklash-tushirish maydoni, avtoturargoh, yashil maydonlar, to‘siq, chiroqlar, daraxtlar. |
 | **Transport** | 2 ta yuk mashinasi (forkliftlar yo‘q): ikkalasi ham bitta KPP orqali kiradi va chiqadi. Xomashyo mashinasi maydonda burilib, orqasi bilan 3-darvozaga (xomashyo ombori) biroz kiradi va tushiriladi; tayyor mahsulot mashinasi orqasi bilan 1-darvozaga (tayyor mahsulot ombori) biroz kirib yuklanadi va chiqib ketadi. Tirkama burilishi real hisoblanadi, avtomatik darvozalar tirkama yaqinlashganda ochiladi; yo‘ldagi avtomobillar — to‘qnashmaslik avtomatik test bilan tekshirilgan. |
 | **O‘lchamlar** | CAD uslubidagi o‘lcham chiziqlari (chiqarish chiziqlari, 45° belgilar, raqamlar): 40 × 125 m, 12 m, omborlar 40 × 40 m (22 + 18 m), 75 m / 5 m, 10 m / 8 m, qavatlar 4 + 4 m, showroom 12 × 24 × 9 m; umumiy va zona o‘lchamlari alohida yoqiladi, 5 m to‘r. Barcha bino va maydon o‘lchamlari aniq qiymat sifatida ko‘rsatiladi. Yozuvlar bir-birining ustiga chiqmaydi va bino orqasida qolganda yashiriladi. |
+| **Xodimlar** | O‘ng paneldagi “Xodimlar” bo‘limi — oyna zavodining shtat jadvali (kamida 100 nafarga mo‘ljallangan, hozir 112 nafar, 14 bo‘lim, 2 smena): rahbariyat (direktor/CEO 1), sotuv (ROP va menejerlar), ishlab chiqarish va har bir liniya stansiyasi operatorlari, texnik xizmat, HR, marketing, IT, OTK/GPO, logistika va omborlar, ta’minot, moliya, ma’muriy-xo‘jalik, oshxona, mehnat muhofazasi. Faqat lavozimlar va soni (ism-familiyasiz); ish joyi maketda bor lavozim bosilsa, kamera o‘sha joyga boradi. Sonlar `src/config/staffConfig.ts` da o‘zgartiriladi. |
 | **Kamera** | Orbit / zoom / pan, Asosiy, Old fasad, Yon, Orqa, Yuqoridan (masterplan), Izometrik, Ichki maket (kesim), Showroom ichi, ichki sayr (walkthrough), to‘liq ekran. Barcha o‘tishlar silliq. |
 | **Interaktivlik** | Istalgan bino/zona/uskunani bosish → info-panel: vazifasi, o‘lchamlari, jarayondagi o‘rni, keyingi jarayon, parametrlar, “Fokuslash”. |
 | **Render** | PBR materiallar, protsedural teksturalar, quyosh + osmon + atrof-muhit refleksiyalari, soyalar, ACES tone mapping. Kunduz / kun botishi / tun. “Yuqori” sifatda N8AO ambient occlusion, real shisha sinishi, 4K soyalar. |
@@ -78,6 +79,7 @@ src/
     equipmentConfig.ts    # liniya tarmoqlari, stansiyalar (o‘lchamlar, oraliqlar, to‘xtash vaqti), OTK zonasi, yo‘laklar
     animationConfig.ts    # transport marshrutlari va jadvallari
     cameraConfig.ts       # kamera ko‘rinishlari va sayr marshruti
+    staffConfig.ts        # xodimlar shtati: bo‘limlar, lavozimlar va soni
     externalModels.ts     # qo‘shimcha GLB/GLTF modellar
   lib/                    # sof hisob-kitoblar (testlanadi): layout, lineLayout, motion, vehicles, dimensions, validation, entities
   three/                  # GeoBuilder (geometriyalarni birlashtirish), materiallar, protsedural teksturalar
@@ -140,7 +142,7 @@ Ilovadagi **“Hisobot”** bo‘limi shu ro‘yxatni va texnik talablar bo‘yi
 
 ## Test va sifat nazorati
 
-`npm run test` (37 ta test):
+`npm run test` (42 ta test):
 * Umumiy uzunlik 125 m = 40 + 75 + 10 m, balandliklar 12 / 5 / 8 m, oxirgi qism 2 qavat, omborlar maydoni 40 × 40 m.
 * **3D geometriyaning o‘zi** o‘lchanadi: fasad panellari 40 × 125 m konturda, har bir segment devorining balandligi
   12 / 5 / 8 m, qavatlararo plita, old fasad 40 m bo‘ylab to‘liq shisha, yon devor yopiq, oxirgi qismning ishlab chiqarishga qaragan devori ikkala qavatda shisha, quyosh panellari faqat ishlab chiqarish zonasi tomining yarmida.
@@ -148,6 +150,7 @@ Ilovadagi **“Hisobot”** bo‘limi shu ro‘yxatni va texnik talablar bo‘yi
 * Showroom 12 × 24 × 9 m o‘ng tomonda, 3 ta darvoza, oxirgi qismda oshxona, rahbar xonasi, texnik xona.
 * Liniya: barcha stansiyalar ishlab chiqarish zonasida, xomashyo tarmog‘i o‘ngda, OTK va qadoqlash chapda, uzatish
   o‘ngdan chapga, jarayon tartibi, shisha panellar bir-biriga tegmaydi.
+* Xodimlar shtati: jami ≥ 100 nafar, birinchi lavozim — direktor (1 nafar), talab qilingan bo‘limlar mavjud, ish joylari maketdagi obyektlarga bog‘langan.
 * Transport: butun sikl bo‘yicha (0.1 s qadam) hech bir transport boshqasi bilan to‘qnashmaydi; yuk mashinalari tirkamasi
   bilan o‘z darvozasiga (xomashyo — 3, tayyor mahsulot — 1) 1–6 m kiradi va showroomdan kamida 1 m uzoqda yuradi.
 

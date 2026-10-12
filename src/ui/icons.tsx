@@ -104,6 +104,14 @@ export const Icon = {
       <path d="M9 12h7M9 16h7M9 8h4" />
     </Svg>
   ),
+  staff: () => (
+    <Svg>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M16 14.2c2.8.3 5 2.6 5 5.8" />
+    </Svg>
+  ),
   close: () => (
     <Svg>
       <path d="M6 6l12 12M18 6L6 18" />

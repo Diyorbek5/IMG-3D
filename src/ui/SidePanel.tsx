@@ -6,12 +6,14 @@ import { useStore, type Layers, type PanelTab, type Quality } from '../state/sto
 import type { LightingMode } from '../three/materials';
 import { Icon } from './icons';
 import { InteractiveInfoPanel } from './InteractiveInfoPanel';
+import { StaffPanel } from './StaffPanel';
 
 const TABS: { id: PanelTab; label: string; icon: ComponentType }[] = [
   { id: 'layers', label: 'Qatlamlar', icon: Icon.layers },
   { id: 'zones', label: 'Zonalar', icon: Icon.list },
   { id: 'info', label: 'Ma’lumot', icon: Icon.info },
   { id: 'report', label: 'Hisobot', icon: Icon.report },
+  { id: 'staff', label: 'Xodimlar', icon: Icon.staff },
 ];
 
 const LAYER_GROUPS: { title: string; items: { key: keyof Layers; label: string; hint?: string }[] }[] = [
@@ -218,7 +220,7 @@ function ReportTab() {
   );
 }
 
-/** O‘ng yon panel: qatlamlar, zonalar ro‘yxati, ma’lumot va hisobot */
+/** O‘ng yon panel: qatlamlar, zonalar ro‘yxati, ma’lumot, hisobot va xodimlar shtati */
 export function SidePanel() {
   const open = useStore((s) => s.panelOpen);
   const setOpen = useStore((s) => s.setPanelOpen);
@@ -243,6 +245,7 @@ export function SidePanel() {
           {tab === 'zones' && <ZonesTab />}
           {tab === 'info' && <InteractiveInfoPanel />}
           {tab === 'report' && <ReportTab />}
+          {tab === 'staff' && <StaffPanel />}
         </div>
       </aside>
     </>

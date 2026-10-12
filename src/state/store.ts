@@ -5,7 +5,7 @@ export type CameraPreset = 'reset' | 'front' | 'side' | 'rear' | 'top' | 'iso' |
 export type Quality = 'high' | 'medium' | 'low';
 export type DoorMode = 'auto' | 'open' | 'closed';
 export type PlayState = 'playing' | 'paused' | 'stopped';
-export type PanelTab = 'layers' | 'zones' | 'info' | 'report';
+export type PanelTab = 'layers' | 'zones' | 'info' | 'report' | 'staff';
 
 export interface Layers {
   dimsOverall: boolean;

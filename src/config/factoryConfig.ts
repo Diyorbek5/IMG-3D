@@ -199,7 +199,7 @@ export const factoryConfig = {
    * (nomsiz, tomi yopiq) ko‘rsatiladi. O‘lchamlar masterplan bo‘yicha.
    */
   neighborBuildings: [
-    { id: 'bldg-1', rect: { x0: 24, x1: 64, z0: 27, z1: 68 } as Rect, height: 10 },
+    { id: 'bldg-1', rect: { x0: 24, x1: 64, z0: 27, z1: 47.5 } as Rect, height: 10 },
     { id: 'bldg-2', rect: { x0: 84, x1: 131, z0: 37, z1: 60 } as Rect, wing: { x0: 84, x1: 100, z0: 33, z1: 37 } as Rect, height: 9 },
   ] as { id: string; rect: Rect; wing?: Rect; height: number }[],
 

@@ -23,9 +23,9 @@ export const cameraConfig: {
     /** Restoran: old fasad (kechki yoritish uchun "Tun" rejimi tavsiya etiladi) */
     restaurant: { position: [35, 5.8, -2.5], target: [45, 6.4, 27], label: 'Restoran' },
     /** Restoran 1-qavat: lobbidan asosiy zal va bar tomon */
-    restaurantHall: { position: [44, 2.35, 29.2], target: [44, 2.3, 57], label: 'Restoran — asosiy zal' },
+    restaurantHall: { position: [44, 2.35, 29.2], target: [44, 2.3, 42], label: 'Restoran — asosiy zal' },
     /** Restoran 2-qavat: 1-VIP zal (banket stoli) */
-    restaurantVip: { position: [40, 7.1, 28.4], target: [33, 5.6, 37.5], label: 'Restoran — VIP zal' },
+    restaurantVip: { position: [40, 7.1, 28.2], target: [32.5, 5.6, 33.4], label: 'Restoran — VIP zal' },
   },
   top: { center: [65, 0, 38], extent: [250, 235] },
   walkthrough: {

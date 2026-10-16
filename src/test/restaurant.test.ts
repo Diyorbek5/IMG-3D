@@ -16,10 +16,12 @@ describe('restoran (zavod yonidagi bino)', () => {
   });
 
   it('zal, banket, VIP zal va VIP xonalar bor', () => {
-    expect(R.hallTables.length).toBeGreaterThanOrEqual(20);
+    expect(R.hallTables.length).toBeGreaterThanOrEqual(14);
     expect(R.banquetSeats.length).toBeGreaterThanOrEqual(24);
-    expect(R.roundTables.length).toBeGreaterThanOrEqual(6);
-    expect(R.vipRooms).toHaveLength(4);
+    expect(R.roundTables.length).toBeGreaterThanOrEqual(5);
+    expect(R.vipRooms).toHaveLength(3);
+    // orqa tomondan yarmiga qisqartirilgan: chuqurligi ≈20.5 m
+    expect(R.D).toBeCloseTo(20.5, 3);
     const ids = new Set(getEntities().map((e) => e.id));
     for (const id of [RESTAURANT_ID, 'rest-hall', 'rest-bar', 'rest-vip1', 'rest-vip2', 'rest-vip-rooms', 'rest-kitchen']) expect(ids.has(id), id).toBe(true);
   });

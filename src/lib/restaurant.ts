@@ -44,10 +44,11 @@ export function restaurantLayout(cfg = factoryConfig) {
   const portico = { u0: W / 2 - 3.5, u1: W / 2 + 3.5, depth: 1.6, eave: 10.9 };
 
   /** 1-qavat asosiy zali: arkalar qatori (v), ustunlar (u) */
-  const arcadeRows = [9, 15, 21, 27];
+  const arcadeRows = [6.0, 11.0];
   const piers = [10, 16.5, 23.5, 30];
-  const backWallV = 31.8;
-  const bar = { u0: W / 2 - 5.5, u1: W / 2 + 5.5, v0: 28.6, v1: 29.4 };
+  /** zal orqa devori; undan keyin oshxona, zinapoya va xizmat xonalari */
+  const backWallV = D - 4.9;
+  const bar = { u0: W / 2 - 5.5, u1: W / 2 + 5.5, v0: backWallV - 3.2, v1: backWallV - 2.4 };
 
   const face = { pz: 0, nz: Math.PI, px: Math.PI / 2, nx: -Math.PI / 2 };
   const rectTable = (u: number, v: number): Table => {
@@ -62,19 +63,20 @@ export function restaurantLayout(cfg = factoryConfig) {
   /* ---- 1-qavat: stollar (markaziy yo‘lak va bar oldi bo‘sh) ---- */
   const hallTables: Table[] = [];
   const colsU = [2.8, 7.2, 13.25, W - 13.25, W - 7.2, W - 2.8];
-  for (const v of [3.2, 6.6]) for (const u of colsU) hallTables.push(rectTable(u, v));
-  for (const v of [12, 18, 24]) for (const u of colsU) hallTables.push(rectTable(u, v));
-  for (const u of [3.4, 7.0, W - 7.0, W - 3.4]) hallTables.push(rectTable(u, 29.6));
+  for (const v of [3.0, 8.5]) for (const u of colsU) hallTables.push(rectTable(u, v));
+  for (const u of [3.4, 7.0, W - 7.0, W - 3.4]) hallTables.push(rectTable(u, (arcadeRows[1] + backWallV) / 2 + 0.1));
 
   /* ---- 2-qavat ---- */
-  const vip1 = { u0: 0.3, u1: 16.5, v0: 0.3, v1: 19.7 };
-  const vip2 = { u0: 23.5, u1: W - 0.3, v0: 0.3, v1: 19.7 };
-  const corridor = { v0: 19.7, v1: 22.3 };
-  const vipRoomsU = [0.3, 10.2, 20, 29.8, W - 0.3];
-  const vipRooms = vipRoomsU.slice(0, -1).map((u0, i) => ({ u0, u1: vipRoomsU[i + 1], v0: corridor.v1, v1: backWallV }));
+  const vip1 = { u0: 0.3, u1: 16.5, v0: 0.3, v1: 12.2 };
+  const vip2 = { u0: 23.5, u1: W - 0.3, v0: 0.3, v1: 12.2 };
+  const corridor = { v0: 12.2, v1: 14.4 };
+  /** 2-qavat orqa qismi: g‘arbda zinapoya xonasi, keyin 3 ta VIP xona */
+  const stairHall = { u0: 0.3, u1: 8.3, v0: corridor.v1, v1: D - 0.4 };
+  const vipRoomsU = [stairHall.u1, 18.8, 29.25, W - 0.3];
+  const vipRooms = vipRoomsU.slice(0, -1).map((u0, i) => ({ u0, u1: vipRoomsU[i + 1], v0: corridor.v1, v1: D - 0.4 }));
 
   // 1-VIP zal: uzun banket stoli
-  const banquet = { u0: 2.5, u1: 14.3, v: 10, d: 1.3 };
+  const banquet = { u0: 2.5, u1: 14.3, v: (vip1.v0 + vip1.v1) / 2, d: 1.3 };
   const banquetSeats: Seat[] = [];
   for (let u = banquet.u0 + 0.5; u < banquet.u1 - 0.3; u += 0.78) {
     banquetSeats.push({ x: X(u), z: Z(banquet.v - 1.02), face: face.pz });
@@ -85,9 +87,9 @@ export function restaurantLayout(cfg = factoryConfig) {
 
   // 2-VIP zal: dumaloq stollar
   const roundTables: Table[] = [];
-  for (const v of [5, 10.4, 15.6])
+  for (const v of [3.3, 8.9])
     for (const u of [27.6, 32.4, 37.1]) {
-      if (u === 37.1 && v === 15.6) continue; // devordagi arkali tokcha oldi bo‘sh
+      if (u === 37.1 && v === 3.3) continue; // devordagi arkali tokcha oldi bo‘sh
       const seats: Seat[] = [];
       for (let k = 0; k < 5; k++) {
         const a = (k / 5) * Math.PI * 2 + 0.3;
@@ -99,7 +101,8 @@ export function restaurantLayout(cfg = factoryConfig) {
     }
 
   /* ---- zinapoya va xizmat qismi ---- */
-  const stair = { u0: 1.0, u1: 4.5, v0: 33.2, v1: 40.5 };
+  /** to‘g‘ri marsh: sharqdan (pastda, u1) g‘arbga (yuqorida, u0) ko‘tariladi */
+  const stair = { u0: 0.6, u1: 7.9, v0: D - 1.9, v1: D - 0.6 };
   const kitchen = { u0: 13, u1: W - 0.3, v0: backWallV + 0.3, v1: D - 0.3 };
 
   return {
@@ -129,11 +132,12 @@ export function restaurantLayout(cfg = factoryConfig) {
     banquetSeats,
     roundTables,
     stair,
+    stairHall,
     kitchen,
     /** fasad derazalari (u markazlari) */
     frontWindows: { pavilion: [2.4, 5.5, 8.6], wing: [12.9, 15.0] },
     /** yon devor derazalari (v markazlari) — arkalar va bo‘linmalar bilan to‘qnashmaydi */
-    sideWindows: [3.0, 6.2, 12.0, 18.0, 24.0, 29.4, 35.0, 38.5],
+    sideWindows: [3.0, 8.5, 13.3, 18.0],
   };
 }
 

@@ -147,7 +147,7 @@ export function getEntities(): Entity[] {
         term: 'Restaurant',
         description:
           'Zavod yonidagi ikki qavatli restoran. Klassik uslubdagi krem rang fasad: arkali katta derazalar, pilyastrlar, karnizlar, frontonli ikki pavilon, markazda portik va temir panjarali balkonlar, terrakota tom; kechqurun fasad pastdan yoritiladi. Ichki qism milliy uslubda: arkalar, gilamlar, so‘zana va laganlar, fonuslar, majolika va ikat bezaklari.',
-        dims: { length: nb.rect.z1 - z0, width: nb.rect.x1 - nb.rect.x0, height: R.PAV_EAVE, status: 'confirmed', note: `2 qavat; 1-qavat ≈${seats1} o‘rin, 2-qavat ≈${seats2} o‘rin + 4 ta VIP xona.` },
+        dims: { length: nb.rect.z1 - z0, width: nb.rect.x1 - nb.rect.x0, height: R.PAV_EAVE, status: 'confirmed', note: `2 qavat; 1-qavat ≈${seats1} o‘rin, 2-qavat ≈${seats2} o‘rin + ${R.vipRooms.length} ta VIP xona.` },
         bounds: { min: [nb.rect.x0, 0, z0 - R.portico.depth], max: [nb.rect.x1, R.PAV_EAVE + 2.8, nb.rect.z1] },
         role: 'Xodimlar, mehmonlar va mijozlar uchun ovqatlanish, tadbirlar',
         group: 'Restoran',
@@ -166,7 +166,7 @@ export function getEntities(): Entity[] {
       zone('rest-bar', 'Bar', 'Majolika bilan qoplangan devor, yoritilgan arkali tokchalar va shishalar, ikat naqshli peshtaxta va bar stullari.', R.bar.u0 - 1.5, R.bar.v0 - 1, R.bar.u1 + 1.5, R.backWallV, R.FL1, R.CEIL1);
       zone('rest-vip1', '1-VIP zal (2-qavat)', `Banket zali: ${R.banquetSeats.length} o‘rinli uzun stol, ikat kreslolar, girih panjarali yoritilgan shift, baraban qandillar, gilamlar.`, R.vip1.u0, R.vip1.v0, R.vip1.u1, R.vip1.v1, R.FL2, R.CEIL2);
       zone('rest-vip2', '2-VIP zal (2-qavat)', `${R.roundTables.length} ta dumaloq stol, rattan qandillar, girih shift, arkali tokcha va gilam panno.`, R.vip2.u0, R.vip2.v0, R.vip2.u1, R.vip2.v1, R.FL2, R.CEIL2);
-      zone('rest-vip-rooms', 'VIP xonalar (4 ta)', 'Milliy uslubdagi xonalar: supa ustida ko‘rpacha va yostiqlar, xontaxta va dasturxon, so‘zana, laganlar, tokchalardagi ko‘zalar, yog‘och to‘sinli shift.', 0.3, R.corridor.v1, R.W - 0.3, R.backWallV, R.FL2, R.CEIL2);
+      zone('rest-vip-rooms', `VIP xonalar (${R.vipRooms.length} ta)`, 'Milliy uslubdagi xonalar: supa ustida ko‘rpacha va yostiqlar, xontaxta va dasturxon, so‘zana, laganlar, tokchalardagi ko‘zalar, yog‘och to‘sinli shift.', R.vipRooms[0].u0, R.corridor.v1, R.W - 0.3, R.vipRooms[0].v1, R.FL2, R.CEIL2);
       zone('rest-kitchen', 'Oshxona', 'Zanglamaydigan po‘lat stollar, plitalar va havo so‘rgich; xizmat eshigi orqa fasadda.', R.kitchen.u0, R.kitchen.v0, R.kitchen.u1, R.kitchen.v1, R.FL1, R.CEIL1);
       return;
     }

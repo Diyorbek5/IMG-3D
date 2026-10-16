@@ -1,0 +1,51 @@
+import { describe, expect, it } from 'vitest';
+import { factoryConfig } from '../config/factoryConfig';
+import { getEntities } from '../lib/entities';
+import { restaurantLayout, RESTAURANT_ID } from '../lib/restaurant';
+import { buildRestaurant } from '../scene/restaurant/restaurantBuilders';
+
+const R = restaurantLayout();
+
+describe('restoran (zavod yonidagi bino)', () => {
+  it('masterplandagi to‘rtburchak bino o‘rnida, zavodga tegmaydi, 2 qavat', () => {
+    const nb = factoryConfig.neighborBuildings.find((b) => b.id === RESTAURANT_ID)!;
+    expect(R.rect).toEqual(nb.rect);
+    expect(R.rect.x0).toBeGreaterThan(factoryConfig.building.width / 2);
+    expect(R.FL2).toBeGreaterThan(R.CEIL1);
+    expect(R.CEIL2).toBeLessThan(R.EAVE);
+  });
+
+  it('zal, banket, VIP zal va VIP xonalar bor', () => {
+    expect(R.hallTables.length).toBeGreaterThanOrEqual(20);
+    expect(R.banquetSeats.length).toBeGreaterThanOrEqual(24);
+    expect(R.roundTables.length).toBeGreaterThanOrEqual(6);
+    expect(R.vipRooms).toHaveLength(4);
+    const ids = new Set(getEntities().map((e) => e.id));
+    for (const id of [RESTAURANT_ID, 'rest-hall', 'rest-bar', 'rest-vip1', 'rest-vip2', 'rest-vip-rooms', 'rest-kitchen']) expect(ids.has(id), id).toBe(true);
+  });
+
+  it('zal stullari arkalar devoriga, tashqi devorlarga va markaziy yo‘lakka tushmaydi', () => {
+    for (const t of R.hallTables)
+      for (const s of t.seats) {
+        const u = s.x - R.rect.x0;
+        const v = s.z - R.rect.z0;
+        expect(u > 0.7 && u < R.W - 0.7 && v > 0.7 && v < R.backWallV - 0.3).toBe(true);
+        for (const row of R.arcadeRows) expect(Math.abs(v - row), `stul arkaga tegadi (v=${v.toFixed(2)})`).toBeGreaterThan(0.55);
+        expect(Math.abs(u - R.W / 2), 'markaziy yo‘lak bo‘sh').toBeGreaterThan(2.2);
+      }
+  });
+
+  it('geometriya: fasad, ichki bezaklar va shishalar yaratiladi', () => {
+    const r = buildRestaurant(R);
+    const keys = (parts: { key: string }[]) => new Set(parts.map((p) => p.key));
+    const shell = keys(r.shell);
+    const inner = keys(r.inner);
+    for (const k of ['stucco', 'aluDark', 'iron', 'concrete']) expect(shell.has(k), k).toBe(true);
+    for (const k of ['stuccoInt', 'ikat', 'majolica', 'woodDark', 'lanternGlass', 'bottle', 'velvet', 'jug']) expect(inner.has(k), k).toBe(true);
+    expect(keys(r.roof).has('girih')).toBe(true);
+    expect(keys(r.roof).has('roofTerracotta')).toBe(true);
+    expect(r.glass.length).toBeGreaterThan(0);
+    expect(r.decals.length).toBeGreaterThan(40);
+    expect(r.uplights.length).toBeGreaterThanOrEqual(12);
+  });
+});

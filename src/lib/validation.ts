@@ -47,7 +47,7 @@ export function runChecks(cfg = factoryConfig): Check[] {
     {
       label: 'Qo‘shni binolar alohida',
       ok: cfg.neighborBuildings.every((b) => !overlap(b.rect, building) && !overlap(b.rect, sr)),
-      detail: 'masterplandagi 2 ta bino — nomsiz, tomi yopiq',
+      detail: 'masterplandagi 2 ta bino: 1-bino — restoran, 2-bino — nomsiz (tomi yopiq)',
     },
     { label: 'OTK/GPO zonasi', ok: qcLeft, detail: 'liniyaning chap (qaytish) tarmog‘ida, alohida to‘siq bilan ajratilgan' },
     { label: 'Uskunalar ishlab chiqarish zonasida', ok: stationsInProd, detail: `${L.stations.length} ta stansiya, ${L.conveyors.length} ta konveyer bo‘lagi` },

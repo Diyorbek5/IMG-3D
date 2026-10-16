@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Rect } from '../../config/factoryConfig';
+import { RESTAURANT_ID } from '../../lib/restaurant';
 import { factoryConfig } from '../../config/factoryConfig';
 import { FLOOR_Y } from '../../lib/lineLayout';
 import { GeoBuilder, type MatKey } from '../../three/GeoBuilder';
@@ -143,7 +144,10 @@ function build(p: WarehouseProps) {
 export function NeighborBuildings() {
   const list = useMemo(
     () =>
-      factoryConfig.neighborBuildings.map<WarehouseProps>((b) => ({
+      factoryConfig.neighborBuildings
+        // restoran alohida komponentda (scene/restaurant)
+        .filter((b) => b.id !== RESTAURANT_ID)
+        .map<WarehouseProps>((b) => ({
         id: b.id,
         rect: b.rect,
         wing: b.wing,

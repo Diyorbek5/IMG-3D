@@ -12,6 +12,9 @@ const VIEWS: { id: CameraPreset; label: string; icon: ComponentType; key: string
   { id: 'iso', label: 'Izometrik', icon: Icon.iso, key: '6' },
   { id: 'interior', label: 'Ichki maket', icon: Icon.interior, key: '7' },
   { id: 'showroom', label: 'Showroom ichi', icon: Icon.showroom, key: '8' },
+  { id: 'restaurant', label: 'Restoran', icon: Icon.restaurant, key: '9' },
+  { id: 'restaurantHall', label: 'Restoran zali', icon: Icon.interior, key: '0' },
+  { id: 'restaurantVip', label: 'VIP zal', icon: Icon.interior, key: '-' },
 ];
 
 export function toggleFullscreen() {

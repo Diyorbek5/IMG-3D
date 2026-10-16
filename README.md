@@ -27,13 +27,14 @@ katta avtomobil yo‘li, ichki ishlab chiqarish liniyasi, OTK/GPO zonasi, animat
 | **Transport** | 2 ta yuk mashinasi (forkliftlar yo‘q): ikkalasi ham bitta KPP orqali kiradi va chiqadi. Xomashyo mashinasi maydonda burilib, orqasi bilan 3-darvozaga (xomashyo ombori) biroz kiradi va tushiriladi; tayyor mahsulot mashinasi orqasi bilan 1-darvozaga (tayyor mahsulot ombori) biroz kirib yuklanadi va chiqib ketadi. Tirkama burilishi real hisoblanadi, avtomatik darvozalar tirkama yaqinlashganda ochiladi; yo‘ldagi avtomobillar — to‘qnashmaslik avtomatik test bilan tekshirilgan. |
 | **O‘lchamlar** | CAD uslubidagi o‘lcham chiziqlari (chiqarish chiziqlari, 45° belgilar, raqamlar): 40 × 135 m, 12 m, omborlar 40 × 40 m (22 + 18 m), 85 m / 5 m, 10 m / 8 m, qavatlar 4 + 4 m, showroom 12 × 24 × 9 m; umumiy va zona o‘lchamlari alohida yoqiladi, 5 m to‘r. Barcha bino va maydon o‘lchamlari aniq qiymat sifatida ko‘rsatiladi. Yozuvlar bir-birining ustiga chiqmaydi va bino orqasida qolganda yashiriladi. |
 | **Xodimlar** | O‘ng paneldagi “Xodimlar” bo‘limi — oyna zavodining shtat jadvali (kamida 100 nafarga mo‘ljallangan, hozir 112 nafar, 14 bo‘lim, 2 smena): rahbariyat (direktor/CEO 1), sotuv (ROP va menejerlar), ishlab chiqarish va har bir liniya stansiyasi operatorlari, texnik xizmat, HR, marketing, IT, OTK/GPO, logistika va omborlar, ta’minot, moliya, ma’muriy-xo‘jalik, oshxona, mehnat muhofazasi. Faqat lavozimlar va soni (ism-familiyasiz); ish joyi maketda bor lavozim bosilsa, kamera o‘sha joyga boradi. Sonlar `src/config/staffConfig.ts` da o‘zgartiriladi. |
-| **Kamera** | Orbit / zoom / pan, Asosiy, Old fasad, Yon, Orqa, Yuqoridan (masterplan), Izometrik, Ichki maket (kesim), Showroom ichi, ichki sayr (walkthrough), to‘liq ekran. Barcha o‘tishlar silliq. |
+| **Restoran** | Zavod yonidagi to‘rtburchak bino (40 × 41 m, masterplandagi 1-qo‘shni bino o‘rnida) — ikki qavatli restoran. Fasad referens rasmlar asosida: krem rang shtukaturka, arkali katta derazalar (rama, impost, zamok toshi), pilyastrlar va kapitellar, qavatlararo belbog‘ va klassik karnizlar, okulusli frontonli ikki pavilon, kartushli frontonli markaziy portik, temir panjarali balkonlar, terrakota tom, kirish zinapoyasi, butalar va tosh plitali maydoncha; kechqurun pilyastrlar pastdan iliq yorug‘lik bilan yoritiladi, derazalardan ichki yorug‘lik ko‘rinadi. **1-qavat — asosiy zal:** arkalar qatori, yog‘och to‘sinli shift, mis fonuslar va bra, so‘zana va gilamlar, ikat qoplamali stullar, gilam yo‘lkalar, palmalar va ko‘zalar; **bar** — majolika devor, yoritilgan arkali tokchalarda shishalar, ikat peshtaxta va bar stullari; lobbi, oshxona, zinapoya. **2-qavat:** 1-VIP zal (banket stoli, ikat kreslolar, girih panjarali yoritilgan shift, baraban qandillar, pardalar), 2-VIP zal (dumaloq stollar, rattan qandillar, arkali tokcha va gilam panno), 4 ta milliy VIP xona (supa, ko‘rpacha va yostiqlar, xontaxta, dasturxon va mevalar, so‘zana, laganlar, tokchadagi ko‘zalar, yog‘och shift). Ichida mehmonlar, ofitsiantlar, barmenlar, administrator va oshpaz. Kamera: `9` — Restoran, `0` — Restoran zali, `-` — VIP zal. |
+| **Kamera** | Orbit / zoom / pan, Asosiy, Old fasad, Yon, Orqa, Yuqoridan (masterplan), Izometrik, Ichki maket (kesim), Showroom ichi, Restoran, Restoran zali, VIP zal, ichki sayr (walkthrough), to‘liq ekran. Barcha o‘tishlar silliq. |
 | **Interaktivlik** | Istalgan bino/zona/uskunani bosish → info-panel: vazifasi, o‘lchamlari, jarayondagi o‘rni, keyingi jarayon, parametrlar, “Fokuslash”. |
 | **Render** | PBR materiallar, protsedural teksturalar, quyosh + osmon + atrof-muhit refleksiyalari, soyalar, ACES tone mapping. Kunduz / kun botishi / tun. “Yuqori” sifatda N8AO ambient occlusion, real shisha sinishi, 4K soyalar. |
 
 ### Klaviatura
 
-`1`–`8` — kamera ko‘rinishlari · `Probel` — pauza/davom · `W` — sayr · `F` — to‘liq ekran · `Esc` — tanlovni bekor qilish.
+`1`–`9`, `0`, `-` — kamera ko‘rinishlari · `Probel` — pauza/davom · `W` — sayr · `F` — to‘liq ekran · `Esc` — tanlovni bekor qilish.
 
 ---
 
@@ -90,6 +91,7 @@ src/
     equipment/            # ProductionLine, GlassProcessingMachine, machineBuilders, ConveyorSystem, GlassFlow, QualityControlZone
     site/                 # SiteGround, RoadNetwork, Landscape
     vehicles/             # yuk mashinalari, avtomobillar
+    restaurant/           # restoran: fasad, zallar, bar, VIP zal va xonalar, bezaklar
     people/               # odamlar: protsedural skeletli model, pozalar, sahna komponenti
     overlays/             # DimensionLine, o‘lchamlar, zona nomlari, oqim strelkalari, tanlov, yozuvlar boshqaruvchisi
     CameraController.tsx  # silliq kamera o‘tishlari, fokuslash, walkthrough
@@ -144,7 +146,7 @@ Ilovadagi **“Hisobot”** bo‘limi shu ro‘yxatni va texnik talablar bo‘yi
 
 ## Test va sifat nazorati
 
-`npm run test` (46 ta test):
+`npm run test` (50 ta test):
 * Umumiy uzunlik 135 m = 40 + 85 + 10 m, balandliklar 12 / 5 / 8 m, oxirgi qism 2 qavat, omborlar maydoni 40 × 40 m.
 * **3D geometriyaning o‘zi** o‘lchanadi: fasad panellari 40 × 135 m konturda, har bir segment devorining balandligi
   12 / 5 / 8 m, qavatlararo plita, old fasad 40 m bo‘ylab to‘liq shisha, yon devor yopiq, oxirgi qismning ishlab chiqarishga qaragan devori ikkala qavatda shisha, quyosh panellari faqat ishlab chiqarish zonasi tomining yarmida.
@@ -154,6 +156,7 @@ Ilovadagi **“Hisobot”** bo‘limi shu ro‘yxatni va texnik talablar bo‘yi
   o‘ngdan chapga, jarayon tartibi, shisha panellar bir-biriga tegmaydi.
 * Xodimlar shtati: jami ≥ 100 nafar, birinchi lavozim — direktor (1 nafar), talab qilingan bo‘limlar mavjud, ish joylari maketdagi obyektlarga bog‘langan.
 * Odamlar: ≥ 50 nafar, talab qilingan joylarning barchasida bor; hech kim uskunalar ichidan o‘tmaydi, o‘z hududidan chiqmaydi, bir sathdagi odamlar orasidagi masofa butun sikl bo‘yicha > 0.55 m.
+* Restoran: masterplandagi bino o‘rnida, zavodga tegmaydi, 2 qavat; zal, banket, VIP zal va VIP xonalar bor; zal stullari arkalarga, devorlarga va markaziy yo‘lakka tushmaydi; fasad va ichki bezak geometriyasi yaratiladi.
 * Transport: butun sikl bo‘yicha (0.1 s qadam) hech bir transport boshqasi bilan to‘qnashmaydi; yuk mashinalari tirkamasi
   bilan o‘z darvozasiga (xomashyo — 3, tayyor mahsulot — 1) 1–6 m kiradi va showroomdan kamida 1 m uzoqda yuradi.
 

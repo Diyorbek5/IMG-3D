@@ -3,6 +3,7 @@ import { factoryConfig } from '../config/factoryConfig';
 import { getSegment, HALF_W, showroomRect } from '../lib/layout';
 import { computeLineLayout } from '../lib/lineLayout';
 import { buildPeople, samplePerson, type PersonDef } from '../lib/people';
+import { restaurantLayout } from '../lib/restaurant';
 
 const people = buildPeople();
 const times = Array.from({ length: 600 }, (_, i) => i * 0.5);
@@ -11,7 +12,7 @@ describe('odamlar (xodimlar va mehmonlar)', () => {
   it('liniya, omborlar, oshxona, yig‘ilishlar zali, xonalar va showroomda odamlar bor', () => {
     expect(people.length).toBeGreaterThanOrEqual(50);
     const zones = new Set(people.map((p) => p.zone));
-    for (const z of ['cutting', 'assembly', 'packing', 'inspection', 'raw-buffer', 'fg-buffer', 'room-canteen', 'room-meeting', 'room-manager', 'room-engineers', 'room-lab', 'showroom', 'site-gate']) expect(zones.has(z), z).toBe(true);
+    for (const z of ['cutting', 'assembly', 'packing', 'inspection', 'raw-buffer', 'fg-buffer', 'room-canteen', 'room-meeting', 'room-manager', 'room-engineers', 'room-lab', 'showroom', 'site-gate', 'restaurant']) expect(zones.has(z), z).toBe(true);
     expect(people.some((p) => p.behaviour.kind === 'route')).toBe(true);
   });
 
@@ -44,6 +45,9 @@ describe('odamlar (xodimlar va mehmonlar)', () => {
         const s = samplePerson(p, t);
         if (p.zone === 'showroom') {
           expect(s.x > sr.x0 && s.x < sr.x1 && s.z > sr.z0 && s.z < sr.z1, p.role).toBe(true);
+        } else if (p.zone === 'restaurant') {
+          const r = restaurantLayout().rect;
+          expect(s.x > r.x0 + 0.4 && s.x < r.x1 - 0.4 && s.z > r.z0 + 0.4 && s.z < r.z1 - 0.4, `${p.role} (${s.x.toFixed(1)}, ${s.z.toFixed(1)})`).toBe(true);
         } else if (p.zone === 'site-gate') {
           expect(s.z < 0, p.role).toBe(true);
         } else {

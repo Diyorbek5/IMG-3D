@@ -20,6 +20,7 @@ import { RoadNetwork } from './site/RoadNetwork';
 import { SiteGround } from './site/SiteGround';
 import { Vehicles } from './vehicles/Vehicles';
 import { People } from './people/People';
+import { Restaurant } from './restaurant/Restaurant';
 
 const DPR = { high: [1, 2], medium: [1, 1.5], low: [0.75, 1.1] } as const;
 
@@ -50,6 +51,7 @@ function SceneContent() {
       <Landscape />
       <FactoryBuilding />
       <NeighborBuildings />
+      <Restaurant />
       <AuxBuildings />
       <ProductionLine />
       <Vehicles />

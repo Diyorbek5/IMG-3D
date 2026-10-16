@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { factoryConfig } from '../../config/factoryConfig';
 import { getSegments, HALF_W, showroomRect } from '../../lib/layout';
+import { RESTAURANT_ID } from '../../lib/restaurant';
 import { useStore } from '../../state/store';
 
 interface Entry {
@@ -58,8 +59,8 @@ function occluderBoxes(): { box: THREE.Box3; roofed: boolean }[] {
   const sr = showroomRect();
   out.push({ box: new THREE.Box3(new THREE.Vector3(sr.x0, 0, sr.z0), new THREE.Vector3(sr.x1, factoryConfig.showroom.height, sr.z1)), roofed: true });
   for (const w of factoryConfig.neighborBuildings) {
-    // qo‘shni binolarning tomi doimo yopiq
-    out.push({ box: new THREE.Box3(new THREE.Vector3(w.rect.x0, 0, w.rect.z0), new THREE.Vector3(w.rect.x1, w.height, w.rect.z1)), roofed: false });
+    // qo‘shni binolarning tomi doimo yopiq (restoran tomi "Tomlar" qatlami bilan yashiriladi)
+    out.push({ box: new THREE.Box3(new THREE.Vector3(w.rect.x0, 0, w.rect.z0), new THREE.Vector3(w.rect.x1, w.height, w.rect.z1)), roofed: w.id === RESTAURANT_ID });
   }
   return out;
 }

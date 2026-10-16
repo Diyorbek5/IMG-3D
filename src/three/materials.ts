@@ -13,6 +13,12 @@ import {
   shutterNormal,
   showroomFloorColor,
   marbleDarkColor,
+  stuccoColor,
+  stoneWarmColor,
+  ikatColor,
+  majolicaColor,
+  girihColor,
+  uplightTexture,
   solarColor,
   woodColor,
 } from './textures';
@@ -134,6 +140,28 @@ export function getMaterials(): Lib {
     marbleDark: withMaps(std({ color: '#ffffff', roughness: 0.14, metalness: 0.05, envMapIntensity: 1.1 }), marbleDarkColor()),
     stoneGrey: withMaps(std({ color: '#8d8984', roughness: 0.78 }), concreteColor(), concreteNormal(), 0.3),
     fabricLight: std({ color: '#d8d2c8', roughness: 0.96 }),
+    // restoran: shtukaturka, tosh pol, terrakota tom, temir panjara, mis fonuslar, milliy matolar
+    stucco: withMaps(std({ color: '#f3e4c6', roughness: 0.92 }), stuccoColor(), concreteNormal(), 0.35),
+    stuccoInt: withMaps(std({ color: '#efd8b2', roughness: 0.93, emissive: '#ffb566', emissiveIntensity: 0 }), stuccoColor()),
+    stoneWarm: withMaps(std({ color: '#ffffff', roughness: 0.38, envMapIntensity: 0.8 }), stoneWarmColor()),
+    roofTerracotta: withMaps(std({ color: '#8d5644', metalness: 0.45, roughness: 0.5 }), undefined, roofNormal(), 0.8),
+    iron: std({ color: '#1d1b1a', metalness: 0.6, roughness: 0.45 }),
+    brass: std({ color: '#b08a45', metalness: 0.9, roughness: 0.32 }),
+    lanternGlass: std({ color: '#f3c27a', emissive: '#ffad4d', emissiveIntensity: 0.5, roughness: 0.45 }),
+    ikat: withMaps(std({ color: '#ffffff', roughness: 0.88 }), ikatColor()),
+    majolica: withMaps(std({ color: '#ffffff', roughness: 0.22, envMapIntensity: 1.0 }), majolicaColor()),
+    girih: (() => {
+      const m = withMaps(std({ color: '#ffffff', roughness: 0.7, emissive: '#ffffff', emissiveIntensity: 0.25 }), girihColor());
+      m.emissiveMap = girihColor();
+      return m;
+    })(),
+    velvet: std({ color: '#6e1a22', roughness: 0.9 }),
+    woodDark: withMaps(std({ color: '#7a5640', roughness: 0.72 }), woodColor()),
+    bottle: std({ color: '#2f4a2c', metalness: 0.25, roughness: 0.12 }),
+    bottleAmber: std({ color: '#8a4d1a', metalness: 0.25, roughness: 0.12, emissive: '#7a3a08', emissiveIntensity: 0.25 }),
+    jug: std({ color: '#b46a3c', roughness: 0.82 }),
+    rattan: withMaps(std({ color: '#e0b77e', roughness: 0.9, emissive: '#ffb050', emissiveIntensity: 0.15 }), woodColor()),
+    uplight: new THREE.MeshBasicMaterial({ map: uplightTexture(), color: '#ffd29a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }),
     shutter: withMaps(std({ color: '#b7bcc1', metalness: 0.75, roughness: 0.4 }), undefined, shutterNormal(), 1),
     lightPanel: std({ color: '#ffffff', emissive: '#f4f8ff', emissiveIntensity: 1.3 }),
     lampWarm: std({ color: '#fff3d6', emissive: '#ffd9a0', emissiveIntensity: 0.25 }),
@@ -186,4 +214,13 @@ export function applyLightingMode(mode: LightingMode) {
   (m.glassTint as THREE.MeshStandardMaterial).emissiveIntensity = night ? 0.55 : dusk ? 0.12 : 0;
   (m.lightPanel as THREE.MeshStandardMaterial).emissiveIntensity = night ? 2.4 : 1.3;
   (m.screen as THREE.MeshStandardMaterial).emissiveIntensity = night ? 1.6 : 0.9;
+  // restoran: ichki yorug‘lik, fonuslar, girih panellar, fasad yoritgichlari
+  (m.stuccoInt as THREE.MeshStandardMaterial).emissiveIntensity = night ? 0.3 : dusk ? 0.12 : 0;
+  (m.lanternGlass as THREE.MeshStandardMaterial).emissiveIntensity = night ? 3.2 : dusk ? 1.6 : 0.5;
+  (m.girih as THREE.MeshStandardMaterial).emissiveIntensity = night ? 1.3 : dusk ? 0.7 : 0.25;
+  (m.rattan as THREE.MeshStandardMaterial).emissiveIntensity = night ? 0.9 : dusk ? 0.4 : 0.15;
+  (m.bottleAmber as THREE.MeshStandardMaterial).emissiveIntensity = night ? 0.9 : 0.25;
+  const up = m.uplight as THREE.MeshBasicMaterial;
+  up.opacity = night ? 0.85 : dusk ? 0.4 : 0;
+  up.visible = !night && !dusk ? false : true;
 }

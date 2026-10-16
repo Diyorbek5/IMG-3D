@@ -2,6 +2,7 @@ import { factoryConfig } from '../config/factoryConfig';
 import type { HumanLook } from '../scene/people/humanGeometry';
 import { getSegment, showroomRect, siteNorthZ } from './layout';
 import { computeLineLayout, FLOOR_Y } from './lineLayout';
+import { restaurantLayout } from './restaurant';
 
 /**
  * Maketdagi xodimlar va mehmonlar: kim, qayerda va nima qilmoqda.
@@ -57,7 +58,7 @@ export interface PersonSample {
 /* Tashqi ko‘rinish (kiyim, teri, soch)                                */
 /* ------------------------------------------------------------------ */
 
-export type Outfit = 'operator' | 'master' | 'warehouse' | 'mechanic' | 'office' | 'manager' | 'chef' | 'lab' | 'guard' | 'consultant' | 'visitor' | 'nurse';
+export type Outfit = 'operator' | 'master' | 'warehouse' | 'mechanic' | 'office' | 'manager' | 'chef' | 'lab' | 'guard' | 'consultant' | 'visitor' | 'nurse' | 'waiter';
 
 const SKIN = ['#e9c6aa', '#ddb497', '#d0a386', '#c19173', '#f1d3bd', '#b48468', '#d8b096'];
 const HAIR = ['#17120f', '#241a14', '#33251b', '#120f0d', '#46342a', '#2b211b', '#5b5550'];
@@ -116,6 +117,9 @@ export function makeLook(outfit: Outfit, female: boolean, seed: number): HumanLo
       return female
         ? { ...base, top: '#1d1f22', bottom: '#1d1f22', badge: brand, skirt: r() < 0.5, hairStyle: 'long' }
         : { ...base, top: '#1d1f22', bottom: '#2b2f36', badge: brand, belt: '#111' };
+    case 'waiter':
+      // ofitsiant: oq ko‘ylak, qora jilet va shim, uzun qora fartuk
+      return { ...base, top: '#f4f4f1', sleeve: '#f4f4f1', bottom: '#1b1c1f', vest: { color: '#1f2024', stripe: '#1f2024' }, apron: '#1b1c1f', hairStyle: female ? 'bun' : 'short', belt: '#111' };
     case 'visitor':
       return { ...base, top: pick(r, CASUAL_TOP), bottom: pick(r, CASUAL_BOTTOM), shortSleeves: r() < 0.3, skirt: female && r() < 0.4, shoes: pick(r, ['#1b1b1c', '#e8e8e4', '#5a3b28']) };
   }
@@ -311,6 +315,60 @@ export function buildPeople(cfg = factoryConfig): PersonDef[] {
   add('Mijoz', 'showroom', 'visitor', false, fixed([X(1.0), Z(3.0)], FACE.px, 'talk', 0.42));
   add('Mijoz', 'showroom', 'visitor', true, fixed([X(2.6), Z(1.5)], FACE.pz, 'talk', 0.42));
   add('Mijoz (antresolda)', 'showroom', 'visitor', false, fixed([X(3.3), Z(11.5)], FACE.px, 'look'), { y: 3.62 });
+
+  /* ---- restoran ---- */
+  {
+    const R = restaurantLayout(cfg);
+    const f1 = { y: R.FL1 };
+    const f2 = { y: R.FL2 };
+    const SEAT_R = 0.51;
+    const guestOutfits: Outfit[] = ['visitor', 'office', 'visitor', 'manager', 'visitor', 'office'];
+    let g = 0;
+    const guest = (s: { x: number; z: number; face: number }, opts: { y: number }, pose: Pose) => {
+      const outfit = guestOutfits[g % guestOutfits.length];
+      const female = g % 3 === 1;
+      g++;
+      add('Restoran mehmoni', 'restaurant', outfit, female, fixed([s.x, s.z], s.face, pose, SEAT_R), opts);
+    };
+    // asosiy zal: bir nechta band stollar
+    const occupied: [number, number[]][] = [
+      [1, [0, 1, 3]],
+      [4, [0, 2]],
+      [7, [1, 2, 3]],
+      [9, [0, 3]],
+      [14, [0, 1]],
+      [16, [1, 2, 3]],
+      [20, [2, 3]],
+      [25, [0, 1]],
+    ];
+    for (const [ti, seats] of occupied) {
+      const t = R.hallTables[Math.min(ti, R.hallTables.length - 1)];
+      seats.forEach((si, k) => guest(t.seats[si], f1, k % 2 ? 'talk' : 'eat'));
+    }
+    // ofitsiantlar: markaziy yo‘lak va zal bo‘ylab
+    const Xr = R.X;
+    const Zr = R.Z;
+    add('Ofitsiant', 'restaurant', 'waiter', false, route([[Xr(R.W / 2 - 0.4), Zr(7.6)], [Xr(R.W / 2 - 0.4), Zr(R.bar.v0 - 1.1)]], 1.05, [{ at: 0, dur: 4, pose: 'look', face: Math.PI }, { at: 1, dur: 6, pose: 'talk', face: 0 }], true), f1);
+    add('Ofitsiant', 'restaurant', 'waiter', true, route([[Xr(3.5), Zr(16.2)], [Xr(15.5), Zr(16.2)]], 0.95, [{ at: 0, dur: 5, pose: 'talk', face: 0 }, { at: 1, dur: 5, pose: 'talk', face: Math.PI }], true), { ...f1, offset: 9 });
+    add('Ofitsiant', 'restaurant', 'waiter', false, route([[Xr(R.W - 15.5), Zr(22.1)], [Xr(R.W - 3.5), Zr(22.1)]], 0.95, [{ at: 0, dur: 5, pose: 'talk', face: 0 }, { at: 1, dur: 5, pose: 'talk', face: Math.PI }], true), { ...f1, offset: 3 });
+    // bar, administrator, oshxona
+    add('Barmen', 'restaurant', 'waiter', false, fixed([Xr(R.W / 2 - 1.2), Zr(R.bar.v1 + 0.65)], Math.PI, 'work'), f1);
+    add('Barmen', 'restaurant', 'waiter', true, fixed([Xr(R.W / 2 + 2.4), Zr(R.bar.v1 + 0.65)], Math.PI, 'look'), f1);
+    add('Administrator (xostes)', 'restaurant', 'consultant', true, fixed([Xr(R.portico.u1 - 0.95), Zr(3.45)], Math.PI, 'talk'), f1);
+    add('Restoran oshpazi', 'restaurant', 'chef', false, fixed([Xr(R.W / 2 + 4), Zr(R.D - 1.35)], 0, 'work'), f1);
+    // 2-qavat: banket (1-VIP zal) va dumaloq stollar (2-VIP zal)
+    const bs = R.banquetSeats;
+    for (const i of [0, 1, 2, 3, 5, 6, 8, 9, 11, bs.length - 2]) if (bs[i]) guest(bs[i], f2, i % 3 ? 'talk' : 'eat');
+    add('Ofitsiant (VIP)', 'restaurant', 'waiter', false, route([[Xr(2.2), Zr(3.2)], [Xr(14.2), Zr(3.2)]], 0.8, [{ at: 0, dur: 6, pose: 'look', face: 0 }, { at: 1, dur: 6, pose: 'look', face: 0 }], true), f2);
+    for (const [ti, seats] of [
+      [0, [0, 2, 3]],
+      [4, [1, 3]],
+    ] as [number, number[]][]) {
+      const t = R.roundTables[ti];
+      if (t) seats.forEach((si, k) => guest(t.seats[si], f2, k % 2 ? 'eat' : 'talk'));
+    }
+    add('Ofitsiant (VIP)', 'restaurant', 'waiter', true, route([[Xr(25.2), Zr(7.7)], [Xr(R.W - 1.5), Zr(7.7)]], 0.85, [{ at: 1, dur: 5, pose: 'talk', face: Math.PI }], true), { ...f2, offset: 14 });
+  }
 
   /* ---- tashqarida: KPP qorovuli ---- */
   const kx = cfg.site.entryGateX - cfg.site.gateWidth / 2 - 14;

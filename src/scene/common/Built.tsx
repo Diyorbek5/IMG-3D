@@ -5,9 +5,9 @@ import { getMaterials } from '../../three/materials';
 import { useStore } from '../../state/store';
 
 /** Soya tashlamaydigan materiallar */
-const NO_CAST = new Set<MatKey>(['glass', 'glassFacade', 'glassSheet', 'glassGreen', 'glassBronze', 'glassBlue', 'glassGrey', 'lightPanel', 'screen', 'lampWarm', 'heat']);
+const NO_CAST = new Set<MatKey>(['uplight', 'lanternGlass', 'glass', 'glassFacade', 'glassSheet', 'glassGreen', 'glassBronze', 'glassBlue', 'glassGrey', 'lightPanel', 'screen', 'lampWarm', 'heat']);
 /** Shaffof (alfa) materiallar — boshqa yuzalardan keyin chiziladi */
-const TRANSPARENT = new Set<MatKey>(['glass', 'glassFacade', 'glassSheet', 'glassGreen', 'glassBronze', 'glassBlue', 'glassGrey']);
+const TRANSPARENT = new Set<MatKey>(['uplight', 'glass', 'glassFacade', 'glassSheet', 'glassGreen', 'glassBronze', 'glassBlue', 'glassGrey']);
 
 interface BuiltProps {
   parts: BuiltPart[];

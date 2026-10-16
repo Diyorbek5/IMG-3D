@@ -637,3 +637,353 @@ export function disposeTextures() {
   cache.forEach((t) => t.dispose());
   cache.clear();
 }
+
+/* ------------------------------------------------------------------ */
+/* Restoran: milliy bezaklar (ikat, gilam, so‘zana, majolika, girih, lagan) */
+/* ------------------------------------------------------------------ */
+
+const canvasTex = (c: HTMLCanvasElement) => {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+};
+
+/** Iliq krem rang shtukaturka (fasad va ichki devorlar) */
+export const stuccoColor = () =>
+  cached('stucco', () => {
+    const w = 512;
+    const h = 512;
+    const n = fbm(w, h, 96, 5, 71);
+    const c = colorFromNoise(n, w, h, (v) => {
+      const g = 222 + v * 26;
+      return [g, g * 0.965, g * 0.9];
+    });
+    return toTexture(c, 3.5, 3.5, true);
+  });
+
+/** Iliq rangli tosh plitalar (restoran poli), 0.6 m */
+export const stoneWarmColor = () =>
+  cached('stoneWarm', () => {
+    const w = 512;
+    const h = 512;
+    const n = fbm(w, h, 64, 4, 73);
+    const c = colorFromNoise(n, w, h, (v, x, y) => {
+      let g = 196 + v * 30;
+      if (x % 256 < 2 || y % 256 < 2) g -= 60;
+      return [g, g * 0.92, g * 0.8];
+    });
+    return toTexture(c, 1.2, 1.2, true);
+  });
+
+/** Ikat (abr) mato: vertikal ustunlardagi "olovsimon" romb naqshlar, chetlari tabiiy "yoyilgan" */
+export const ikatColor = () =>
+  cached('ikat', () => {
+    const w = 256;
+    const h = 512;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#d8c3a0';
+    ctx.fillRect(0, 0, w, h);
+    seed = 91;
+    const cols = ['#5e2418', '#2d4a3a', '#8f5a26', '#3a2c4a', '#7a2238'];
+    const motif = (cx: number, cy: number, rw: number, rh: number, col: string) => {
+      // har bir qator biroz siljigan — ikatning xarakterli "yoyilgan" chetlari
+      for (let y = -rh; y <= rh; y += 2) {
+        const k = 1 - Math.abs(y) / rh;
+        const half = rw * k + (rnd() - 0.5) * 6;
+        const jitter = (rnd() - 0.5) * 4;
+        ctx.fillStyle = col;
+        ctx.fillRect(cx - half + jitter, cy + y, half * 2, 2);
+      }
+    };
+    for (let i = 0; i < 2; i++) {
+      for (let j = 0; j < 4; j++) {
+        const cx = w * (0.25 + i * 0.5);
+        const cy = h * (0.125 + j * 0.25) + (i ? h * 0.125 : 0);
+        motif(cx, cy, w * 0.2, h * 0.11, cols[(i + j) % cols.length]);
+        motif(cx, cy, w * 0.11, h * 0.06, '#d8c3a0');
+        motif(cx, cy, w * 0.05, h * 0.03, cols[(i + j + 2) % cols.length]);
+      }
+    }
+    // ingichka vertikal chiziqlar
+    ctx.fillStyle = 'rgba(60,20,20,0.35)';
+    for (let x = 0; x < w; x += 64) ctx.fillRect(x, 0, 2, h);
+    return toTexture(c, 0.45, 0.9, true);
+  });
+
+/** Majolika (ko‘k-oq-feruza sopol plitkalar, sakkiz qirrali yulduz) — 0.3 m */
+export const majolicaColor = () =>
+  cached('majolica', () => {
+    const s = 256;
+    const c = makeCanvas(s, s);
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#f2efe6';
+    ctx.fillRect(0, 0, s, s);
+    const star = (cx: number, cy: number, r: number, col: string) => {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      for (let k = 0; k < 16; k++) {
+        const a = (k / 16) * Math.PI * 2;
+        const rr = k % 2 === 0 ? r : r * 0.62;
+        ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+      }
+      ctx.closePath();
+      ctx.fill();
+    };
+    for (const [x, y] of [
+      [0, 0],
+      [s, 0],
+      [0, s],
+      [s, s],
+      [s / 2, s / 2],
+    ]) {
+      star(x, y, s * 0.36, '#1d3f8a');
+      star(x, y, s * 0.24, '#2aa3a8');
+      star(x, y, s * 0.1, '#f2efe6');
+    }
+    ctx.strokeStyle = '#c99a3a';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(0, 0, s, s);
+    return toTexture(c, 0.3, 0.3, true);
+  });
+
+/** Girih yog‘och panjara (shiftdagi orqadan yoritilgan panel): to‘q yog‘och va yorug‘ teshiklar */
+export const girihColor = () =>
+  cached('girih', () => {
+    const s = 256;
+    const c = makeCanvas(s, s);
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#3a2416';
+    ctx.fillRect(0, 0, s, s);
+    ctx.fillStyle = '#ffd9a0';
+    const hole = (cx: number, cy: number, r: number) => {
+      ctx.beginPath();
+      for (let k = 0; k < 16; k++) {
+        const a = (k / 16) * Math.PI * 2 + Math.PI / 16;
+        const rr = k % 2 === 0 ? r : r * 0.7;
+        ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+      }
+      ctx.closePath();
+      ctx.fill();
+    };
+    for (const [x, y] of [
+      [s / 2, s / 2],
+      [0, 0],
+      [s, 0],
+      [0, s],
+      [s, s],
+    ])
+      hole(x, y, s * 0.3);
+    for (const [x, y] of [
+      [s / 2, 0],
+      [0, s / 2],
+      [s, s / 2],
+      [s / 2, s],
+    ])
+      hole(x, y, s * 0.12);
+    ctx.fillStyle = '#3a2416';
+    for (const [x, y] of [
+      [s / 2, s / 2],
+      [0, 0],
+      [s, 0],
+      [0, s],
+      [s, s],
+    ])
+      hole(x, y, s * 0.1);
+    return toTexture(c, 0.9, 0.9, true);
+  });
+
+/** Gilam (qizil fon, markaziy medalyon, chegaralar) — har bir gilamga butun tekstura */
+export function carpetTexture(variant = 0) {
+  return cached(`carpet-${variant}`, () => {
+    const w = 512;
+    const h = 768;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    const field = ['#7d1717', '#6b1420', '#3a2a5a'][variant % 3];
+    const navy = '#1d2440';
+    const cream = '#e8d9b5';
+    const gold = '#c08a3a';
+    ctx.fillStyle = navy;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = cream;
+    ctx.fillRect(18, 18, w - 36, h - 36);
+    ctx.fillStyle = navy;
+    ctx.fillRect(30, 30, w - 60, h - 60);
+    // chegara naqshi (romblar)
+    ctx.fillStyle = gold;
+    for (let x = 44; x < w - 44; x += 28) {
+      for (const y of [44, h - 44]) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - 9);
+        ctx.lineTo(x + 9, y);
+        ctx.lineTo(x, y + 9);
+        ctx.lineTo(x - 9, y);
+        ctx.fill();
+      }
+    }
+    for (let y = 72; y < h - 44; y += 28) {
+      for (const x of [44, w - 44]) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - 9);
+        ctx.lineTo(x + 9, y);
+        ctx.lineTo(x, y + 9);
+        ctx.lineTo(x - 9, y);
+        ctx.fill();
+      }
+    }
+    ctx.fillStyle = field;
+    ctx.fillRect(64, 64, w - 128, h - 128);
+    // mayda naqshli maydon
+    seed = 101 + variant;
+    for (let y = 80; y < h - 80; y += 34)
+      for (let x = 80; x < w - 80; x += 34) {
+        ctx.fillStyle = rnd() < 0.5 ? 'rgba(232,217,181,0.35)' : 'rgba(29,36,64,0.45)';
+        ctx.beginPath();
+        ctx.moveTo(x, y - 6);
+        ctx.lineTo(x + 6, y);
+        ctx.lineTo(x, y + 6);
+        ctx.lineTo(x - 6, y);
+        ctx.fill();
+      }
+    // markaziy medalyon
+    const med = (r: number, col: string) => {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      for (let k = 0; k < 24; k++) {
+        const a = (k / 24) * Math.PI * 2;
+        const rr = k % 2 === 0 ? r : r * 0.8;
+        ctx.lineTo(w / 2 + Math.cos(a) * rr * 0.8, h / 2 + Math.sin(a) * rr * 1.15);
+      }
+      ctx.closePath();
+      ctx.fill();
+    };
+    med(150, navy);
+    med(124, cream);
+    med(98, field);
+    med(56, gold);
+    med(26, navy);
+    // burchak elementlari
+    for (const [x, y] of [
+      [64, 64],
+      [w - 64, 64],
+      [64, h - 64],
+      [w - 64, h - 64],
+    ]) {
+      ctx.fillStyle = navy;
+      ctx.beginPath();
+      ctx.arc(x, y, 70, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = gold;
+      ctx.beginPath();
+      ctx.arc(x, y, 34, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return canvasTex(c);
+  });
+}
+
+/** So‘zana (krem fon, qizil gul-rozetkalar, yashil barglar) */
+export function suzaniTexture() {
+  return cached('suzani', () => {
+    const w = 384;
+    const h = 768;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#efe2c6';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#8c1d1d';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(14, 14, w - 28, h - 28);
+    const rosette = (cx: number, cy: number, r: number) => {
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2;
+        ctx.fillStyle = '#2f5a3a';
+        ctx.beginPath();
+        ctx.ellipse(cx + Math.cos(a) * r * 1.2, cy + Math.sin(a) * r * 1.2, r * 0.32, r * 0.14, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (const [rr, col] of [
+        [r, '#a3201f'],
+        [r * 0.78, '#e8b04a'],
+        [r * 0.62, '#a3201f'],
+        [r * 0.35, '#2a2f5a'],
+        [r * 0.15, '#e8b04a'],
+      ] as [number, string][]) {
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    rosette(w / 2, h * 0.25, 70);
+    rosette(w / 2, h * 0.62, 90);
+    rosette(w * 0.22, h * 0.86, 30);
+    rosette(w * 0.78, h * 0.86, 30);
+    rosette(w * 0.22, h * 0.08, 24);
+    rosette(w * 0.78, h * 0.08, 24);
+    // pastki popuk (tassels)
+    ctx.fillStyle = '#7a1a1a';
+    for (let x = 20; x < w - 20; x += 16) ctx.fillRect(x, h - 18, 6, 18);
+    return canvasTex(c);
+  });
+}
+
+/** Lagan (sopol likop) — dumaloq, ko‘k naqsh */
+export function lyaganTexture(variant = 0) {
+  return cached(`lyagan-${variant}`, () => {
+    const s = 256;
+    const c = makeCanvas(s, s);
+    const ctx = c.getContext('2d')!;
+    ctx.clearRect(0, 0, s, s);
+    const cx = s / 2;
+    const ring = (r: number, col: string) => {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(cx, cx, r, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    const blue = variant % 2 ? '#1d3f8a' : '#7a2a1a';
+    ring(126, blue);
+    ring(112, '#f1ead8');
+    ctx.fillStyle = blue;
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * 72, cx + Math.sin(a) * 72, 28, 11, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ring(48, '#2aa3a8');
+    ring(34, '#f1ead8');
+    ring(18, blue);
+    return canvasTex(c);
+  });
+}
+
+/** Fasadni pastdan yorituvchi chiroq izi (konussimon gradient, additive) */
+export function uplightTexture() {
+  return cached('uplight', () => {
+    const w = 128;
+    const h = 256;
+    const c = makeCanvas(w, h);
+    const ctx = c.getContext('2d')!;
+    const img = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      const t = y / h; // 0 — tepa, 1 — past (chiroq yonida)
+      const spread = 0.22 + 0.78 * (1 - t);
+      for (let x = 0; x < w; x++) {
+        const dx = Math.abs(x / w - 0.5) / (0.5 * spread);
+        let a = Math.max(0, 1 - dx * dx) * Math.pow(t, 1.1) * (1 - Math.pow(t, 30));
+        a = Math.min(1, a * 1.3);
+        const i = (y * w + x) * 4;
+        img.data[i] = 255;
+        img.data[i + 1] = 214;
+        img.data[i + 2] = 150;
+        img.data[i + 3] = Math.round(a * 255);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvasTex(c);
+  });
+}

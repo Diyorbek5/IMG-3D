@@ -7,6 +7,7 @@ import { animationConfig } from '../../config/animationConfig';
 import { dimensionSpecs, dimText } from '../../lib/dimensions';
 import { getEntity } from '../../lib/entities';
 import { getSegments, HALF_W, roadFrame, showroomRect } from '../../lib/layout';
+import { restaurantLayout, RESTAURANT_ID } from '../../lib/restaurant';
 import { computeLineLayout, FLOOR_Y } from '../../lib/lineLayout';
 import { Path2D, type P2 } from '../../lib/motion';
 import { simClock, useStore } from '../../state/store';
@@ -85,6 +86,10 @@ export function ZoneLabels() {
     out.push({ id: 'raw-buffer', text: 'Xomashyo ombori', pos: [(-HALF_W + px) / 2, front.height + 1.2, front.z0 + front.length * 0.62], kind: 'major' });
     out.push({ id: 'fg-buffer', text: 'Tayyor mahsulotlar ombori', pos: [(HALF_W + px) / 2, front.height + 1.2, front.z0 + front.length * 0.62], kind: 'major' });
     out.push({ id: 'front-yard', text: 'Yuklash-tushirish maydoni', pos: [6, 1.5, -30], kind: 'minor' });
+    {
+      const R = restaurantLayout();
+      out.push({ id: RESTAURANT_ID, text: 'Restoran', pos: [R.X(R.W / 2), R.PAV_EAVE + 4.2, R.Z(R.D / 2)], kind: 'major' });
+    }
     for (const m of c.rearRooms) {
       const r = segs[segs.length - 1];
       const y = m.floor === 1 ? FLOOR_Y + 2.6 : c.building.rearFirstFloorHeight + 2.4;

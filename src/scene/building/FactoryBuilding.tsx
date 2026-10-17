@@ -24,6 +24,7 @@ export function FactoryBuilding() {
       roof: p.roof.build(),
       upper: p.upper.build(),
       upperGlass: p.upperGlass.build(),
+      upperRoof: p.upperRoof.build(),
       interior: p.interior.build(),
     };
   }, []);
@@ -75,6 +76,7 @@ export function FactoryBuilding() {
         <>
           <Built parts={parts.upper} dispose={false} />
           <Built parts={parts.upperGlass} castShadow={false} dispose={false} />
+          {roofs && <Built parts={parts.upperRoof} dispose={false} />}
         </>
       )}
       <FrontFacade />

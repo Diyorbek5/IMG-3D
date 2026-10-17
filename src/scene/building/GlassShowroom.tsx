@@ -19,6 +19,8 @@ export interface ShowroomPanel {
   size: [number, number];
   /** panel normali: 0 → +z, π → −z, π/2 → +x, −π/2 → −x */
   rotY: number;
+  /** antresoldagi yozuv ("2-qavat" qatlami bilan yashiriladi) */
+  upper?: boolean;
 }
 
 /** Profil tizimlari namunalari (stend) */
@@ -42,6 +44,9 @@ export function buildShowroom(cfg = factoryConfig) {
   const glass = new GeoBuilder();
   /** shift, tom va shiftdagi yoritgichlar — "Tomlar" qatlami o‘chirilganda yashiriladi */
   const roof = new GeoBuilder();
+  /** antresol (2-sath) — "2-qavat" qatlami o‘chirilganda yashiriladi */
+  const upper = new GeoBuilder();
+  const upperGlass = new GeoBuilder();
   const panels: ShowroomPanel[] = [];
   const fascia = 0.9;
   const gTop = H - fascia;
@@ -169,23 +174,23 @@ export function buildShowroom(cfg = factoryConfig) {
   const mu1 = 3.8; // antresolning sharqiy cheti (u)
   const mv0 = 5.6;
   const mv1 = SD - 5.4;
-  solid.boxMinMax('paintWhite', X(0.15), MZ - 0.3, Z(mv0), X(mu1), MZ, Z(mv1));
-  solid.boxMinMax('floorShowroom', X(0.15), MZ, Z(mv0), X(mu1), MZ + 0.02, Z(mv1));
+  upper.boxMinMax('paintWhite', X(0.15), MZ - 0.3, Z(mv0), X(mu1), MZ, Z(mv1));
+  upper.boxMinMax('floorShowroom', X(0.15), MZ, Z(mv0), X(mu1), MZ + 0.02, Z(mv1));
   // fasad bandi + pastki LED
-  solid.boxMinMax('aluDark', X(mu1), MZ - 0.32, Z(mv0), X(mu1 + 0.08), MZ + 0.12, Z(mv1));
-  solid.boxMinMax('aluDark', X(0.15), MZ - 0.32, Z(mv0 - 0.08), X(mu1 + 0.08), MZ + 0.12, Z(mv0));
-  led(solid, X(mu1 - 0.06), MZ - 0.34, Z(mv0), X(mu1 + 0.08), MZ - 0.32, Z(mv1));
+  upper.boxMinMax('aluDark', X(mu1), MZ - 0.32, Z(mv0), X(mu1 + 0.08), MZ + 0.12, Z(mv1));
+  upper.boxMinMax('aluDark', X(0.15), MZ - 0.32, Z(mv0 - 0.08), X(mu1 + 0.08), MZ + 0.12, Z(mv0));
+  led(upper, X(mu1 - 0.06), MZ - 0.34, Z(mv0), X(mu1 + 0.08), MZ - 0.32, Z(mv1));
   // ustunlar
   for (const v of [mv0 + 0.2, (mv0 + mv1) / 2, mv1 - 0.2]) solid.box('aluDark', [X(mu1 - 0.15), (F + MZ - 0.3) / 2, Z(v)], [0.2, MZ - 0.3 - F, 0.2]);
   // shisha to‘siq (balyustrada) va poruchen
-  glass.boxMinMax('glass', X(mu1 + 0.01), MZ + 0.12, Z(mv0), X(mu1 + 0.03), MZ + 1.1, Z(mv1));
-  solid.boxMinMax('chrome', X(mu1 - 0.01), MZ + 1.1, Z(mv0), X(mu1 + 0.05), MZ + 1.14, Z(mv1));
-  glass.boxMinMax('glass', X(1.3), MZ + 0.02, Z(mv1 - 0.03), X(mu1), MZ + 1.1, Z(mv1 - 0.01));
-  solid.boxMinMax('chrome', X(1.3), MZ + 1.1, Z(mv1 - 0.04), X(mu1), MZ + 1.14, Z(mv1));
-  glass.boxMinMax('glass', X(0.15), MZ + 0.12, Z(mv0 - 0.06), X(mu1), MZ + 1.1, Z(mv0 - 0.04));
+  upperGlass.boxMinMax('glass', X(mu1 + 0.01), MZ + 0.12, Z(mv0), X(mu1 + 0.03), MZ + 1.1, Z(mv1));
+  upper.boxMinMax('chrome', X(mu1 - 0.01), MZ + 1.1, Z(mv0), X(mu1 + 0.05), MZ + 1.14, Z(mv1));
+  upperGlass.boxMinMax('glass', X(1.3), MZ + 0.02, Z(mv1 - 0.03), X(mu1), MZ + 1.1, Z(mv1 - 0.01));
+  upper.boxMinMax('chrome', X(1.3), MZ + 1.1, Z(mv1 - 0.04), X(mu1), MZ + 1.14, Z(mv1));
+  upperGlass.boxMinMax('glass', X(0.15), MZ + 0.12, Z(mv0 - 0.06), X(mu1), MZ + 1.1, Z(mv0 - 0.04));
   // antresol ostidagi yoritgichlar
   for (let v = mv0 + 0.9; v < mv1; v += 1.5)
-    for (const u of [1.0, 2.8]) solid.cyl('lampWarm', [X(u), MZ - 0.31, Z(v)], 0.09, 0.02, 'y', 12);
+    for (const u of [1.0, 2.8]) upper.cyl('lampWarm', [X(u), MZ - 0.31, Z(v)], 0.09, 0.02, 'y', 12);
   // zinapoya: orqa devordan antresolga (g‘arbiy vitraj yonida)
   const steps = 18;
   const sv0 = SD - 0.75;
@@ -204,14 +209,14 @@ export function buildShowroom(cfg = factoryConfig) {
   }
   // 2-sathdagi deraza tizimlari namunalari
   for (const v of [7.2, 10.8, 14.4]) {
-    curtainWall(glass, solid, 'z', X(0.9), Z(v - 0.9), Z(v + 0.9), MZ + 0.15, MZ + 2.55, 0.9, [MZ + 1.5], { frameKey: 'aluDark', depth: 0.09, glassKey: 'glass' });
-    solid.boxMinMax('aluDark', X(0.75), MZ, Z(v - 1.0), X(1.05), MZ + 0.15, Z(v + 1.0));
+    curtainWall(upperGlass, upper, 'z', X(0.9), Z(v - 0.9), Z(v + 0.9), MZ + 0.15, MZ + 2.55, 0.9, [MZ + 1.5], { frameKey: 'aluDark', depth: 0.09, glassKey: 'glass' });
+    upper.boxMinMax('aluDark', X(0.75), MZ, Z(v - 1.0), X(1.05), MZ + 0.15, Z(v + 1.0));
   }
-  solid.add('plant', unitIco(), [X(2.6), MZ + 0.75, Z(mv0 + 0.8)], [0, 0, 0], [0.4, 0.55, 0.4]);
-  solid.boxMinMax('stoneGrey', X(2.35), MZ, Z(mv0 + 0.55), X(2.85), MZ + 0.5, Z(mv0 + 1.05));
+  upper.add('plant', unitIco(), [X(2.6), MZ + 0.75, Z(mv0 + 0.8)], [0, 0, 0], [0.4, 0.55, 0.4]);
+  upper.boxMinMax('stoneGrey', X(2.35), MZ, Z(mv0 + 0.55), X(2.85), MZ + 0.5, Z(mv0 + 1.05));
   // antresol bandidagi yozuvlar
-  panels.push({ tex: { type: 'sign', text: 'WINDOWS & DOORS', w: 1024, h: 110 }, pos: [X(mu1 + 0.09), MZ - 0.1, Z(mv0 + 3.2)], size: [3.2, 0.34], rotY: Math.PI / 2 });
-  panels.push({ tex: { type: 'sign', text: 'SLIDING SYSTEMS', w: 1024, h: 110 }, pos: [X(mu1 + 0.09), MZ - 0.1, Z(mv1 - 3.2)], size: [3.2, 0.34], rotY: Math.PI / 2 });
+  panels.push({ tex: { type: 'sign', text: 'WINDOWS & DOORS', w: 1024, h: 110 }, pos: [X(mu1 + 0.09), MZ - 0.1, Z(mv0 + 3.2)], size: [3.2, 0.34], rotY: Math.PI / 2, upper: true });
+  panels.push({ tex: { type: 'sign', text: 'SLIDING SYSTEMS', w: 1024, h: 110 }, pos: [X(mu1 + 0.09), MZ - 0.1, Z(mv1 - 3.2)], size: [3.2, 0.34], rotY: Math.PI / 2, upper: true });
 
   /* ================= Eshik-rom bokslari (antresol ostida) ================= */
   const booths: [number, number, 'living' | 'dining'][] = [
@@ -345,6 +350,8 @@ export function buildShowroom(cfg = factoryConfig) {
     solid: solid.build(),
     glass: glass.build(),
     roof: roof.build(),
+    upper: upper.build(),
+    upperGlass: upperGlass.build(),
     panels,
     brandWall: { x: (m0 + m1) / 2, y: 4.5, z: wz - 0.27 },
     fasciaY: gTop + fascia / 2,
@@ -389,15 +396,21 @@ function Panel({ p }: { p: ShowroomPanel }) {
 export function GlassShowroom() {
   const sr = useMemo(() => buildShowroom(), []);
   const roofs = useStore((s) => s.layers.roofs);
+  const upperFloor = useStore((s) => s.layers.upperFloor);
   const r = sr.r;
   return (
     <group name="GlassShowroom">
       <Built parts={sr.solid} />
       <Built parts={sr.glass} castShadow={false} />
       {roofs && <Built parts={sr.roof} dispose={false} />}
-      {sr.panels.map((p, i) => (
-        <Panel key={i} p={p} />
-      ))}
+      {/* antresol (2-sath) — "2-qavat" qatlami */}
+      {upperFloor && (
+        <>
+          <Built parts={sr.upper} dispose={false} />
+          <Built parts={sr.upperGlass} castShadow={false} dispose={false} />
+        </>
+      )}
+      {sr.panels.map((p, i) => (upperFloor || !p.upper) && <Panel key={i} p={p} />)}
       {/* qora marmar brend devoridagi logotip */}
       <LogoPlane position={[sr.brandWall.x, sr.brandWall.y, sr.brandWall.z]} height={1.7} rotationY={Math.PI} />
       {/* fasad karnizlaridagi logotiplar (old va yon tomonlar) */}

@@ -88,24 +88,32 @@ function Uplights({ items }: { items: { pos: [number, number, number]; w: number
 export function Restaurant() {
   const parts = useMemo(() => buildRestaurant(), []);
   const roofs = useStore((s) => s.layers.roofs);
+  const upperFloor = useStore((s) => s.layers.upperFloor);
   // "Past" sifatda ichki jihozlar soya tashlamaydi
   const shadows = useStore((s) => s.quality !== 'low');
   const groups = useMemo(() => {
     const m = new Map<Decal['kind'], Decal[]>();
-    for (const d of parts.decals) m.set(d.kind, [...(m.get(d.kind) ?? []), d]);
+    for (const d of parts.decals) if (upperFloor || !d.upper) m.set(d.kind, [...(m.get(d.kind) ?? []), d]);
     return [...m.entries()];
-  }, [parts]);
+  }, [parts, upperFloor]);
   return (
     <Selectable id={RESTAURANT_ID}>
       <group name="Restaurant">
         <Built parts={parts.shell} />
         <Built parts={parts.inner} castShadow={shadows} />
         <Built parts={parts.glass} castShadow={false} />
-        {roofs && <Built parts={parts.roof} dispose={false} />}
+        {/* "2-qavat" qatlami o‘chirilsa 1-qavat shiftidan yuqorisi (devorlar, VIP zallar, tom) yashiriladi */}
+        {upperFloor && (
+          <>
+            <Built parts={parts.upper} castShadow={shadows} dispose={false} />
+            <Built parts={parts.upperGlass} castShadow={false} dispose={false} />
+            <Uplights items={parts.uplights} />
+          </>
+        )}
+        {roofs && upperFloor && <Built parts={parts.roof} dispose={false} />}
         {groups.map(([k, items]) => (
-          <DecalSet key={k} kind={k} items={items} />
+          <DecalSet key={`${k}-${items.length}`} kind={k} items={items} />
         ))}
-        <Uplights items={parts.uplights} />
       </group>
     </Selectable>
   );

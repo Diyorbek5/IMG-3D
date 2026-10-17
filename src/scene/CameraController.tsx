@@ -61,6 +61,8 @@ export function CameraController() {
     st.setActivePreset(preset);
     if (preset === 'interior') st.setLayer('roofs', false);
     else if (preset !== 'top') st.setLayer('roofs', true);
+    // VIP zal 2-qavatda — ko‘rinishi uchun "2-qavat" qatlami yoqiladi
+    if (preset === 'restaurantVip') st.setLayer('upperFloor', true);
   }, [request, camera, get]);
 
   useEffect(() => {

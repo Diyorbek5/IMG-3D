@@ -182,6 +182,8 @@ export interface Decal {
   h: number;
   /** Euler burchaklari */
   rot: V3;
+  /** 2-qavatdagi bezak ("2-qavat" qatlami bilan yashiriladi) */
+  upper?: boolean;
 }
 
 /** Restoran geometriyasi: qobiq, shisha, tom/shift (yashiriladi), ichki jihozlar, bezak tekisliklari */
@@ -190,6 +192,9 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   const glass = new GeoBuilder();
   const roof = new GeoBuilder();
   const inner = new GeoBuilder();
+  /** 2-qavat (1-qavat shiftidan yuqorisi) — "2-qavat" qatlami bilan yashiriladi */
+  const upper = new GeoBuilder();
+  const upperGlass = new GeoBuilder();
   const decals: Decal[] = [];
   const uplights: { pos: V3; w: number; h: number; rotY: number }[] = [];
   const { X, Z, W, D, FL1, CEIL1, FL2, CEIL2, EAVE, PAV_EAVE, pavW, portico } = L;
@@ -215,45 +220,54 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   shell.boxMinMax('stoneWarm', X(-2), 0.02, Z(-9), X(W + 2), 0.05, Z(-0.1));
 
   /* ---------------- tashqi devorlar ---------------- */
+  /** 1-qavat shifti sathida ikkiga bo‘lingan tashqi devor: pastki qismi qobiqda, yuqorisi 2-qavat qatlamida */
+  const wall = (axis: 'x' | 'z', plane: number, side: 1 | -1, a0: number, a1: number, top: number, holes: Hole[]) => {
+    archedWall(shell, 'stucco', axis, plane, side, a0, a1, 0, CEIL1, holes.filter((h) => holeTop(h) <= CEIL1), T);
+    archedWall(upper, 'stucco', axis, plane, side, a0, a1, CEIL1, top, holes.filter((h) => h.y0 >= CEIL1), T);
+  };
+  const isUp = (h: Hole) => h.y0 >= CEIL1;
   const pavHolesFront = (u0: number, u1: number) => pavU.filter((u) => u > u0 && u < u1).flatMap((u) => [gWin(X(u), 0.95), uWin(X(u), 0.95)]);
   const wingHolesFront = wingU.flatMap((u) => [gWin(X(u), 0.8), uWin(X(u), 0.8, 7.6)]);
   // shimoliy (old) fasad: pavilonlar, o‘rta qanot (portik ortida eshik va balkon teshigi)
-  archedWall(shell, 'stucco', 'x', Z(0), 1, X(0), X(pavW), 0, PAV_EAVE, pavHolesFront(0, pavW), T);
-  archedWall(shell, 'stucco', 'x', Z(0), 1, X(W - pavW), X(W), 0, PAV_EAVE, pavHolesFront(W - pavW, W), T);
-  archedWall(shell, 'stucco', 'x', Z(0), 1, X(pavW), X(W - pavW), 0, EAVE, [...wingHolesFront, door, balconyDoor], T);
+  wall('x', Z(0), 1, X(0), X(pavW), PAV_EAVE, pavHolesFront(0, pavW));
+  wall('x', Z(0), 1, X(W - pavW), X(W), PAV_EAVE, pavHolesFront(W - pavW, W));
+  wall('x', Z(0), 1, X(pavW), X(W - pavW), EAVE, [...wingHolesFront, door, balconyDoor]);
   // janubiy (orqa) fasad
-  archedWall(shell, 'stucco', 'x', Z(D), -1, X(0), X(pavW), 0, PAV_EAVE, pavHolesFront(0, pavW), T);
-  archedWall(shell, 'stucco', 'x', Z(D), -1, X(W - pavW), X(W), 0, PAV_EAVE, pavHolesFront(W - pavW, W), T);
-  archedWall(shell, 'stucco', 'x', Z(D), -1, X(pavW), X(W - pavW), 0, EAVE, [...wingHolesFront, { a0: X(W / 2 + 6), a1: X(W / 2 + 7.6), y0: FL1 + 0.005, ys: 2.6 }], T);
+  wall('x', Z(D), -1, X(0), X(pavW), PAV_EAVE, pavHolesFront(0, pavW));
+  wall('x', Z(D), -1, X(W - pavW), X(W), PAV_EAVE, pavHolesFront(W - pavW, W));
+  wall('x', Z(D), -1, X(pavW), X(W - pavW), EAVE, [...wingHolesFront, { a0: X(W / 2 + 6), a1: X(W / 2 + 7.6), y0: FL1 + 0.005, ys: 2.6 }]);
   // yon fasadlar
   const sideHoles = L.sideWindows.flatMap((v) => [gWin(Z(v), 0.8), uWin(Z(v), 0.8)]);
-  archedWall(shell, 'stucco', 'z', X(0), 1, Z(0), Z(D), 0, PAV_EAVE, sideHoles, T);
-  archedWall(shell, 'stucco', 'z', X(W), -1, Z(0), Z(D), 0, PAV_EAVE, sideHoles, T);
+  wall('z', X(0), 1, Z(0), Z(D), PAV_EAVE, sideHoles);
+  wall('z', X(W), -1, Z(0), Z(D), PAV_EAVE, sideHoles);
   // pavilonlarning o‘rta qanotga qaragan yuqori qismi
-  for (const u of [pavW, W - pavW]) shell.boxMinMax('stucco', X(u - 0.2), EAVE - 0.2, Z(0), X(u + 0.2), PAV_EAVE, Z(D));
+  for (const u of [pavW, W - pavW]) upper.boxMinMax('stucco', X(u - 0.2), EAVE - 0.2, Z(0), X(u + 0.2), PAV_EAVE, Z(D));
   // portik: old devor (eshik, balkon eshigi) va yon devorlar
-  archedWall(shell, 'stucco', 'x', Z(-portico.depth), 1, X(portico.u0), X(portico.u1), 0, portico.eave, [door, balconyDoor], T);
-  archedWall(shell, 'stucco', 'z', X(portico.u0), 1, Z(-portico.depth), Z(0), 0, portico.eave, [], T);
-  archedWall(shell, 'stucco', 'z', X(portico.u1), -1, Z(-portico.depth), Z(0), 0, portico.eave, [], T);
+  wall('x', Z(-portico.depth), 1, X(portico.u0), X(portico.u1), portico.eave, [door, balconyDoor]);
+  wall('z', X(portico.u0), 1, Z(-portico.depth), Z(0), portico.eave, []);
+  wall('z', X(portico.u1), -1, Z(-portico.depth), Z(0), portico.eave, []);
 
   /* ---------------- derazalar va eshiklar ---------------- */
+  const archWindowAt = (axis: 'x' | 'z', mid: number, h: Hole, frameKey?: MatKey, glassKey?: MatKey) =>
+    archWindow(isUp(h) ? upper : shell, isUp(h) ? upperGlass : glass, axis, mid, h, frameKey, glassKey);
   for (const h of [...pavHolesFront(0, W), ...wingHolesFront]) {
-    archWindow(shell, glass, 'x', Z(0.16), h);
-    archWindow(shell, glass, 'x', Z(D - 0.16), h);
+    archWindowAt('x', Z(0.16), h);
+    archWindowAt('x', Z(D - 0.16), h);
   }
   for (const h of sideHoles) {
-    archWindow(shell, glass, 'z', X(0.16), h);
-    archWindow(shell, glass, 'z', X(W - 0.16), h);
+    archWindowAt('z', X(0.16), h);
+    archWindowAt('z', X(W - 0.16), h);
   }
-  archWindow(shell, glass, 'x', Z(-portico.depth + 0.16), door);
-  archWindow(shell, glass, 'x', Z(-portico.depth + 0.16), balconyDoor);
-  archWindow(shell, glass, 'x', Z(D - 0.16), { a0: X(W / 2 + 6), a1: X(W / 2 + 7.6), y0: FL1 + 0.005, ys: 2.6 }, 'woodDark', 'woodDark');
+  archWindowAt('x', Z(-portico.depth + 0.16), door);
+  archWindowAt('x', Z(-portico.depth + 0.16), balconyDoor);
+  archWindowAt('x', Z(D - 0.16), { a0: X(W / 2 + 6), a1: X(W / 2 + 7.6), y0: FL1 + 0.005, ys: 2.6 }, 'woodDark', 'woodDark');
   // deraza tokchalari (podokonnik) va arka tepasidagi zamok toshi
   const sill = (axis: 'x' | 'z', plane: number, out: number, h: Hole) => {
     const { P, S } = placer(axis, plane);
     const ac = (h.a0 + h.a1) / 2;
-    shell.box('stucco', P(ac, h.y0 - 0.06, out * 0.12), S(h.a1 - h.a0 + 0.3, 0.12, 0.3));
-    if (h.ry) shell.box('stucco', P(ac, holeTop(h) + 0.08, out * 0.06), S(0.28, 0.36, 0.12));
+    const b = isUp(h) ? upper : shell;
+    b.box('stucco', P(ac, h.y0 - 0.06, out * 0.12), S(h.a1 - h.a0 + 0.3, 0.12, 0.3));
+    if (h.ry) b.box('stucco', P(ac, holeTop(h) + 0.08, out * 0.06), S(0.28, 0.36, 0.12));
   };
   for (const h of [...pavHolesFront(0, W), ...wingHolesFront]) {
     sill('x', Z(0), -1, h);
@@ -268,8 +282,9 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   /* ---------------- pilyastrlar, karnizlar, kechki yoritish ---------------- */
   const pilaster = (axis: 'x' | 'z', plane: number, out: number, a: number, y1: number, w = 0.56, uplight = false) => {
     const { P, S } = placer(axis, plane);
-    shell.box('stucco', P(a, (FL1 + y1) / 2, out * 0.09), S(w, y1 - FL1, 0.18));
-    shell.box('stucco', P(a, y1 - 0.14, out * 0.13), S(w + 0.2, 0.28, 0.26));
+    shell.box('stucco', P(a, (FL1 + CEIL1) / 2, out * 0.09), S(w, CEIL1 - FL1, 0.18));
+    upper.box('stucco', P(a, (CEIL1 + y1) / 2, out * 0.09), S(w, y1 - CEIL1, 0.18));
+    upper.box('stucco', P(a, y1 - 0.14, out * 0.13), S(w + 0.2, 0.28, 0.26));
     shell.box('stucco', P(a, FL1 + 0.18, out * 0.12), S(w + 0.14, 0.36, 0.24));
     if (uplight) {
       shell.box('iron', P(a, 0.07, out * 0.45), S(0.22, 0.1, 0.16));
@@ -299,10 +314,10 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   // qavatlararo belbog‘ va tepa karnizlar (yuqori qismi kengroq — klassik profil)
   /** perimetr bo‘ylab halqa (karniz, belbog‘): tashqariga ext, ichkariga devor qalinligicha */
   const ring = (x0: number, z0: number, x1: number, z1: number, y0: number, y1: number, ext: number, inset = T) => {
-    shell.boxMinMax('stucco', x0 - ext, y0, z0 - ext, x1 + ext, y1, z0 + inset);
-    shell.boxMinMax('stucco', x0 - ext, y0, z1 - inset, x1 + ext, y1, z1 + ext);
-    shell.boxMinMax('stucco', x0 - ext, y0, z0 + inset, x0 + inset, y1, z1 - inset);
-    shell.boxMinMax('stucco', x1 - inset, y0, z0 + inset, x1 + ext, y1, z1 - inset);
+    upper.boxMinMax('stucco', x0 - ext, y0, z0 - ext, x1 + ext, y1, z0 + inset);
+    upper.boxMinMax('stucco', x0 - ext, y0, z1 - inset, x1 + ext, y1, z1 + ext);
+    upper.boxMinMax('stucco', x0 - ext, y0, z0 + inset, x0 + inset, y1, z1 - inset);
+    upper.boxMinMax('stucco', x1 - inset, y0, z0 + inset, x1 + ext, y1, z1 - inset);
   };
   const band = (x0: number, z0: number, x1: number, z1: number, y: number) => ring(x0, z0, x1, z1, y - 0.15, y + 0.15, 0.14);
   band(X(0), Z(0), X(W), Z(D), (CEIL1 + FL2) / 2);
@@ -333,23 +348,23 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
       tri.lineTo(X(u0), eave + 0.1);
       const g = new THREE.ExtrudeGeometry(tri, { depth: T, bevelEnabled: false });
       g.translate(0, 0, isFront ? Z(v) : Z(v) - T);
-      shell.add('stucco', g);
+      upper.add('stucco', g);
       // qiya karnizlar
       const out = isFront ? -1 : 1;
       const len = Math.hypot(half + 0.4, rise + 0.4 * Math.tan(pitch));
       for (const sg of [-1, 1]) {
-        shell.add('stucco', new THREE.BoxGeometry(len, 0.3, 0.42), [X(uc + (sg * (half + 0.4)) / 2), eave + 0.2 + rise / 2 - 0.2 * Math.tan(pitch), Z(v) + out * 0.12], [0, 0, -sg * pitch]);
+        upper.add('stucco', new THREE.BoxGeometry(len, 0.3, 0.42), [X(uc + (sg * (half + 0.4)) / 2), eave + 0.2 + rise / 2 - 0.2 * Math.tan(pitch), Z(v) + out * 0.12], [0, 0, -sg * pitch]);
       }
       if (isFront && ornament === 'oculus') {
-        shell.add('stucco', new THREE.TorusGeometry(0.62, 0.09, 8, 28), [X(uc), eave + 0.1 + rise * 0.42, Z(v) - 0.05]);
-        glass.add('lanternGlass', new THREE.CircleGeometry(0.56, 24), [X(uc), eave + 0.1 + rise * 0.42, Z(v) + 0.02], [0, Math.PI, 0]);
+        upper.add('stucco', new THREE.TorusGeometry(0.62, 0.09, 8, 28), [X(uc), eave + 0.1 + rise * 0.42, Z(v) - 0.05]);
+        upperGlass.add('lanternGlass', new THREE.CircleGeometry(0.56, 24), [X(uc), eave + 0.1 + rise * 0.42, Z(v) + 0.02], [0, Math.PI, 0]);
       }
       if (isFront && ornament === 'cartouche') {
         const y = eave + 0.1 + rise * 0.4;
-        shell.add('stucco', new THREE.SphereGeometry(1, 16, 8), [X(uc), y, Z(v) - 0.04], [0, 0, 0], [0.55, 0.42, 0.1]);
+        upper.add('stucco', new THREE.SphereGeometry(1, 16, 8), [X(uc), y, Z(v) - 0.04], [0, 0, 0], [0.55, 0.42, 0.1]);
         for (const sg of [-1, 1]) {
-          shell.add('stucco', new THREE.TorusGeometry(0.18, 0.05, 6, 14), [X(uc + sg * 0.85), y - 0.05, Z(v) - 0.05]);
-          shell.add('stucco', new THREE.BoxGeometry(0.9, 0.08, 0.08), [X(uc + sg * 1.4), y - 0.2, Z(v) - 0.05], [0, 0, sg * 0.25]);
+          upper.add('stucco', new THREE.TorusGeometry(0.18, 0.05, 6, 14), [X(uc + sg * 0.85), y - 0.05, Z(v) - 0.05]);
+          upper.add('stucco', new THREE.BoxGeometry(0.9, 0.08, 0.08), [X(uc + sg * 1.4), y - 0.2, Z(v) - 0.05], [0, 0, sg * 0.25]);
         }
       }
     }
@@ -379,19 +394,19 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   /* ---------------- balkonlar (temir panjara) ---------------- */
   const balcony = (u0: number, u1: number, plane: number, depth: number) => {
     const z0 = plane - depth;
-    shell.boxMinMax('stucco', X(u0), FL2 - 0.12, z0, X(u1), FL2 + 0.06, plane);
-    for (const u of [u0 + 0.3, u1 - 0.3]) shell.boxMinMax('stucco', X(u - 0.12), FL2 - 0.55, z0 + 0.1, X(u + 0.12), FL2 - 0.12, plane);
+    upper.boxMinMax('stucco', X(u0), FL2 - 0.12, z0, X(u1), FL2 + 0.06, plane);
+    for (const u of [u0 + 0.3, u1 - 0.3]) upper.boxMinMax('stucco', X(u - 0.12), FL2 - 0.55, z0 + 0.1, X(u + 0.12), FL2 - 0.12, plane);
     const yTop = FL2 + 1.05;
     for (const [a0, a1, zA, zB] of [
       [u0, u1, z0, z0],
       [u0, u0, z0, plane],
       [u1, u1, z0, plane],
     ]) {
-      shell.boxMinMax('iron', X(a0) - 0.03, yTop - 0.04, Math.min(zA, zB) - 0.03, X(a1) + 0.03, yTop, Math.max(zA, zB) + 0.03);
-      shell.boxMinMax('iron', X(a0) - 0.02, FL2 + 0.1, Math.min(zA, zB) - 0.02, X(a1) + 0.02, FL2 + 0.13, Math.max(zA, zB) + 0.02);
+      upper.boxMinMax('iron', X(a0) - 0.03, yTop - 0.04, Math.min(zA, zB) - 0.03, X(a1) + 0.03, yTop, Math.max(zA, zB) + 0.03);
+      upper.boxMinMax('iron', X(a0) - 0.02, FL2 + 0.1, Math.min(zA, zB) - 0.02, X(a1) + 0.02, FL2 + 0.13, Math.max(zA, zB) + 0.02);
     }
-    for (let u = u0 + 0.06; u <= u1 - 0.05; u += 0.13) shell.boxMinMax('iron', X(u) - 0.012, FL2 + 0.1, z0 - 0.012, X(u) + 0.012, yTop, z0 + 0.012);
-    for (let u = u0 + 0.35; u < u1 - 0.3; u += 0.52) shell.add('iron', new THREE.TorusGeometry(0.17, 0.014, 4, 16), [X(u), FL2 + 0.6, z0]);
+    for (let u = u0 + 0.06; u <= u1 - 0.05; u += 0.13) upper.boxMinMax('iron', X(u) - 0.012, FL2 + 0.1, z0 - 0.012, X(u) + 0.012, yTop, z0 + 0.012);
+    for (let u = u0 + 0.35; u < u1 - 0.3; u += 0.52) upper.add('iron', new THREE.TorusGeometry(0.17, 0.014, 4, 16), [X(u), FL2 + 0.6, z0]);
   };
   for (const u of [fw.pavilion[1], W - fw.pavilion[1]]) balcony(u - 1.45, u + 1.45, Z(0), 0.75);
   balcony(W / 2 - 1.9, W / 2 + 1.9, Z(-portico.depth), 0.65);
@@ -409,16 +424,16 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   const { arcadeRows, piers, backWallV, bar } = L;
 
   /* ---- 1-qavat shifti: yog‘och reykalar va to‘sinlar ---- */
-  inner.boxMinMax('woodDark', X(T), CEIL1 - 0.05, Z(T), X(W - T), CEIL1, Z(D - T));
+  upper.boxMinMax('woodDark', X(T), CEIL1 - 0.05, Z(T), X(W - T), CEIL1, Z(D - T));
   for (let v = 1.4; v < backWallV; v += 1.6) {
     if (arcadeRows.some((r) => Math.abs(r - v) < 0.6)) continue;
-    inner.boxMinMax('woodDark', X(T), CEIL1 - 0.3, Z(v - 0.1), X(W - T), CEIL1 - 0.05, Z(v + 0.1));
+    upper.boxMinMax('woodDark', X(T), CEIL1 - 0.3, Z(v - 0.1), X(W - T), CEIL1 - 0.05, Z(v + 0.1));
   }
   // qavatlararo plita (zinapoya teshigi bilan) va 2-qavat poli
   const st = L.stair;
   const slab = (u0: number, v0: number, u1: number, v1: number) => {
-    inner.boxMinMax('concrete', X(u0), CEIL1, Z(v0), X(u1), FL2 - 0.02, Z(v1));
-    inner.boxMinMax('stoneWarm', X(u0), FL2 - 0.02, Z(v0), X(u1), FL2, Z(v1));
+    upper.boxMinMax('concrete', X(u0), CEIL1, Z(v0), X(u1), FL2 - 0.02, Z(v1));
+    upper.boxMinMax('stoneWarm', X(u0), FL2 - 0.02, Z(v0), X(u1), FL2, Z(v1));
   };
   slab(T, T, W - T, st.v0);
   slab(st.u1, st.v0, W - T, D - T);
@@ -488,7 +503,7 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   };
   const plate = (s: Seat, y: number, dist = 0.42) => {
     const [x, z] = yawPt(s.x, s.z, s.face, 0, dist);
-    inner.cyl('paintWhite', [x, y + 0.77, z], 0.13, 0.015, 'y', 16);
+    (y >= FL2 - 0.1 ? upper : inner).cyl('paintWhite', [x, y + 0.77, z], 0.13, 0.015, 'y', 16);
   };
   for (const t of L.hallTables) {
     table(t.x, t.z, t.w, t.d, FL1);
@@ -564,19 +579,19 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   }
   inner.beam('iron', [X(st.u1), FL1 + 0.95, Z(st.v0)], [X(st.u0), FL2 + 0.95, Z(st.v0)], 0.05);
   // 2-qavatda zinapoya teshigi atrofidagi panjara
-  inner.boxMinMax('iron', X(st.u0 + 1.2), FL2 + 0.95, Z(st.v0 - 0.03), X(st.u1), FL2 + 1.0, Z(st.v0 + 0.03));
-  for (let u = st.u0 + 1.2; u <= st.u1; u += 0.6) inner.boxMinMax('iron', X(u) - 0.015, FL2, Z(st.v0) - 0.015, X(u) + 0.015, FL2 + 0.95, Z(st.v0) + 0.015);
+  upper.boxMinMax('iron', X(st.u0 + 1.2), FL2 + 0.95, Z(st.v0 - 0.03), X(st.u1), FL2 + 1.0, Z(st.v0 + 0.03));
+  for (let u = st.u0 + 1.2; u <= st.u1; u += 0.6) upper.boxMinMax('iron', X(u) - 0.015, FL2, Z(st.v0) - 0.015, X(u) + 0.015, FL2 + 0.95, Z(st.v0) + 0.015);
 
   /* ---------------- 2-QAVAT ---------------- */
   const y2 = FL2;
   const T2 = 0.25;
   const doorH = (a: number, w = 1.6): Hole => ({ a0: a - w / 2, a1: a + w / 2, y0: y2 + 0.005, ys: y2 + 2.2, ry: w / 2 });
   // devorlar
-  archedWall(inner, 'stuccoInt', 'z', X(L.vip1.u1), -1, Z(T), Z(L.corridor.v0), y2, CEIL2, [doorH(Z(10.6))], T2);
-  archedWall(inner, 'stuccoInt', 'z', X(L.vip2.u0), 1, Z(T), Z(L.corridor.v0), y2, CEIL2, [doorH(Z(10.6))], T2);
-  archedWall(inner, 'stuccoInt', 'x', Z(L.corridor.v0), 1, X(T), X(W - T), y2, CEIL2, [doorH(X(8.8)), { a0: X(portico.u0 + 0.6), a1: X(portico.u1 - 0.6), y0: y2 + 0.005, ys: y2 + 2.4, ry: 1.4 }, doorH(X(31.8))], T2);
-  archedWall(inner, 'stuccoInt', 'x', Z(L.corridor.v1), 1, X(T), X(W - T), y2, CEIL2, [doorH(X(L.stairHall.u1 - 3.2), 1.3), ...L.vipRooms.map((r) => doorH(X((r.u0 + r.u1) / 2), 1.3))], T2);
-  for (const r of L.vipRooms) archedWall(inner, 'stuccoInt', 'z', X(r.u0), 1, Z(L.corridor.v1 + T2), Z(r.v1), y2, CEIL2, [], 0.2);
+  archedWall(upper, 'stuccoInt', 'z', X(L.vip1.u1), -1, Z(T), Z(L.corridor.v0), y2, CEIL2, [doorH(Z(10.6))], T2);
+  archedWall(upper, 'stuccoInt', 'z', X(L.vip2.u0), 1, Z(T), Z(L.corridor.v0), y2, CEIL2, [doorH(Z(10.6))], T2);
+  archedWall(upper, 'stuccoInt', 'x', Z(L.corridor.v0), 1, X(T), X(W - T), y2, CEIL2, [doorH(X(8.8)), { a0: X(portico.u0 + 0.6), a1: X(portico.u1 - 0.6), y0: y2 + 0.005, ys: y2 + 2.4, ry: 1.4 }, doorH(X(31.8))], T2);
+  archedWall(upper, 'stuccoInt', 'x', Z(L.corridor.v1), 1, X(T), X(W - T), y2, CEIL2, [doorH(X(L.stairHall.u1 - 3.2), 1.3), ...L.vipRooms.map((r) => doorH(X((r.u0 + r.u1) / 2), 1.3))], T2);
+  for (const r of L.vipRooms) archedWall(upper, 'stuccoInt', 'z', X(r.u0), 1, Z(L.corridor.v1 + T2), Z(r.v1), y2, CEIL2, [], 0.2);
   lantern(roof, X((L.stairHall.u0 + L.stairHall.u1) / 2 + 1), Z(L.corridor.v1 + 1.6), CEIL2 - 1.4, CEIL2, 1.1);
   // 2-qavat shifti va tom osti (tomlar qatlami bilan yashiriladi)
   roof.boxMinMax('paintWhite', X(T), CEIL2, Z(T), X(W - T), CEIL2 + 0.15, Z(D - T));
@@ -584,26 +599,26 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   /* ---- 1-VIP zal: banket stoli, qandillar, girih shift ---- */
   const v1r = L.vip1;
   const bq = L.banquet;
-  inner.boxMinMax('woodDark', X(bq.u0), y2 + 0.72, Z(bq.v - bq.d / 2), X(bq.u1), y2 + 0.77, Z(bq.v + bq.d / 2));
-  inner.boxMinMax('ikat', X(bq.u0 + 0.2), y2 + 0.77, Z(bq.v - 0.22), X(bq.u1 - 0.2), y2 + 0.775, Z(bq.v + 0.22));
-  for (const u of [bq.u0 + 0.6, (bq.u0 + bq.u1) / 2, bq.u1 - 0.6]) inner.boxMinMax('woodDark', X(u - 0.25), y2, Z(bq.v - 0.35), X(u + 0.25), y2 + 0.72, Z(bq.v + 0.35));
+  upper.boxMinMax('woodDark', X(bq.u0), y2 + 0.72, Z(bq.v - bq.d / 2), X(bq.u1), y2 + 0.77, Z(bq.v + bq.d / 2));
+  upper.boxMinMax('ikat', X(bq.u0 + 0.2), y2 + 0.77, Z(bq.v - 0.22), X(bq.u1 - 0.2), y2 + 0.775, Z(bq.v + 0.22));
+  for (const u of [bq.u0 + 0.6, (bq.u0 + bq.u1) / 2, bq.u1 - 0.6]) upper.boxMinMax('woodDark', X(u - 0.25), y2, Z(bq.v - 0.35), X(u + 0.25), y2 + 0.72, Z(bq.v + 0.35));
   for (const s of L.banquetSeats) {
-    chair(inner, s, y2, true);
+    chair(upper, s, y2, true);
     plate(s, y2, 0.48);
   }
   for (let u = bq.u0 + 0.9; u < bq.u1 - 0.5; u += 1.2) {
-    inner.cyl('brass', [X(u), y2 + 0.82, Z(bq.v)], 0.04, 0.1, 'y', 8);
-    inner.cyl('lanternGlass', [X(u), y2 + 0.92, Z(bq.v)], 0.028, 0.1, 'y', 8);
+    upper.cyl('brass', [X(u), y2 + 0.82, Z(bq.v)], 0.04, 0.1, 'y', 8);
+    upper.cyl('lanternGlass', [X(u), y2 + 0.92, Z(bq.v)], 0.028, 0.1, 'y', 8);
   }
   for (let u = bq.u0 + 1.5; u < bq.u1 - 1; u += 2.4) {
-    inner.cyl('brass', [X(u), y2 + 0.82, Z(bq.v)], 0.12, 0.08, 'y', 12, 0.08);
-    inner.add('plant', ico, [X(u), y2 + 0.98, Z(bq.v)], [0, u, 0], [0.18, 0.14, 0.18]);
-    inner.add('paintWhite', ico, [X(u + 0.1), y2 + 1.03, Z(bq.v + 0.05)], [0, 0, 0], [0.07, 0.07, 0.07]);
+    upper.cyl('brass', [X(u), y2 + 0.82, Z(bq.v)], 0.12, 0.08, 'y', 12, 0.08);
+    upper.add('plant', ico, [X(u), y2 + 0.98, Z(bq.v)], [0, u, 0], [0.18, 0.14, 0.18]);
+    upper.add('paintWhite', ico, [X(u + 0.1), y2 + 1.03, Z(bq.v + 0.05)], [0, 0, 0], [0.07, 0.07, 0.07]);
   }
   decals.push({ kind: 'carpet', pos: [X((bq.u0 + bq.u1) / 2), y2 + 0.004, Z(bq.v)], w: 4.2, h: bq.u1 - bq.u0 + 2.4, rot: [-Math.PI / 2, 0, Math.PI / 2] });
   // sayqal mebel (servant) va pardalar
-  inner.boxMinMax('woodDark', X(v1r.u1 - 0.75), y2, Z(1.5), X(v1r.u1 - 0.3), y2 + 0.9, Z(8.6));
-  for (const v of [3.4, 6.6]) jug(inner, X(v1r.u1 - 0.52), y2 + 0.9, Z(v), 0.9);
+  upper.boxMinMax('woodDark', X(v1r.u1 - 0.75), y2, Z(1.5), X(v1r.u1 - 0.3), y2 + 0.9, Z(8.6));
+  for (const v of [3.4, 6.6]) jug(upper, X(v1r.u1 - 0.52), y2 + 0.9, Z(v), 0.9);
   // shift: atrof bo‘ylab tushirilgan karniz, girih panel, yashirin LED, baraban qandillar
   const ceilingPanel = (u0: number, v0: number, u1: number, v1: number, room: { u0: number; u1: number; v0: number; v1: number }) => {
     const y = CEIL2 - 0.45;
@@ -634,14 +649,14 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   for (const u of [bq.u0 + 2.2, (bq.u0 + bq.u1) / 2, bq.u1 - 2.2]) drum(X(u), Z(bq.v), CEIL2 - 1.25);
   // devor gilamlari, bra
   for (const v of [5.75, 10.75]) decals.push({ kind: 'carpet2', pos: [X(T + 0.01), y2 + 2.1, Z(v)], w: 1.4, h: 2.2, rot: [0, Math.PI / 2, 0] });
-  for (const v of [2.6, 8.4]) sconce(inner, X(v1r.u1 - 0.27), y2 + 2.3, Z(v), -1, 0);
+  for (const v of [2.6, 8.4]) sconce(upper, X(v1r.u1 - 0.27), y2 + 2.3, Z(v), -1, 0);
   // pardalar (derazalar yonida)
   const curtains = (axis: 'x' | 'z', plane: number, inward: number, centers: number[], rx: number) => {
     for (const c of centers)
       for (const sg of [-1, 1]) {
         const a = c + sg * (rx + 0.22);
-        if (axis === 'x') inner.boxMinMax('velvet', a - 0.2, y2 + 0.05, plane + inward * 0.06, a + 0.2, CEIL2 - 0.5, plane + inward * 0.16);
-        else inner.boxMinMax('velvet', plane + inward * 0.06, y2 + 0.05, a - 0.2, plane + inward * 0.16, CEIL2 - 0.5, a + 0.2);
+        if (axis === 'x') upper.boxMinMax('velvet', a - 0.2, y2 + 0.05, plane + inward * 0.06, a + 0.2, CEIL2 - 0.5, plane + inward * 0.16);
+        else upper.boxMinMax('velvet', plane + inward * 0.06, y2 + 0.05, a - 0.2, plane + inward * 0.16, CEIL2 - 0.5, a + 0.2);
       }
   };
   curtains('x', Z(T), 1, [...fw.pavilion, ...fw.wing].map(X), 0.95);
@@ -651,15 +666,15 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
 
   /* ---- 2-VIP zal: dumaloq stollar, rattan qandillar ---- */
   for (const t of L.roundTables) {
-    inner.cyl('woodDark', [t.x, y2 + 0.745, t.z], 0.75, 0.05, 'y', 28);
-    inner.cyl('woodDark', [t.x, y2 + 0.36, t.z], 0.07, 0.72, 'y', 8);
-    inner.cyl('woodDark', [t.x, y2 + 0.02, t.z], 0.32, 0.04, 'y', 16);
+    upper.cyl('woodDark', [t.x, y2 + 0.745, t.z], 0.75, 0.05, 'y', 28);
+    upper.cyl('woodDark', [t.x, y2 + 0.36, t.z], 0.07, 0.72, 'y', 8);
+    upper.cyl('woodDark', [t.x, y2 + 0.02, t.z], 0.32, 0.04, 'y', 16);
     for (const s of t.seats) {
-      chair(inner, s, y2, true);
+      chair(upper, s, y2, true);
       plate(s, y2, 0.5);
     }
-    inner.cyl('brass', [t.x, y2 + 0.8, t.z], 0.05, 0.08, 'y', 8);
-    inner.cyl('lanternGlass', [t.x, y2 + 0.88, t.z], 0.035, 0.08, 'y', 8);
+    upper.cyl('brass', [t.x, y2 + 0.8, t.z], 0.05, 0.08, 'y', 8);
+    upper.cyl('lanternGlass', [t.x, y2 + 0.88, t.z], 0.035, 0.08, 'y', 8);
     roof.cyl('iron', [t.x, (CEIL2 + CEIL2 - 1.3) / 2, t.z], 0.008, 1.0, 'y', 4);
     roof.add('rattan', new THREE.CylinderGeometry(0.22, 0.38, 0.42, 18, 1, true), [t.x, CEIL2 - 1.35, t.z]);
     roof.cyl('lampWarm', [t.x, CEIL2 - 1.5, t.z], 0.2, 0.02, 'y', 14);
@@ -669,19 +684,19 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
   // devordagi arkali tokcha va gilam panno
   {
     const n: Hole = { a0: Z(4.3), a1: Z(7.2), y0: y2 + 0.3, ys: y2 + 2.6, ry: 1.45 };
-    archPanel(inner, 'woodDark', 'z', X(W - T - 0.02), n, -1);
+    archPanel(upper, 'woodDark', 'z', X(W - T - 0.02), n, -1);
     decals.push({ kind: 'carpet', pos: [X(W - T - 0.04), y2 + 2.0, Z(5.75)], w: 2.2, h: 3.0, rot: [0, -Math.PI / 2, 0] });
-    pottedPlant(inner, X(W - 1.0), y2, Z(4.0), 0.9);
-    pottedPlant(inner, X(W - 1.0), y2, Z(7.5), 0.9);
+    pottedPlant(upper, X(W - 1.0), y2, Z(4.0), 0.9);
+    pottedPlant(upper, X(W - 1.0), y2, Z(7.5), 0.9);
   }
 
   /* ---- foye va koridor ---- */
-  inner.boxMinMax('velvet', X(portico.u0 + 0.6), y2, Z(6), X(portico.u0 + 1.5), y2 + 0.45, Z(10));
-  inner.boxMinMax('velvet', X(portico.u1 - 1.5), y2, Z(6), X(portico.u1 - 0.6), y2 + 0.45, Z(10));
-  inner.boxMinMax('woodDark', X(W / 2 - 0.6), y2, Z(7.3), X(W / 2 + 0.6), y2 + 0.42, Z(8.7));
+  upper.boxMinMax('velvet', X(portico.u0 + 0.6), y2, Z(6), X(portico.u0 + 1.5), y2 + 0.45, Z(10));
+  upper.boxMinMax('velvet', X(portico.u1 - 1.5), y2, Z(6), X(portico.u1 - 0.6), y2 + 0.45, Z(10));
+  upper.boxMinMax('woodDark', X(W / 2 - 0.6), y2, Z(7.3), X(W / 2 + 0.6), y2 + 0.42, Z(8.7));
   decals.push({ kind: 'carpet2', pos: [X(W / 2), y2 + 0.004, Z(8)], w: 3.4, h: 5.0, rot: [-Math.PI / 2, 0, 0] });
   lantern(roof, X(W / 2), Z(8), CEIL2 - 1.6, CEIL2, 1.4);
-  for (let u = 3; u < W - 2; u += 5) sconce(inner, X(u), y2 + 2.3, Z(L.corridor.v0 + T2 + 0.01), 0, 1);
+  for (let u = 3; u < W - 2; u += 5) sconce(upper, X(u), y2 + 2.3, Z(L.corridor.v0 + T2 + 0.01), 0, 1);
 
   /* ---- VIP xonalar: supa, ko‘rpachalar, xontaxta, so‘zana, laganlar ---- */
   for (const [i, r] of L.vipRooms.entries()) {
@@ -691,30 +706,30 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
     const v1 = r.v1 - 0.05;
     const ph = 0.32;
     // U shaklidagi supa
-    inner.boxMinMax('woodDark', X(u0), y2, Z(v1 - 1.1), X(u1), y2 + ph, Z(v1));
-    inner.boxMinMax('woodDark', X(u0), y2, Z(v0), X(u0 + 1.1), y2 + ph, Z(v1 - 1.1));
-    inner.boxMinMax('woodDark', X(u1 - 1.1), y2, Z(v0), X(u1), y2 + ph, Z(v1 - 1.1));
+    upper.boxMinMax('woodDark', X(u0), y2, Z(v1 - 1.1), X(u1), y2 + ph, Z(v1));
+    upper.boxMinMax('woodDark', X(u0), y2, Z(v0), X(u0 + 1.1), y2 + ph, Z(v1 - 1.1));
+    upper.boxMinMax('woodDark', X(u1 - 1.1), y2, Z(v0), X(u1), y2 + ph, Z(v1 - 1.1));
     // ko‘rpachalar va yostiqlar
-    inner.boxMinMax('ikat', X(u0 + 0.05), y2 + ph, Z(v1 - 1.05), X(u1 - 0.05), y2 + ph + 0.1, Z(v1 - 0.05));
-    inner.boxMinMax('ikat', X(u0 + 0.05), y2 + ph, Z(v0 + 0.05), X(u0 + 1.05), y2 + ph + 0.1, Z(v1 - 1.05));
-    inner.boxMinMax('ikat', X(u1 - 1.05), y2 + ph, Z(v0 + 0.05), X(u1 - 0.05), y2 + ph + 0.1, Z(v1 - 1.05));
-    for (let u = u0 + 0.7; u < u1 - 0.5; u += 0.9) inner.box('velvet', [X(u), y2 + ph + 0.35, Z(v1 - 0.22)], [0.6, 0.45, 0.16]);
+    upper.boxMinMax('ikat', X(u0 + 0.05), y2 + ph, Z(v1 - 1.05), X(u1 - 0.05), y2 + ph + 0.1, Z(v1 - 0.05));
+    upper.boxMinMax('ikat', X(u0 + 0.05), y2 + ph, Z(v0 + 0.05), X(u0 + 1.05), y2 + ph + 0.1, Z(v1 - 1.05));
+    upper.boxMinMax('ikat', X(u1 - 1.05), y2 + ph, Z(v0 + 0.05), X(u1 - 0.05), y2 + ph + 0.1, Z(v1 - 1.05));
+    for (let u = u0 + 0.7; u < u1 - 0.5; u += 0.9) upper.box('velvet', [X(u), y2 + ph + 0.35, Z(v1 - 0.22)], [0.6, 0.45, 0.16]);
     for (let v = v0 + 0.5; v < v1 - 1.2; v += 0.9) {
-      inner.box('velvet', [X(u0 + 0.22), y2 + ph + 0.35, Z(v)], [0.16, 0.45, 0.6]);
-      inner.box('velvet', [X(u1 - 0.22), y2 + ph + 0.35, Z(v)], [0.16, 0.45, 0.6]);
+      upper.box('velvet', [X(u0 + 0.22), y2 + ph + 0.35, Z(v)], [0.16, 0.45, 0.6]);
+      upper.box('velvet', [X(u1 - 0.22), y2 + ph + 0.35, Z(v)], [0.16, 0.45, 0.6]);
     }
     // xontaxta, dasturxon, mevalar, choynak
     const cx = X((r.u0 + r.u1) / 2);
     const cz = Z((v0 + v1 - 1.1) / 2 + 0.3);
-    inner.boxMinMax('woodDark', cx - 1.4, y2, cz - 0.65, cx + 1.4, y2 + 0.36, cz + 0.65);
-    inner.boxMinMax('velvet', cx - 1.3, y2 + 0.36, cz - 0.55, cx + 1.3, y2 + 0.37, cz + 0.55);
+    upper.boxMinMax('woodDark', cx - 1.4, y2, cz - 0.65, cx + 1.4, y2 + 0.36, cz + 0.65);
+    upper.boxMinMax('velvet', cx - 1.3, y2 + 0.36, cz - 0.55, cx + 1.3, y2 + 0.37, cz + 0.55);
     const fruitKeys: MatKey[] = ['paintOrange', 'paintRed', 'plant', 'paintYellow'];
     for (let kk = 0; kk < 6; kk++) {
       const fx = cx - 1.0 + kk * 0.4;
-      inner.cyl('paintWhite', [fx, y2 + 0.38, cz], 0.15, 0.02, 'y', 14);
-      inner.add(fruitKeys[kk % 4], ico, [fx, y2 + 0.43, cz], [0, 0, 0], [0.06, 0.05, 0.06]);
+      upper.cyl('paintWhite', [fx, y2 + 0.38, cz], 0.15, 0.02, 'y', 14);
+      upper.add(fruitKeys[kk % 4], ico, [fx, y2 + 0.43, cz], [0, 0, 0], [0.06, 0.05, 0.06]);
     }
-    inner.add('brass', new THREE.SphereGeometry(0.1, 12, 8), [cx + 0.9, y2 + 0.46, cz + 0.3]);
+    upper.add('brass', new THREE.SphereGeometry(0.1, 12, 8), [cx + 0.9, y2 + 0.46, cz + 0.3]);
     decals.push({ kind: i % 2 ? 'carpet' : 'carpet3', pos: [cx, y2 + 0.004, cz], w: 4.6, h: 6.0, rot: [-Math.PI / 2, 0, Math.PI / 2] });
     // orqa devor: so‘zanalar, laganlar, tokchalar va ko‘zalar
     const bz = Z(r.v1 - 0.02);
@@ -728,9 +743,9 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
       decals.push({ kind: i % 2 ? 'lyagan' : 'lyagan2', pos: [cx + du, y2 + dy, bz - 0.005], w: s, h: s, rot: [0, Math.PI, 0] });
     for (const du of [-2.6, 2.6]) {
       const n: Hole = { a0: cx + du - 0.35, a1: cx + du + 0.35, y0: y2 + 1.2, ys: y2 + 1.85, ry: 0.35 };
-      archPanel(inner, 'woodDark', 'x', bz - 0.01, n, -1);
-      jug(inner, cx + du, y2 + 1.25, bz - 0.15, 0.85);
-      inner.boxMinMax('woodDark', cx + du - 0.33, y2 + 1.2, bz - 0.3, cx + du + 0.33, y2 + 1.25, bz - 0.01);
+      archPanel(upper, 'woodDark', 'x', bz - 0.01, n, -1);
+      jug(upper, cx + du, y2 + 1.25, bz - 0.15, 0.85);
+      upper.boxMinMax('woodDark', cx + du - 0.33, y2 + 1.2, bz - 0.3, cx + du + 0.33, y2 + 1.25, bz - 0.01);
     }
     // yon devor gilamlari
     decals.push({ kind: 'carpet2', pos: [X(r.u0 + 0.21), y2 + 2.25, Z((r.v0 + r.v1) / 2 + 0.6)], w: 1.4, h: 1.9, rot: [0, Math.PI / 2, 0] });
@@ -741,5 +756,14 @@ export function buildRestaurant(L: RestaurantLayout = restaurantLayout()) {
     lantern(roof, cx, cz, CEIL2 - 1.5, CEIL2, 1.25);
   }
 
-  return { shell: shell.build(), glass: glass.build(), roof: roof.build(), inner: inner.build(), decals, uplights };
+  return {
+    shell: shell.build(),
+    glass: glass.build(),
+    roof: roof.build(),
+    inner: inner.build(),
+    upper: upper.build(),
+    upperGlass: upperGlass.build(),
+    decals: decals.map((d) => ({ ...d, upper: d.pos[1] >= FL2 - 0.1 })),
+    uplights,
+  };
 }

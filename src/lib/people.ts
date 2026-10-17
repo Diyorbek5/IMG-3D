@@ -314,13 +314,13 @@ export function buildPeople(cfg = factoryConfig): PersonDef[] {
   add('Mijoz', 'showroom', 'visitor', false, fixed([X(4.6), Z(9.5)], -Math.PI / 2 - 0.3, 'look'));
   add('Mijoz', 'showroom', 'visitor', false, fixed([X(1.0), Z(3.0)], FACE.px, 'talk', 0.42));
   add('Mijoz', 'showroom', 'visitor', true, fixed([X(2.6), Z(1.5)], FACE.pz, 'talk', 0.42));
-  add('Mijoz (antresolda)', 'showroom', 'visitor', false, fixed([X(3.3), Z(11.5)], FACE.px, 'look'), { y: 3.62 });
+  add('Mijoz (antresolda)', 'showroom', 'visitor', false, fixed([X(3.3), Z(11.5)], FACE.px, 'look'), { y: 3.62, upper: true });
 
   /* ---- restoran ---- */
   {
     const R = restaurantLayout(cfg);
     const f1 = { y: R.FL1 };
-    const f2 = { y: R.FL2 };
+    const f2 = { y: R.FL2, upper: true };
     const SEAT_R = 0.51;
     const guestOutfits: Outfit[] = ['visitor', 'office', 'visitor', 'manager', 'visitor', 'office'];
     let g = 0;

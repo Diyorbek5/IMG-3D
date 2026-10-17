@@ -43,11 +43,31 @@ describe('restoran (zavod yonidagi bino)', () => {
     const shell = keys(r.shell);
     const inner = keys(r.inner);
     for (const k of ['stucco', 'aluDark', 'iron', 'concrete']) expect(shell.has(k), k).toBe(true);
-    for (const k of ['stuccoInt', 'ikat', 'majolica', 'woodDark', 'lanternGlass', 'bottle', 'velvet', 'jug']) expect(inner.has(k), k).toBe(true);
+    for (const k of ['stuccoInt', 'ikat', 'majolica', 'woodDark', 'lanternGlass', 'bottle', 'jug']) expect(inner.has(k), k).toBe(true);
+    for (const k of ['stucco', 'stuccoInt', 'ikat', 'velvet', 'woodDark']) expect(keys(r.upper).has(k), k).toBe(true);
+    expect(r.upperGlass.length).toBeGreaterThan(0);
     expect(keys(r.roof).has('girih')).toBe(true);
     expect(keys(r.roof).has('roofTerracotta')).toBe(true);
     expect(r.glass.length).toBeGreaterThan(0);
     expect(r.decals.length).toBeGreaterThan(40);
     expect(r.uplights.length).toBeGreaterThanOrEqual(12);
+  });
+
+  it('"2-qavat" qatlami: 1-qavat shiftidan yuqorisi alohida guruhda', () => {
+    const r = buildRestaurant(R);
+    const maxY = (parts: { geometry: { boundingBox: { max: { y: number } } | null; computeBoundingBox(): void } }[]) =>
+      Math.max(
+        ...parts.map((p) => {
+          p.geometry.computeBoundingBox();
+          return p.geometry.boundingBox!.max.y;
+        }),
+      );
+    // o‘chirilganda qoladigan qism (qobiq, 1-qavat jihozlari, 1-qavat shishalari) 1-qavat shiftidan oshmaydi
+    for (const parts of [r.shell, r.glass]) expect(maxY(parts)).toBeLessThanOrEqual(R.CEIL1 + 0.01);
+    // 1-qavat jihozlaridan faqat zinapoya (va uning poruchenlari) 2-qavat sathiga yetadi
+    expect(maxY(r.inner)).toBeLessThanOrEqual(R.FL2 + 1.0);
+    expect(maxY(r.upper)).toBeGreaterThan(R.PAV_EAVE);
+    expect(r.decals.some((d) => d.upper)).toBe(true);
+    for (const d of r.decals) expect(!!d.upper).toBe(d.pos[1] > R.CEIL1);
   });
 });

@@ -124,6 +124,8 @@ export interface ShellParts {
   /** ikkinchi qavat (oxirgi qism) — alohida yoqib-o‘chiriladi */
   upper: GeoBuilder;
   upperGlass: GeoBuilder;
+  /** ikki qavatli qismning tomi — "Tomlar" va "2-qavat" qatlamlari yoqilganda ko‘rinadi */
+  upperRoof: GeoBuilder;
   /** ichki pol, ustunlar, bo‘linmalar */
   interior: GeoBuilder;
 }
@@ -141,6 +143,7 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
   const roof = new GeoBuilder();
   const upper = new GeoBuilder();
   const upperGlass = new GeoBuilder();
+  const upperRoof = new GeoBuilder();
   const interior = new GeoBuilder();
   const segs = getSegments(cfg);
   const t = cfg.building.wallThickness;
@@ -357,6 +360,11 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
   for (const seg of segs) {
     const roofY = seg.height - P;
     const isProd = seg.id === 'production';
+    // ikki qavatli oxirgi qism: tomi va yuqori qismi "2-qavat" qatlami bilan yashiriladi
+    const upperSeg = seg.floors >= 2;
+    const rb = upperSeg ? upperRoof : roof;
+    const ib = upperSeg ? upper : interior;
+    const sb = upperSeg ? upper : shell;
     // tom plitasi (zenit fonarlari uchun bo‘laklarga ajratilgan)
     const sky: [number, number][] = [];
     if (seg.id !== 'rear') {
@@ -377,16 +385,16 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
     for (const [a, b] of roofSpans) {
       const za = Math.max(a, t);
       const zb = Math.min(b, L - t);
-      if (zb > za) roof.boxMinMax('roof', -W + t, roofY - 0.3, za, W - t, roofY, zb);
+      if (zb > za) rb.boxMinMax('roof', -W + t, roofY - 0.3, za, W - t, roofY, zb);
     }
     // zenit fonarlari (polikarbonat/shisha)
     for (const [a, b] of sky) {
-      roof.boxMinMax('glass', skyX0, roofY + 0.25, a + 0.1, skyX1, roofY + 0.27, b - 0.1);
-      roof.boxMinMax('aluminium', skyX0, roofY, a, skyX1, roofY + 0.25, a + 0.1);
-      roof.boxMinMax('aluminium', skyX0, roofY, b - 0.1, skyX1, roofY + 0.25, b);
+      rb.boxMinMax('glass', skyX0, roofY + 0.25, a + 0.1, skyX1, roofY + 0.27, b - 0.1);
+      rb.boxMinMax('aluminium', skyX0, roofY, a, skyX1, roofY + 0.25, a + 0.1);
+      rb.boxMinMax('aluminium', skyX0, roofY, b - 0.1, skyX1, roofY + 0.25, b);
       // fonar ochig‘ining tom bilan tutashgan qismlari
-      roof.boxMinMax('roof', -W + t, roofY - 0.3, a, skyX0, roofY, b);
-      roof.boxMinMax('roof', skyX1, roofY - 0.3, a, W - t, roofY, b);
+      rb.boxMinMax('roof', -W + t, roofY - 0.3, a, skyX0, roofY, b);
+      rb.boxMinMax('roof', skyX1, roofY - 0.3, a, W - t, roofY, b);
     }
     // quyosh panellari (tomning yarmida): janubga qiyalatilgan qatorlar
     if (solarHere) {
@@ -397,29 +405,29 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
       for (let z = seg.z0 + 1.6; z + depth < seg.z1 - 0.8; z += cfg.solar.rowPitch) {
         const zc = z + depth / 2;
         const yc = roofY + 0.45 + Math.sin(tilt) * (depth / 2);
-        roof.add('solar', new THREE.BoxGeometry(sx1 - sx0, 0.04, depth), [(sx0 + sx1) / 2, yc, zc], [tilt, 0, 0]);
+        rb.add('solar', new THREE.BoxGeometry(sx1 - sx0, 0.04, depth), [(sx0 + sx1) / 2, yc, zc], [tilt, 0, 0]);
         // tayanch ramalar
         for (let x = sx0 + 0.5; x < sx1; x += 3) {
-          roof.box('aluminium', [x, roofY + 0.25, z + 0.15], [0.06, 0.5 + Math.sin(tilt) * depth, 0.06]);
-          roof.box('aluminium', [x, roofY + 0.25, z + depth - 0.15], [0.06, 0.4, 0.06]);
+          rb.box('aluminium', [x, roofY + 0.25, z + 0.15], [0.06, 0.5 + Math.sin(tilt) * depth, 0.06]);
+          rb.box('aluminium', [x, roofY + 0.25, z + depth - 0.15], [0.06, 0.4, 0.06]);
         }
       }
     }
     // parapet qoplamasi (alyuminiy)
-    shell.boxMinMax('aluminium', -W - 0.06, seg.height - 0.06, seg.z0, -W + t + 0.06, seg.height + 0.02, seg.z1);
-    shell.boxMinMax('aluminium', W - t - 0.06, seg.height - 0.06, seg.z0, W + 0.06, seg.height + 0.02, seg.z1);
+    sb.boxMinMax('aluminium', -W - 0.06, seg.height - 0.06, seg.z0, -W + t + 0.06, seg.height + 0.02, seg.z1);
+    sb.boxMinMax('aluminium', W - t - 0.06, seg.height - 0.06, seg.z0, W + 0.06, seg.height + 0.02, seg.z1);
     // fermalar (ichkaridan ko‘rinadi) — tom bilan birga yashiriladi
     const bay = cfg.building.bayLength;
     for (let z = seg.z0 + bay; z < seg.z1 - 0.5; z += bay) {
-      roof.boxMinMax('steel', -W + t, roofY - 1.0, z - 0.12, W - t, roofY - 0.3, z + 0.12);
+      rb.boxMinMax('steel', -W + t, roofY - 1.0, z - 0.12, W - t, roofY - 0.3, z + 0.12);
       // ichki ustunlar devor yonida
-      interior.boxMinMax('steel', -W + t, FLOOR_Y, z - 0.18, -W + t + 0.36, roofY - 0.3, z + 0.18);
-      interior.boxMinMax('steel', W - t - 0.36, FLOOR_Y, z - 0.18, W - t, roofY - 0.3, z + 0.18);
+      ib.boxMinMax('steel', -W + t, FLOOR_Y, z - 0.18, -W + t + 0.36, roofY - 0.3, z + 0.18);
+      ib.boxMinMax('steel', W - t - 0.36, FLOOR_Y, z - 0.18, W - t, roofY - 0.3, z + 0.18);
     }
     // ichki yoritgichlar (LED chiziqlar)
     if (seg.id !== 'rear') {
       for (let z = seg.z0 + 3; z < seg.z1 - 1; z += bay) {
-        for (const x of [-12, 0, 12]) roof.boxMinMax('lightPanel', x - 2.5, roofY - 1.25, z - 0.12, x + 2.5, roofY - 1.18, z + 0.12);
+        for (const x of [-12, 0, 12]) rb.boxMinMax('lightPanel', x - 2.5, roofY - 1.25, z - 0.12, x + 2.5, roofY - 1.18, z + 0.12);
       }
     }
     // tomdagi ventilyatsiya uskunalari
@@ -431,10 +439,10 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
         [hx, seg.z0 + 51],
         [hx - 4, seg.z0 + 66],
       ]) {
-        roof.box('paintGrey', [x, roofY + 0.75, z], [3.2, 1.5, 2.2]);
-        roof.cyl('steel', [x - 0.7, roofY + 1.55, z], 0.55, 0.12, 'y', 20);
-        roof.cyl('steel', [x + 0.7, roofY + 1.55, z], 0.55, 0.12, 'y', 20);
-        roof.box('galvanized', [x, roofY + 0.25, z + 1.8], [0.6, 0.5, 1.6]);
+        rb.box('paintGrey', [x, roofY + 0.75, z], [3.2, 1.5, 2.2]);
+        rb.cyl('steel', [x - 0.7, roofY + 1.55, z], 0.55, 0.12, 'y', 20);
+        rb.cyl('steel', [x + 0.7, roofY + 1.55, z], 0.55, 0.12, 'y', 20);
+        rb.box('galvanized', [x, roofY + 0.25, z + 1.8], [0.6, 0.5, 1.6]);
       }
     }
   }
@@ -462,7 +470,7 @@ export function buildMainShell(cfg = factoryConfig): ShellParts {
   }
 
   void sr;
-  return { shell, glass, roof, upper, upperGlass, interior };
+  return { shell, glass, roof, upper, upperGlass, upperRoof, interior };
 }
 
 /** Ishlab chiqarish tomoniga shisha bo‘linma bilan ochiladigan xonalar */

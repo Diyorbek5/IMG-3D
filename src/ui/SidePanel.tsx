@@ -30,7 +30,7 @@ const LAYER_GROUPS: { title: string; items: { key: keyof Layers; label: string; 
     title: 'Model',
     items: [
       { key: 'roofs', label: 'Tomlar', hint: 'o‘chirilsa — ichki maket (kesim)' },
-      { key: 'upperFloor', label: 'Oxirgi qism: 2-qavat', hint: 'o‘chirilsa 1-qavat ko‘rinadi' },
+      { key: 'upperFloor', label: '2-qavat', hint: 'barcha binolarda (zavod oxirgi qismi, restoran, showroom antresoli); o‘chirilsa 1-qavat ko‘rinadi' },
       { key: 'equipment', label: 'Uskunalar va konveyerlar' },
       { key: 'optionalEquipment', label: 'Qo‘shimcha (ixtiyoriy) uskunalar', hint: 'toblash pechi' },
       { key: 'flow', label: 'Ishlab chiqarish oqimi' },
